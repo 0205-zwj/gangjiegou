@@ -57,8 +57,15 @@
             camera-orbit:0deg 75deg auto;
             camera-target:0m 0m 0m;
             field-of-view:30deg;
-            min-field-of-view:15deg;
-            max-field-of-view:70deg;
+            min-field-of-view:5deg;
+            max-field-of-view:80deg;
+            // 开放360度上下左右旋转
+            polar-min:0deg;
+            polar-max:180deg;
+        }
+        // 模型全屏时背景和主页统一，不是黑色
+        model-viewer:fullscreen {
+            background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
         }
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
@@ -87,14 +94,26 @@
             flex:1;height:auto;background:rgba(220,235,250,.75);border-radius:20px;
         }
         .full-wrap:fullscreen .info-card{
-            max-width:320px;margin:0 auto;padding:16px 18px;border-radius:20px;
+            padding:12px 16px;border-radius:18px;
+            display:grid;grid-template-columns:repeat(4,1fr);gap:8px 16px;
         }
-        .full-wrap:fullscreen .info-card .row{padding:8px 0;font-size:13px;}
-        .full-wrap:fullscreen .info-card h3{font-size:14px;margin-bottom:10px;padding-bottom:8px;}
+        .full-wrap:fullscreen .info-card h3{
+            grid-column:1/-1;font-size:13px;margin:0 0 4px;padding-bottom:6px;
+        }
+        .full-wrap:fullscreen .info-card .row{
+            display:block;padding:0;font-size:12px;line-height:1.4;border-bottom:none;
+        }
+        .full-wrap:fullscreen .info-card .k{width:auto;display:block;font-size:11px;opacity:.7;margin-bottom:2px;}
+        .full-wrap:fullscreen .info-card .v{font-size:12px;}
         @media screen and (orientation:landscape){
             .full-wrap:fullscreen{flex-direction:row;gap:12px;padding:12px;}
             .full-wrap:fullscreen .model-container{flex:1;}
-            .full-wrap:fullscreen .info-card{max-width:280px;margin:0;flex-shrink:0;overflow-y:auto;}
+            .full-wrap:fullscreen .info-card{
+                max-width:240px;margin:0;flex-shrink:0;overflow-y:auto;
+                display:block;padding:14px 16px;
+            }
+            .full-wrap:fullscreen .info-card .row{display:flex;padding:6px 0;font-size:12px;}
+            .full-wrap:fullscreen .info-card .k{width:70px;display:block;font-size:11px;}
         }
         .full-wrap:fullscreen.panel-hidden .info-card{display:none;}
 
@@ -168,8 +187,8 @@
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
-        <!-- 模型全屏退出按钮 -->
-        <button class="btn hide" id="btnExitFull" style="position:absolute;top:16px;right:16px;z-index:30;" title="退出全屏">✕</button>
+        <!-- 模型全屏退出按钮，做大更明显 -->
+        <button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">✕</button>
         <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
