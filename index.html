@@ -4,336 +4,285 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>中铁装配 钢结构构件信息</title>
-    <!-- 稳定的国内可访问CDN -->
-    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js"></script>
+    <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        * {margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+        * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        html,body{height:100%;}
         body {
-            background:#f4f5f7;
-            padding:12px;max-width:100%;margin:0 auto;min-height:100vh;
+            background:linear-gradient(160deg,#eef6ff 0%,#f8fbff 50%,#fff5f7 100%);
+            padding:14px;max-width:100%;margin:0 auto;
+            font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
             overflow-x:hidden;
+            animation:fadeIn .35s cubic-bezier(.4,0,.2,1);
         }
-        /* 跟随触摸/鼠标的光晕 */
+        @keyframes fadeIn {from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+        /* 丝滑跟手柔光光晕 */
         .glow {
-            position:fixed;
-            width:300px;height:300px;
-            border-radius:50%;
-            background:radial-gradient(circle,rgba(0,122,255,0.15) 0%,rgba(0,122,255,0.05) 40%,transparent 70%);
-            pointer-events:none;
-            transform:translate(-50%,-50%);
-            z-index:1;
-            transition:opacity 0.3s;
-            opacity:0;
+            position:fixed;width:420px;height:420px;border-radius:50%;
+            background:radial-gradient(circle,rgba(0,140,255,.18) 0%,rgba(0,140,255,.06) 40%,transparent 70%);
+            pointer-events:none;transform:translate(-50%,-50%);z-index:1;
+            opacity:0;transition:opacity .25s ease;will-change:transform;
         }
 
-        /* 毛玻璃头部 */
+        /* 头部卡片 */
         .header {
             position:relative;z-index:2;
-            background:rgba(255,255,255,0.65);
-            backdrop-filter:blur(12px);
-            -webkit-backdrop-filter:blur(12px);
-            color:#00529B;padding:16px;border-radius:16px;text-align:center;margin-bottom:12px;
-            box-shadow:0 4px 20px rgba(0,82,155,0.1);
-            border:1px solid rgba(255,255,255,0.8);
+            background:rgba(255,255,255,.72);
+            backdrop-filter:blur(24px) saturate(180%);
+            -webkit-backdrop-filter:blur(24px) saturate(180%);
+            color:#0050a0;padding:20px;border-radius:26px;text-align:center;margin-bottom:14px;
+            box-shadow:0 8px 32px rgba(0,100,200,.1);
+            border:1px solid rgba(255,255,255,.9);
         }
-        .header h2 {font-size:18px;font-weight:600;letter-spacing:1px;}
-        .header p {font-size:12px;opacity:0.7;margin-top:4px;letter-spacing:2px;}
+        .header h2 {font-size:19px;font-weight:600;letter-spacing:.5px;}
+        .header p {font-size:11px;opacity:.6;margin-top:6px;letter-spacing:3px;font-weight:400;}
 
         .full-wrap {position:relative;z-index:2;width:100%;}
         .model-container {
-            position:relative;width:100%;height:400px;
-            background:rgba(255,255,255,0.5);
-            backdrop-filter:blur(8px);
-            border-radius:16px;overflow:hidden;
-            box-shadow:0 8px 32px rgba(0,82,155,0.12);
-            border:1px solid rgba(255,255,255,0.8);
-            transition:height 0.3s ease;
+            position:relative;width:100%;height:420px;
+            background:rgba(255,255,255,.65);
+            backdrop-filter:blur(20px) saturate(160%);
+            border-radius:26px;overflow:hidden;
+            box-shadow:0 12px 40px rgba(0,100,200,.12);
+            border:1px solid rgba(255,255,255,.9);
+            will-change:height;
         }
-        model-viewer {width:100%;height:100%;--poster-color:#f0f4f8;}
+        model-viewer {width:100%;height:100%;--poster-color:#f0f7ff;}
+        model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
-        /* 毛玻璃工具栏 */
-        .viewer-toolbar{
-            position:absolute;top:10px;right:10px;z-index:20;
-            display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;
+        /* 右上角工具栏，澎湃OS风格圆角胶囊按钮 */
+        .toolbar{
+            position:absolute;top:14px;right:14px;z-index:20;
+            display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;
         }
-        .tool-btn{
-            background:rgba(255,255,255,0.35);
-            backdrop-filter:blur(10px);
-            -webkit-backdrop-filter:blur(10px);
-            color:#003d73;border:1px solid rgba(255,255,255,0.5);
-            border-radius:20px;padding:7px 12px;font-size:12px;cursor:pointer;
-            box-shadow:0 2px 8px rgba(0,0,0,0.08);
-            transition:all 0.2s;
+        .btn{
+            background:rgba(255,255,255,.6);
+            backdrop-filter:blur(16px) saturate(180%);
+            color:#0066cc;border:1px solid rgba(255,255,255,.8);
+            border-radius:26px;padding:8px 16px;font-size:12px;cursor:pointer;
+            box-shadow:0 4px 12px rgba(0,100,200,.08);
+            transition:all .18s cubic-bezier(.4,0,.2,1);will-change:transform;
         }
-        .tool-btn:hover{background:rgba(255,255,255,0.6);transform:scale(1.03);}
-        .tool-btn.active{background:#00529B;color:#fff;}
+        .btn:active{transform:scale(.94);}
+        .btn.active{background:#0078ed;color:#fff;box-shadow:0 6px 16px rgba(0,120,237,.35);}
+
+        /* 右下角圆形截图按钮 */
+        .snap{
+            position:absolute;bottom:18px;right:18px;z-index:20;
+            width:46px;height:46px;border-radius:50%;
+            background:rgba(255,255,255,.65);
+            backdrop-filter:blur(16px) saturate(180%);
+            border:1px solid rgba(255,255,255,.8);
+            font-size:19px;cursor:pointer;
+            box-shadow:0 6px 20px rgba(0,100,200,.15);
+            display:flex;align-items:center;justify-content:center;
+            transition:all .18s cubic-bezier(.4,0,.2,1);will-change:transform;
+        }
+        .snap:active{transform:scale(.9);}
 
         /* 全屏模式 */
         .full-wrap:fullscreen{
-            background:#1e293b;
-            padding:12px;
-            display:flex;
-            flex-direction:column;
+            background:linear-gradient(160deg,#eef6ff 0%,#f8fbff 100%);
+            padding:16px;display:flex;flex-direction:column;
         }
         .full-wrap:fullscreen .model-container{
-            flex:1;
-            height:auto;
-            background:rgba(255,255,255,0.08);
-            border-radius:12px;
-            border:1px solid rgba(255,255,255,0.15);
+            flex:1;height:auto;background:rgba(255,255,255,.7);border-radius:20px;
         }
-        .full-wrap:fullscreen .info-card{
-            max-width:480px;
-            margin:10px auto 0;
-            background:rgba(255,255,255,0.9);
+        .full-wrap:fullscreen .info-card{max-width:480px;margin:12px auto 0;}
+        @media screen and (orientation:landscape){
+            .full-wrap:fullscreen{flex-direction:row;gap:14px;}
+            .full-wrap:fullscreen .model-container{flex:1;}
+            .full-wrap:fullscreen .info-card{max-width:340px;margin:0;flex-shrink:0;overflow-y:auto;}
         }
-        /* 横屏布局 */
-        @media screen and (orientation: landscape){
-            .full-wrap:fullscreen{
-                flex-direction:row;
-                gap:12px;
-            }
-            .full-wrap:fullscreen .model-container{
-                flex:1;
-            }
-            .full-wrap:fullscreen .info-card{
-                max-width:340px;
-                margin:0;
-                flex-shrink:0;
-                overflow-y:auto;
-            }
-        }
-        /* 全屏隐藏信息时，模型占满全部 */
-        .full-wrap:fullscreen.panel-hidden .model-container{
-            flex:1;
-        }
-        .full-wrap:fullscreen.panel-hidden .info-card{
-            display:none;
-        }
+        .full-wrap:fullscreen.panel-hidden .info-card{display:none;}
 
-        /* 提示文字 */
-        .full-tip{
+        /* 提示 */
+        .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%);
-            top:48px;z-index:21;
-            color:#003d73;font-size:12px;
-            background:rgba(255,255,255,0.7);
-            backdrop-filter:blur(8px);
-            padding:6px 14px;border-radius:20px;
-            white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.1);
-            transition:opacity 0.4s;
+            top:56px;z-index:21;color:#0066cc;font-size:12px;
+            background:rgba(255,255,255,.8);backdrop-filter:blur(16px);
+            padding:8px 18px;border-radius:26px;white-space:nowrap;
+            box-shadow:0 6px 20px rgba(0,100,200,.12);transition:opacity .3s;
         }
+        .toast{
+            position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+            z-index:99;color:#0078ed;font-size:14px;font-weight:500;
+            background:rgba(255,255,255,.9);backdrop-filter:blur(20px);
+            padding:14px 28px;border-radius:26px;
+            box-shadow:0 12px 40px rgba(0,100,200,.2);
+            opacity:0;pointer-events:none;transition:opacity .25s;
+        }
+        .toast.show{opacity:1;}
 
         /* 加载遮罩 */
-        .loading-mask {
+        .loading{
             position:absolute;top:0;left:0;width:100%;height:100%;
-            background:rgba(240,244,248,0.9);
-            backdrop-filter:blur(8px);
+            background:rgba(240,248,255,.92);backdrop-filter:blur(16px);
             display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;
         }
-        .loading-text {font-size:14px;color:#64748b;margin-top:16px;}
-        .loading-progress {width:60%;height:4px;background:#e2e8f0;border-radius:2px;margin-top:12px;overflow:hidden;}
-        .progress-bar {height:100%;width:0%;background:#00529B;transition:width 0.3s;}
-        .spinner {
-            width:40px;height:40px;
-            border:3px solid #e2e8f0;border-top:3px solid #00529B;
-            border-radius:50%;animation:spin 1s linear infinite;
+        .loading-text{font-size:14px;color:#0078ed;margin-top:18px;font-weight:500;}
+        .progress{width:70%;height:5px;background:rgba(180,220,255,.5);border-radius:3px;margin-top:14px;overflow:hidden;}
+        .bar{height:100%;width:0%;background:linear-gradient(90deg,#00a2ff,#0078ed);transition:width .3s;}
+        .spinner{
+            width:46px;height:46px;border:4px solid rgba(180,220,255,.4);
+            border-top:4px solid #0078ed;border-radius:50%;
+            animation:spin 1s linear infinite;
         }
-        @keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-        .error-tip {
-            display:none;position:absolute;top:0;left:0;width:100%;height:100%;
-            background:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10;
-            color:#64748b;font-size:14px;
-        }
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .error{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#fff;flex-direction:column;align-items:center;justify-content:center;z-index:10;color:#668;}
 
-        /* 毛玻璃信息卡片 */
-        .info-card {
-            background:rgba(255,255,255,0.75);
-            backdrop-filter:blur(12px);
-            -webkit-backdrop-filter:blur(12px);
-            padding:18px;border-radius:16px;margin-top:12px;
-            box-shadow:0 4px 24px rgba(0,82,155,0.1);
-            border:1px solid rgba(255,255,255,0.8);
-            transition:0.2s;
+        /* 信息卡片 */
+        .info-card{
+            background:rgba(255,255,255,.75);
+            backdrop-filter:blur(24px) saturate(180%);
+            -webkit-backdrop-filter:blur(24px) saturate(180%);
+            padding:22px;border-radius:26px;margin-top:14px;
+            box-shadow:0 8px 32px rgba(0,100,200,.1);
+            border:1px solid rgba(255,255,255,.9);
         }
-        .info-card h3 {
-            color:#00529B;font-size:16px;margin-bottom:12px;
-            padding-bottom:10px;border-bottom:2px solid rgba(0,82,155,0.15);
-            font-weight:600;
+        .info-card h3{
+            color:#0050a0;font-size:16px;margin-bottom:14px;
+            padding-bottom:12px;border-bottom:1px solid rgba(0,100,200,.1);font-weight:600;
         }
-        .info-item {display:flex;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);font-size:14px;}
-        .info-item:last-child {border-bottom:none;}
-        .label {width:90px;color:#64748b;flex-shrink:0;}
-        .value {flex:1;color:#1e293b;word-break:break-all;font-weight:500;}
+        .row{display:flex;padding:11px 0;border-bottom:1px solid rgba(0,100,200,.04);font-size:14px;}
+        .row:last-child{border-bottom:none;}
+        .k{width:90px;color:#7098c8;flex-shrink:0;font-weight:400;}
+        .v{flex:1;color:#1a3a60;word-break:break-all;font-weight:500;}
 
-        .tip {position:relative;z-index:2;text-align:center;color:#94a3b8;font-size:11px;margin-top:16px;line-height:1.6;}
-        .hide{display:none !important;}
+        .footer{text-align:center;color:#88a8d0;font-size:11px;margin-top:18px;line-height:1.7;}
+        .hide{display:none!important;}
     </style>
 </head>
 <body>
 <div class="glow" id="glow"></div>
+<div class="toast" id="toast">✅ 截图已保存</div>
+
 <div class="header">
     <h2>中铁装配｜钢结构构件信息</h2>
     <p>CHINA RAILWAY ASSEMBLY</p>
 </div>
 
 <div class="full-wrap" id="fullWrap">
-    <div class="full-tip hide" id="fullTip">💡微信内建议点右上角「在浏览器打开」可横屏查看</div>
+    <div class="tip-banner hide" id="tipBanner">💡微信内点右上角「在浏览器打开」可横屏查看</div>
     <div class="model-container">
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="1" camera-controls interaction-prompt="auto" ar></model-viewer>
-        <!-- 工具栏 -->
-        <div class="viewer-toolbar">
-            <button class="tool-btn" id="btnAutoRotate">自动旋转</button>
-            <button class="tool-btn" id="btnResetCam">重置视角</button>
-            <button class="tool-btn" id="btnFull">⛶全屏</button>
-            <button class="tool-btn hide" id="btnPanelToggle">隐藏信息</button>
+        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="1" camera-controls interaction-prompt="auto"></model-viewer>
+        <div class="toolbar">
+            <button class="btn" id="btnRotate">自动旋转</button>
+            <button class="btn" id="btnReset">重置视角</button>
+            <button class="btn" id="btnFull">⛶全屏</button>
+            <button class="btn hide" id="btnToggle">隐藏信息</button>
         </div>
-        <div class="loading-mask" id="loadingMask">
+        <button class="snap" id="btnSnap">📷</button>
+        <div class="loading" id="loading">
             <div class="spinner"></div>
-            <div class="loading-text" id="loadingText">正在加载3D模型...</div>
-            <div class="loading-progress">
-                <div class="progress-bar" id="progressBar"></div>
-            </div>
+            <div class="loading-text" id="loadText">正在加载3D模型...</div>
+            <div class="progress"><div class="bar" id="bar"></div></div>
         </div>
-        <div class="error-tip" id="errorTip">
-            <p>3D模型加载失败，请检查网络后刷新</p>
+        <div class="error" id="error">
+            <p>3D模型加载失败，请检查网络刷新</p>
         </div>
     </div>
 
     <div class="info-card" id="infoCard">
         <h3>构件基本信息</h3>
-        <div class="info-item"><div class="label">构件编号</div><div class="value" id="partId">-</div></div>
-        <div class="info-item"><div class="label">加工号</div><div class="value" id="workNo">-</div></div>
-        <div class="info-item"><div class="label">项目名称</div><div class="value" id="projectName">-</div></div>
-        <div class="info-item"><div class="label">分部工程</div><div class="value" id="section">-</div></div>
-        <div class="info-item"><div class="label">构件类型</div><div class="value" id="partType">-</div></div>
-        <div class="info-item"><div class="label">材质</div><div class="value" id="material">-</div></div>
-        <div class="info-item"><div class="label">规格</div><div class="value" id="spec">-</div></div>
-        <div class="info-item"><div class="label">数量</div><div class="value" id="quantity">-</div></div>
+        <div class="row"><div class="k">构件编号</div><div class="v" id="partId">-</div></div>
+        <div class="row"><div class="k">加工号</div><div class="v" id="workNo">-</div></div>
+        <div class="row"><div class="k">项目名称</div><div class="v" id="projectName">-</div></div>
+        <div class="row"><div class="k">分部工程</div><div class="v" id="section">-</div></div>
+        <div class="row"><div class="k">构件类型</div><div class="v" id="partType">-</div></div>
+        <div class="row"><div class="k">材质</div><div class="v" id="material">-</div></div>
+        <div class="row"><div class="k">规格</div><div class="v" id="spec">-</div></div>
+        <div class="row"><div class="k">数量</div><div class="v" id="quantity">-</div></div>
     </div>
 </div>
 
-<p class="tip">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰</p>
+<p class="footer">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰</p>
 
 <script src="data.js"></script>
 <script>
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('id');
-const viewer = document.getElementById('viewer');
-const loadingMask = document.getElementById('loadingMask');
-const loadingText = document.getElementById('loadingText');
-const progressBar = document.getElementById('progressBar');
-const errorTip = document.getElementById('errorTip');
-const fullWrap = document.getElementById('fullWrap');
-const btnFull = document.getElementById('btnFull');
-const btnPanelToggle = document.getElementById('btnPanelToggle');
-const btnAutoRotate = document.getElementById('btnAutoRotate');
-const btnResetCam = document.getElementById('btnResetCam');
-const infoCard = document.getElementById('infoCard');
-const fullTip = document.getElementById('fullTip');
-const glow = document.getElementById('glow');
+const $ = s => document.querySelector(s);
+const id = new URLSearchParams(location.search).get('id');
+const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), loadText = $('#loadText'),
+error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnToggle = $('#btnToggle'),
+btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
+glow = $('#glow'), btnSnap = $('#btnSnap'), toast = $('#toast');
 
-let autoRotateState = false;
-let tipTimer = null;
+let rotate = false, tipTimer = null;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 
-if (id && window.partData && window.partData[id]) {
-    const d = window.partData[id];
-    // 填充数据
-    fields.forEach(f => {
-        const el = document.getElementById(f);
-        if(el && d[f]) el.innerText = d[f];
-    });
-
+if(id && partData[id]){
+    const d = partData[id];
+    fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
     viewer.src = d.glbUrl;
-    // 旋转速度调快，让效果明显
     viewer.autoRotateSpeed = 3;
-
-    viewer.addEventListener('progress', (e) => {
-        if (e.total) {
-            const percent = Math.round((e.loaded / e.total) * 100);
-            progressBar.style.width = percent + '%';
-            loadingText.innerText = `正在加载3D模型... ${percent}%`;
+    viewer.addEventListener('progress', e => {
+        if(e.total){
+            const p = Math.round(e.loaded/e.total*100);
+            bar.style.width = p+'%';
+            loadText.innerText = `正在加载3D模型... ${p}%`;
         }
     });
-    viewer.addEventListener('load', () => loadingMask.style.display = 'none');
-    viewer.addEventListener('error', () => {
-        loadingMask.style.display = 'none';
-        errorTip.style.display = 'flex';
-    });
+    viewer.addEventListener('load', () => loading.style.display = 'none');
+    viewer.addEventListener('error', () => {loading.style.display='none'; error.style.display='flex';});
 }else{
     document.querySelector('.header h2').innerText = '构件信息未找到';
     document.querySelector('.model-container').style.display = 'none';
-    loadingMask.style.display = 'none';
+    loading.style.display = 'none';
 }
 
-// 触摸/鼠标跟随光晕
-function moveGlow(x,y){
-    glow.style.left = x + 'px';
-    glow.style.top = y + 'px';
-    glow.style.opacity = '1';
-}
-document.addEventListener('mousemove',(e)=>{moveGlow(e.clientX,e.clientY)});
-document.addEventListener('touchmove',(e)=>{
-    if(e.touches[0]) moveGlow(e.touches[0].clientX,e.touches[0].clientY);
-});
-document.addEventListener('mouseleave',()=>{glow.style.opacity='0'});
-
-// 点击提示关闭
-fullTip.onclick = ()=>{
-    fullTip.classList.add('hide');
-    clearTimeout(tipTimer);
+// 截图功能
+btnSnap.onclick = async () => {
+    try{
+        const blob = await viewer.toBlob({imageType:'png',quality:.95});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `构件${id}_模型视图.png`; a.click();
+        URL.revokeObjectURL(url);
+        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1800);
+    }catch(e){alert('截图失败，请手动截屏');}
 }
 
-// 自动旋转开关
-btnAutoRotate.onclick = ()=>{
-    autoRotateState = !autoRotateState;
-    viewer.autoRotate = autoRotateState;
-    btnAutoRotate.classList.toggle('active',autoRotateState);
-    btnAutoRotate.innerText = autoRotateState ? "旋转中" : "自动旋转";
-}
+// 跟手光晕
+function moveGlow(x,y){glow.style.left=x+'px';glow.style.top=y+'px';glow.style.opacity='1';}
+document.addEventListener('mousemove',e=>moveGlow(e.clientX,e.clientY));
+document.addEventListener('touchmove',e=>{if(e.touches[0])moveGlow(e.touches[0].clientX,e.touches[0].clientY);});
+document.addEventListener('mouseleave',()=>glow.style.opacity='0');
 
+// 自动旋转
+btnRotate.onclick = () => {
+    rotate = !rotate; viewer.autoRotate = rotate;
+    btnRotate.classList.toggle('active',rotate);
+    btnRotate.innerText = rotate ? "旋转中" : "自动旋转";
+}
 // 重置视角
-btnResetCam.onclick = ()=>{
-    viewer.cameraOrbit = "0deg 75deg 105%";
-    viewer.cameraTarget = "auto";
-}
-
-// 全屏按钮
-btnFull.onclick = async ()=>{
+btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg 105%"; viewer.cameraTarget = "auto";}
+// 全屏
+btnFull.onclick = async () => {
     try{
         if(!document.fullscreenElement){
             await fullWrap.requestFullscreen();
-            btnPanelToggle.classList.remove('hide');
-            fullTip.classList.remove('hide');
-            // 5秒自动消失提示
-            tipTimer = setTimeout(()=>{
-                fullTip.classList.add('hide');
-            },5000);
-            btnFull.innerText="⤢退出全屏";
-        }else{
-            await document.exitFullscreen();
-        }
-    }catch(e){console.warn("全屏异常",e)}
+            btnToggle.classList.remove('hide'); tipBanner.classList.remove('hide');
+            tipTimer = setTimeout(()=>tipBanner.classList.add('hide'),5000);
+            btnFull.innerText = "⤢退出全屏";
+        }else document.exitFullscreen();
+    }catch(e){}
 }
-
-// 监听退出全屏
+// 退出全屏监听
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
-        btnPanelToggle.classList.add('hide');
-        fullTip.classList.add('hide');
-        fullWrap.classList.remove('panel-hidden');
-        infoCard.classList.remove('hide');
-        clearTimeout(tipTimer);
-        btnFull.innerText="⛶全屏";
+        btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
+        fullWrap.classList.remove('panel-hidden'); infoCard.classList.remove('hide');
+        clearTimeout(tipTimer); btnFull.innerText = "⛶全屏";
     }
-})
-
-// 隐藏/显示信息卡片，全屏时模型占满
-btnPanelToggle.onclick = ()=>{
-    const hidden = infoCard.classList.toggle('hide');
-    fullWrap.classList.toggle('panel-hidden',hidden);
-    btnPanelToggle.innerText = hidden ? "显示信息" : "隐藏信息";
+});
+// 隐藏信息
+btnToggle.onclick = () => {
+    const h = infoCard.classList.toggle('hide');
+    fullWrap.classList.toggle('panel-hidden',h);
+    btnToggle.innerText = h ? "显示信息" : "隐藏信息";
 }
+tipBanner.onclick = () => {tipBanner.classList.add('hide');clearTimeout(tipTimer);}
 </script>
 </body>
 </html>
