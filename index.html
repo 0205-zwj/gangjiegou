@@ -29,18 +29,49 @@
         }
         .tool-btn:hover{background:rgba(0,0,0,0.65);}
 
-        /* 全屏模式样式 */
+        /* 全屏模式基础 */
         .full-wrap:fullscreen{
             background:#000;
             padding:12px;
         }
         .full-wrap:fullscreen .model-container{
-            height:calc(100vh - 220px);
+            height:calc(100vh - 240px);
             border-radius:6px;
         }
         .full-wrap:fullscreen .info-card{
-            max-width:420px;
+            max-width:440px;
             margin:10px auto 0;
+        }
+        /* ========== 关键：用户手动把手机物理横过来之后的布局 ========== */
+        @media screen and (orientation: landscape){
+            .full-wrap:fullscreen{
+                display:flex;
+                gap:12px;
+                align-items:stretch;
+            }
+            .full-wrap:fullscreen .model-container{
+                height:100%;
+                flex:1;
+            }
+            .full-wrap:fullscreen .info-card{
+                max-width:320px;
+                margin:0;
+                flex-shrink:0;
+            }
+        }
+
+        .full-tip{
+            position:absolute;
+            left:50%;
+            transform:translateX(-50%);
+            top:44px;
+            z-index:21;
+            color:#fff;
+            font-size:12px;
+            background:rgba(0,0,0,0.4);
+            padding:4px 10px;
+            border-radius:12px;
+            white-space:nowrap;
         }
 
         /* 加载遮罩层 */
@@ -68,8 +99,8 @@
     <h2>中铁装配｜钢结构构件信息</h2>
     <p>CHINA RAILWAY ASSEMBLY</p>
 </div>
-
 <div class="full-wrap" id="fullWrap">
+    <div class="full-tip hide" id="fullTip">💡建议将手机横向握持获得更好3D浏览效果</div>
     <div class="model-container">
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="1" camera-controls interaction-prompt="auto" ar></model-viewer>
         <!-- 工具栏按钮 -->
@@ -90,7 +121,6 @@
             <p>3D模型加载失败，请检查网络后刷新</p>
         </div>
     </div>
-
     <div class="info-card" id="infoCard">
         <h3>构件基本信息</h3>
         <div class="info-item"><div class="label">构件编号</div><div class="value"><span id="partId">-</span></div></div>
@@ -103,9 +133,7 @@
         <div class="info-item"><div class="label">数量</div><div class="value"><span id="quantity">-</span></div></div>
     </div>
 </div>
-
 <p class="tip">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰</p>
-
 <script src="data.js"></script>
 <script>
 const urlParams = new URLSearchParams(window.location.search);
@@ -121,17 +149,16 @@ const btnPanelToggle = document.getElementById('btnPanelToggle');
 const btnAutoRotate = document.getElementById('btnAutoRotate');
 const btnResetCam = document.getElementById('btnResetCam');
 const infoCard = document.getElementById('infoCard');
+const fullTip = document.getElementById('fullTip');
 
 let autoRotateState = false;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 
 if (id && window.partData && window.partData[id]) {
     const d = window.partData[id];
-    //填充信息
     fields.forEach(f => {
         if (document.getElementById(f) && d[f]) document.getElementById(f).innerText = d[f];
     });
-
     viewer.src = d.glbUrl;
 
     viewer.addEventListener('progress', (e) => {
@@ -158,23 +185,24 @@ btnFull.addEventListener('click',async ()=>{
         if(!document.fullscreenElement){
             await fullWrap.requestFullscreen();
             btnPanelToggle.classList.remove('hide');
+            fullTip.classList.remove('hide');
             btnFull.innerText="⤢退出全屏";
         }else{
             await document.exitFullscreen();
-            btnPanelToggle.classList.add('hide');
-            btnFull.innerText="⛶全屏";
-            infoCard.classList.remove('hide');
         }
     }catch(e){console.warn("全屏异常",e)}
 })
+
 // ESC退出全屏监听
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
         btnPanelToggle.classList.add('hide');
+        fullTip.classList.add('hide');
         btnFull.innerText="⛶全屏";
         infoCard.classList.remove('hide');
     }
 })
+
 // 全屏模式切换信息面板显示隐藏
 btnPanelToggle.addEventListener('click',()=>{
     if(infoCard.classList.contains('hide')){
@@ -185,12 +213,14 @@ btnPanelToggle.addEventListener('click',()=>{
         btnPanelToggle.innerText="显示信息";
     }
 })
+
 // 自动旋转开关
 btnAutoRotate.addEventListener('click',()=>{
     autoRotateState = !autoRotateState;
     viewer.autoRotate = autoRotateState;
     btnAutoRotate.innerText = autoRotateState ? "自动旋转 开":"自动旋转 关";
 })
+
 // 重置相机视角
 btnResetCam.addEventListener('click',()=>{viewer.cameraOrbit = "0deg 75deg 105%";})
 </script>
