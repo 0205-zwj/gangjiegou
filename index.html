@@ -6,8 +6,6 @@
     <title>中铁装配 钢结构构件信息</title>
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <!-- 预加载模型文件，提前开始下载，加快加载速度 -->
-    <link rel="preload" as="fetch" id="modelPreload" crossorigin="anonymous">
     <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" onerror="const s=document.createElement('script');s.type='module';s.src='https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js';document.head.appendChild(s);"></script>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -60,8 +58,9 @@
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
         .toolbar{
-            position:absolute;top:14px;right:14px;z-index:20;
+            position:absolute;top:16px;right:12px;z-index:20;
             display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;
+            max-width:70%;
         }
         .btn{
             background:rgba(255,255,255,.65);
@@ -119,8 +118,8 @@
         }
         .toast.show{opacity:1;}
 
-        /* 顶部细进度条，固定在模型窗口最上方 */
-        .progress{position:absolute;top:0;left:0;width:100%;height:6px;background:rgba(160,200,240,.3);z-index:11;overflow:hidden;}
+        .progress{position:absolute;top:0;left:0;width:100%;height:6px;background:rgba(160,200,240,.3);z-index:11;overflow:hidden;transition:opacity .3s;}
+        .progress.done{opacity:0;}
         .bar{height:100%;width:0%;background:linear-gradient(90deg,#5b8def,#2563a8);transition:width .15s;}
         .loading{
             position:absolute;top:0;left:0;width:100%;height:100%;
@@ -170,7 +169,6 @@
 <div class="full-wrap" id="fullWrap">
     <div class="tip-banner hide" id="tipBanner">💡微信内点右上角「在浏览器打开」可横屏查看</div>
     <div class="model-container">
-        <!-- 顶部细进度条 -->
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
         <div class="toolbar">
@@ -221,10 +219,6 @@ if(id && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
     
-    // 提前设置模型预加载地址，浏览器一打开就开始下载模型
-    document.getElementById('modelPreload').href = d.glbUrl;
-    
-    // 平滑模拟进度：从0慢慢涨到90%，等真实加载完再跳100%
     let fakeProgress = 0;
     progressTimer = setInterval(() => {
         if(fakeProgress < 90){
@@ -245,7 +239,13 @@ if(id && partData[id]){
         clearInterval(progressTimer);
         bar.style.width = '100%';
         percent.innerText = '100%';
-        setTimeout(()=>loading.style.display = 'none', 200);
+        // 模型默认位置往下移，不被顶部按钮挡住
+        viewer.cameraTarget = "0m 0m 0m";
+        setTimeout(()=>{
+            loading.style.display = 'none';
+            // 加载完隐藏顶部进度条
+            document.querySelector('.progress').classList.add('done');
+        }, 200);
     });
     viewer.addEventListener('error', () => {
         clearInterval(progressTimer);
