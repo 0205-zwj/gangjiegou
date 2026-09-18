@@ -6,6 +6,8 @@
     <title>中铁装配 钢结构构件信息</title>
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <!-- 预加载模型文件，提前开始下载，加快加载速度 -->
+    <link rel="preload" as="fetch" id="modelPreload" crossorigin="anonymous">
     <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" onerror="const s=document.createElement('script');s.type='module';s.src='https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js';document.head.appendChild(s);"></script>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -19,7 +21,6 @@
         }
         @keyframes fadeIn {from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-        /* 增强柔光光晕 */
         .glow {
             position:fixed;width:500px;height:500px;border-radius:50%;
             background:radial-gradient(circle,rgba(140,120,255,.25) 0%,rgba(90,150,255,.15) 40%,transparent 70%);
@@ -27,7 +28,6 @@
             opacity:0;transition:opacity .3s ease;will-change:transform;
         }
 
-        /* 统一淡蓝毛玻璃头部 */
         .header {
             position:relative;z-index:2;
             background:rgba(220,235,250,.7);
@@ -119,24 +119,24 @@
         }
         .toast.show{opacity:1;}
 
+        /* 顶部细进度条，固定在模型窗口最上方 */
+        .progress{position:absolute;top:0;left:0;width:100%;height:6px;background:rgba(160,200,240,.3);z-index:11;overflow:hidden;}
+        .bar{height:100%;width:0%;background:linear-gradient(90deg,#5b8def,#2563a8);transition:width .15s;}
         .loading{
             position:absolute;top:0;left:0;width:100%;height:100%;
-            background:rgba(228,237,247,.88);backdrop-filter:blur(20px);
+            background:rgba(228,237,247,.7);backdrop-filter:blur(16px);
             display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;
         }
         .spinner{
-            width:50px;height:50px;border:5px solid rgba(160,200,240,.4);
+            width:46px;height:46px;border:5px solid rgba(160,200,240,.4);
             border-top:5px solid #2563a8;border-radius:50%;
             animation:spin 1s linear infinite;
         }
-        .progress{width:80%;height:10px;background:rgba(160,200,240,.5);border-radius:5px;margin-top:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.9);}
-        .bar{height:100%;width:0%;background:linear-gradient(90deg,#5b8def,#2563a8);transition:width .2s;}
-        .loading-text{font-size:15px;color:#2563a8;margin-top:16px;font-weight:500;}
-        .progress-percent{font-size:24px;font-weight:600;color:#2563a8;margin-top:6px;}
+        .loading-text{font-size:14px;color:#2563a8;margin-top:16px;font-weight:500;}
+        .progress-percent{font-size:22px;font-weight:600;color:#2563a8;margin-top:6px;}
         @keyframes spin{to{transform:rotate(360deg)}}
         .error{display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,.92);flex-direction:column;align-items:center;justify-content:center;z-index:10;color:#557;}
 
-        /* 统一淡蓝毛玻璃信息卡片 */
         .info-card{
             background:rgba(220,235,250,.7);
             backdrop-filter:blur(36px) saturate(220%);
@@ -170,6 +170,8 @@
 <div class="full-wrap" id="fullWrap">
     <div class="tip-banner hide" id="tipBanner">💡微信内点右上角「在浏览器打开」可横屏查看</div>
     <div class="model-container">
+        <!-- 顶部细进度条 -->
+        <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
         <div class="toolbar">
             <button class="btn" id="btnRotate">自动旋转</button>
@@ -180,7 +182,6 @@
         <button class="snap" id="btnSnap">📷</button>
         <div class="loading" id="loading">
             <div class="spinner"></div>
-            <div class="progress"><div class="bar" id="bar"></div></div>
             <div class="loading-text">正在加载3D模型</div>
             <div class="progress-percent" id="percent">0%</div>
         </div>
@@ -213,26 +214,41 @@ error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnTogg
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
 glow = $('#glow'), btnSnap = $('#btnSnap'), toast = $('#toast');
 
-let rotate = false, tipTimer = null, retryCount = 0;
+let rotate = false, tipTimer = null, retryCount = 0, progressTimer = null;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 
 if(id && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
+    
+    // 提前设置模型预加载地址，浏览器一打开就开始下载模型
+    document.getElementById('modelPreload').href = d.glbUrl;
+    
+    // 平滑模拟进度：从0慢慢涨到90%，等真实加载完再跳100%
+    let fakeProgress = 0;
+    progressTimer = setInterval(() => {
+        if(fakeProgress < 90){
+            fakeProgress += Math.random()*8 + 2;
+            if(fakeProgress > 90) fakeProgress = 90;
+            bar.style.width = fakeProgress + '%';
+            percent.innerText = Math.round(fakeProgress) + '%';
+        }
+    }, 150);
+
     function loadModel(){
         viewer.src = d.glbUrl;
         viewer.autoRotateSpeed = 3;
     }
     loadModel();
-    viewer.addEventListener('progress', e => {
-        if(e.total){
-            const p = Math.round(e.loaded/e.total*100);
-            bar.style.width = p+'%';
-            percent.innerText = p+'%';
-        }
+
+    viewer.addEventListener('load', () => {
+        clearInterval(progressTimer);
+        bar.style.width = '100%';
+        percent.innerText = '100%';
+        setTimeout(()=>loading.style.display = 'none', 200);
     });
-    viewer.addEventListener('load', () => loading.style.display = 'none');
     viewer.addEventListener('error', () => {
+        clearInterval(progressTimer);
         if(retryCount < 1){retryCount++; setTimeout(loadModel, 1000);}
         else {loading.style.display='none'; error.style.display='flex';}
     });
