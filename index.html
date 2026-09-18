@@ -52,12 +52,16 @@
             width:100%;height:100%;
             --poster-color:#e8f2fc;
             touch-action:pan-y;
-            interpolation-decay:0.1;
+            interpolation-decay:0.05;
             min-image-width:512;
+            camera-orbit:0deg 75deg auto;
+            camera-target:0m 0m 0m;
+            field-of-view:30deg;
+            min-field-of-view:15deg;
+            max-field-of-view:70deg;
         }
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
-        /* 右边竖排图标按钮，不挡模型 */
         .toolbar{
             position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:20;
             display:flex;flex-direction:column;gap:10px;align-items:center;
@@ -75,18 +79,23 @@
         .btn:active{transform:scale(.92);}
         .btn.active{background:#2563a8;color:#fff;box-shadow:0 6px 20px rgba(37,99,168,.4);}
 
+        /* 全屏状态：信息面板做窄，模型更大 */
         .full-wrap:fullscreen{
             background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
-            padding:16px;display:flex;flex-direction:column;
+            padding:16px;display:flex;flex-direction:column;gap:12px;
         }
         .full-wrap:fullscreen .model-container{
             flex:1;height:auto;background:rgba(220,235,250,.75);border-radius:20px;
         }
-        .full-wrap:fullscreen .info-card{max-width:480px;margin:12px auto 0;}
+        .full-wrap:fullscreen .info-card{
+            max-width:320px;margin:0 auto;padding:16px 18px;border-radius:20px;
+        }
+        .full-wrap:fullscreen .info-card .row{padding:8px 0;font-size:13px;}
+        .full-wrap:fullscreen .info-card h3{font-size:14px;margin-bottom:10px;padding-bottom:8px;}
         @media screen and (orientation:landscape){
-            .full-wrap:fullscreen{flex-direction:row;gap:14px;}
+            .full-wrap:fullscreen{flex-direction:row;gap:12px;padding:12px;}
             .full-wrap:fullscreen .model-container{flex:1;}
-            .full-wrap:fullscreen .info-card{max-width:340px;margin:0;flex-shrink:0;overflow-y:auto;}
+            .full-wrap:fullscreen .info-card{max-width:280px;margin:0;flex-shrink:0;overflow-y:auto;}
         }
         .full-wrap:fullscreen.panel-hidden .info-card{display:none;}
 
@@ -109,7 +118,7 @@
 
         .progress{position:absolute;top:0;left:0;width:100%;height:6px;background:rgba(160,200,240,.3);z-index:11;overflow:hidden;transition:opacity .3s;}
         .progress.done{opacity:0;}
-        .bar{height:100%;width:0%;background:linear-gradient(90deg,#5b8def,#2563a8);transition:width .15s;}
+        .bar{height:100%;width:0%;background:linear-gradient(90deg,#5b8def,#2563a8);transition:width .2s;}
         .loading{
             position:absolute;top:0;left:0;width:100%;height:100%;
             background:rgba(228,237,247,.7);backdrop-filter:blur(16px);
@@ -148,7 +157,7 @@
 </head>
 <body>
 <div class="glow" id="glow"></div>
-<div class="toast" id="toast">✅ 截图已保存</div>
+<div class="toast" id="toast">✅ 操作成功</div>
 
 <div class="header">
     <h2>中铁装配｜钢结构构件信息</h2>
@@ -160,13 +169,13 @@
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
-        <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnReset" title="重置视角">🎯</button>
-            <button class="btn" id="btnFull" title="全屏">⛶</button>
+            <button class="btn" id="btnFull" title="整页全屏">⛶</button>
             <button class="btn" id="btnModelFull" title="模型占满全屏">🖥️</button>
             <button class="btn" id="btnSwitch" title="切换构件">🔀</button>
+            <button class="btn hide" id="btnToggle" title="隐藏/显示信息">ℹ️</button>
         </div>
         <div class="loading" id="loading">
             <div class="spinner"></div>
@@ -200,44 +209,38 @@ const id = new URLSearchParams(location.search).get('id');
 const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), percent = $('#percent'),
 error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnModelFull = $('#btnModelFull'),
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
-glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast');
+glow = $('#glow'), btnSwitch = $('#btnSwitch'), btnToggle = $('#btnToggle'), toast = $('#toast');
 
-let rotate = false, tipTimer = null, retryCount = 0, progressTimer = null;
+let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 
 if(id && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
-    
-    let fakeProgress = 0;
-    progressTimer = setInterval(() => {
-        if(fakeProgress < 90){
-            fakeProgress += Math.random()*8 + 2;
-            if(fakeProgress > 90) fakeProgress = 90;
-            bar.style.width = fakeProgress + '%';
-            percent.innerText = Math.round(fakeProgress) + '%';
-        }
-    }, 150);
 
     function loadModel(){
         viewer.src = d.glbUrl;
-        viewer.autoRotateSpeed = 3;
+        viewer.autoRotateSpeed = 2.5;
     }
     loadModel();
 
+    // 真实加载进度，不再无脑假涨
+    viewer.addEventListener('progress', e => {
+        if(e.total){
+            const p = Math.round(e.loaded/e.total*100);
+            bar.style.width = p + '%';
+            percent.innerText = p + '%';
+        }
+    });
     viewer.addEventListener('load', () => {
-        clearInterval(progressTimer);
         bar.style.width = '100%';
         percent.innerText = '100%';
-        // 模型居中显示，不被右边按钮挡住
-        viewer.cameraTarget = "0m 0m 0m";
         setTimeout(()=>{
             loading.style.display = 'none';
             document.querySelector('.progress').classList.add('done');
         }, 200);
     });
     viewer.addEventListener('error', () => {
-        clearInterval(progressTimer);
         if(retryCount < 1){retryCount++; setTimeout(loadModel, 1000);}
         else {loading.style.display='none'; error.style.display='flex';}
     });
@@ -247,7 +250,7 @@ if(id && partData[id]){
     loading.style.display = 'none';
 }
 
-// 一键模型占满全屏
+// 一键模型占满全屏，背景和主页统一
 btnModelFull.onclick = async () => {
     try{
         await viewer.requestFullscreen();
@@ -274,22 +277,27 @@ btnRotate.onclick = () => {
     rotate = !rotate; viewer.autoRotate = rotate;
     btnRotate.classList.toggle('active',rotate);
 }
-btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg 105%"; viewer.cameraTarget = "auto";}
+btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m";}
 btnFull.onclick = async () => {
     try{
         if(!document.fullscreenElement){
             await fullWrap.requestFullscreen();
-            tipBanner.classList.remove('hide');
+            btnToggle.classList.remove('hide'); tipBanner.classList.remove('hide');
             tipTimer = setTimeout(()=>tipBanner.classList.add('hide'),5000);
         }else document.exitFullscreen();
     }catch(e){}
 }
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
-        tipBanner.classList.add('hide');
+        btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
+        fullWrap.classList.remove('panel-hidden'); infoCard.classList.remove('hide');
         clearTimeout(tipTimer);
     }
 });
+btnToggle.onclick = () => {
+    const h = infoCard.classList.toggle('hide');
+    fullWrap.classList.toggle('panel-hidden',h);
+}
 tipBanner.onclick = () => {tipBanner.classList.add('hide');clearTimeout(tipTimer);}
 </script>
 </body>
