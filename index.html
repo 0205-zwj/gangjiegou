@@ -63,9 +63,10 @@
             polar-min:0deg;
             polar-max:180deg;
         }
-        // 模型全屏时背景和主页统一，不是黑色
-        model-viewer:fullscreen {
-            background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
+        /* 模型全屏时背景和主页统一淡蓝磨砂，不是黑色 */
+        model-viewer:fullscreen, model-viewer:-webkit-full-screen {
+            background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%) !important;
+            --poster-color:#e8f2fc;
         }
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
@@ -183,10 +184,10 @@
 </div>
 
 <div class="full-wrap" id="fullWrap">
-    <div class="tip-banner hide" id="tipBanner">💡微信内点右上角「在浏览器打开」可横屏查看</div>
+    <div class="tip-banner hide" id="tipBanner">💡竖屏横屏都可查看，拖动旋转360度看模型</div>
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
+        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto" polar-min="0deg" polar-max="180deg" min-field-of-view="5deg" max-field-of-view="80deg"></model-viewer>
         <!-- 模型全屏退出按钮，做大更明显 -->
         <button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">✕</button>
         <!-- 右边竖排图标按钮 -->
@@ -304,6 +305,15 @@ btnRotate.onclick = () => {
     btnRotate.classList.toggle('active',rotate);
 }
 btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m";}
+// 双击模型任意位置，以该点为中心旋转放大
+viewer.addEventListener('dblclick', (e) => {
+    const p = e.intersectionPoint;
+    if(p){
+        viewer.cameraTarget = `${p.x}m ${p.y}m ${p.z}m`;
+        toast.innerText = "已定位到该点，可围绕该点旋转放大";
+        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
+    }
+});
 btnFull.onclick = async () => {
     try{
         if(!document.fullscreenElement){
