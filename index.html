@@ -79,7 +79,6 @@
         .btn:active{transform:scale(.92);}
         .btn.active{background:#2563a8;color:#fff;box-shadow:0 6px 20px rgba(37,99,168,.4);}
 
-        /* 全屏状态：信息面板做窄，模型更大 */
         .full-wrap:fullscreen{
             background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
             padding:16px;display:flex;flex-direction:column;gap:12px;
@@ -169,6 +168,9 @@
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
+        <!-- 模型全屏退出按钮 -->
+        <button class="btn hide" id="btnExitFull" style="position:absolute;top:16px;right:16px;z-index:30;" title="退出全屏">✕</button>
+        <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnReset" title="重置视角">🎯</button>
@@ -209,7 +211,7 @@ const id = new URLSearchParams(location.search).get('id');
 const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), percent = $('#percent'),
 error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnModelFull = $('#btnModelFull'),
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
-glow = $('#glow'), btnSwitch = $('#btnSwitch'), btnToggle = $('#btnToggle'), toast = $('#toast');
+glow = $('#glow'), btnSwitch = $('#btnSwitch'), btnToggle = $('#btnToggle'), btnExitFull = $('#btnExitFull'), toast = $('#toast');
 
 let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
@@ -224,7 +226,6 @@ if(id && partData[id]){
     }
     loadModel();
 
-    // 真实加载进度，不再无脑假涨
     viewer.addEventListener('progress', e => {
         if(e.total){
             const p = Math.round(e.loaded/e.total*100);
@@ -250,13 +251,19 @@ if(id && partData[id]){
     loading.style.display = 'none';
 }
 
-// 一键模型占满全屏，背景和主页统一
+// 一键模型占满全屏
 btnModelFull.onclick = async () => {
     try{
         await viewer.requestFullscreen();
+        btnExitFull.classList.remove('hide');
         toast.innerText = "模型已占满全屏";
         toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
     }catch(e){}
+}
+// 模型全屏退出按钮
+btnExitFull.onclick = () => {
+    document.exitFullscreen();
+    btnExitFull.classList.add('hide');
 }
 // 切换构件
 btnSwitch.onclick = () => {
@@ -290,6 +297,7 @@ btnFull.onclick = async () => {
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
         btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
+        btnExitFull.classList.add('hide');
         fullWrap.classList.remove('panel-hidden'); infoCard.classList.remove('hide');
         clearTimeout(tipTimer);
     }
