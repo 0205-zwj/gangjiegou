@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>中铁装配 钢结构构件信息</title>
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" onerror="const s=document.createElement('script');s.type='module';s.src='https://cdn.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js';document.head.appendChild(s);"></script>
+    <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin>
+    <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" onerror="const s=document.createElement('script');s.type='module';s.src='https://gcore.jsdelivr.net/npm/@google/model-viewer/dist/model-viewer.min.js';document.head.appendChild(s);"></script>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
         html,body{height:100%;}
@@ -40,7 +40,7 @@
 
         .full-wrap {position:relative;z-index:2;width:100%;}
         .model-container {
-            position:relative;width:100%;height:420px;
+            position:relative;width:100%;height:440px;
             background:rgba(220,235,250,.7);
             backdrop-filter:blur(36px) saturate(220%);
             border-radius:26px;overflow:hidden;
@@ -57,34 +57,23 @@
         }
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
 
+        /* 右边竖排图标按钮，不挡模型 */
         .toolbar{
-            position:absolute;top:16px;right:12px;z-index:20;
-            display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;
-            max-width:70%;
+            position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:20;
+            display:flex;flex-direction:column;gap:10px;align-items:center;
         }
         .btn{
+            width:42px;height:42px;border-radius:50%;
             background:rgba(255,255,255,.65);
             backdrop-filter:blur(24px) saturate(220%);
             color:#2563a8;border:1px solid rgba(255,255,255,.9);
-            border-radius:26px;padding:8px 16px;font-size:12px;cursor:pointer;
+            font-size:18px;cursor:pointer;
             box-shadow:0 4px 14px rgba(50,100,180,.12);
             transition:all .18s cubic-bezier(.4,0,.2,1);will-change:transform;
-        }
-        .btn:active{transform:scale(.94);}
-        .btn.active{background:#2563a8;color:#fff;box-shadow:0 6px 20px rgba(37,99,168,.4);}
-
-        .snap{
-            position:absolute;bottom:18px;right:18px;z-index:20;
-            width:46px;height:46px;border-radius:50%;
-            background:rgba(255,255,255,.7);
-            backdrop-filter:blur(24px) saturate(220%);
-            border:1px solid rgba(255,255,255,.9);
-            font-size:19px;cursor:pointer;
-            box-shadow:0 8px 24px rgba(50,100,180,.2);
             display:flex;align-items:center;justify-content:center;
-            transition:all .18s cubic-bezier(.4,0,.2,1);will-change:transform;
         }
-        .snap:active{transform:scale(.9);}
+        .btn:active{transform:scale(.92);}
+        .btn.active{background:#2563a8;color:#fff;box-shadow:0 6px 20px rgba(37,99,168,.4);}
 
         .full-wrap:fullscreen{
             background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
@@ -103,7 +92,7 @@
 
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%);
-            top:56px;z-index:21;color:#2563a8;font-size:12px;
+            top:20px;z-index:21;color:#2563a8;font-size:12px;
             background:rgba(255,255,255,.88);backdrop-filter:blur(24px);
             padding:8px 18px;border-radius:26px;white-space:nowrap;
             box-shadow:0 8px 24px rgba(50,100,180,.18);transition:opacity .3s;
@@ -171,13 +160,14 @@
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto"></model-viewer>
+        <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
-            <button class="btn" id="btnRotate">自动旋转</button>
-            <button class="btn" id="btnReset">重置视角</button>
-            <button class="btn" id="btnFull">⛶全屏</button>
-            <button class="btn hide" id="btnToggle">隐藏信息</button>
+            <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
+            <button class="btn" id="btnReset" title="重置视角">🎯</button>
+            <button class="btn" id="btnFull" title="全屏">⛶</button>
+            <button class="btn" id="btnModelFull" title="模型占满全屏">🖥️</button>
+            <button class="btn" id="btnSwitch" title="切换构件">🔀</button>
         </div>
-        <button class="snap" id="btnSnap">📷</button>
         <div class="loading" id="loading">
             <div class="spinner"></div>
             <div class="loading-text">正在加载3D模型</div>
@@ -208,9 +198,9 @@
 const $ = s => document.querySelector(s);
 const id = new URLSearchParams(location.search).get('id');
 const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), percent = $('#percent'),
-error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnToggle = $('#btnToggle'),
+error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnModelFull = $('#btnModelFull'),
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
-glow = $('#glow'), btnSnap = $('#btnSnap'), toast = $('#toast');
+glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast');
 
 let rotate = false, tipTimer = null, retryCount = 0, progressTimer = null;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
@@ -239,11 +229,10 @@ if(id && partData[id]){
         clearInterval(progressTimer);
         bar.style.width = '100%';
         percent.innerText = '100%';
-        // 模型默认位置往下移，不被顶部按钮挡住
+        // 模型居中显示，不被右边按钮挡住
         viewer.cameraTarget = "0m 0m 0m";
         setTimeout(()=>{
             loading.style.display = 'none';
-            // 加载完隐藏顶部进度条
             document.querySelector('.progress').classList.add('done');
         }, 200);
     });
@@ -258,15 +247,22 @@ if(id && partData[id]){
     loading.style.display = 'none';
 }
 
-btnSnap.onclick = async () => {
+// 一键模型占满全屏
+btnModelFull.onclick = async () => {
     try{
-        const blob = await viewer.toBlob({imageType:'png',quality:.95});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = `构件${id}_模型视图.png`; a.click();
-        URL.revokeObjectURL(url);
-        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1800);
-    }catch(e){alert('截图失败，请手动截屏');}
+        await viewer.requestFullscreen();
+        toast.innerText = "模型已占满全屏";
+        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
+    }catch(e){}
+}
+// 切换构件
+btnSwitch.onclick = () => {
+    const newId = prompt("请输入要查看的构件编号：", "2");
+    if(newId && partData[newId]){
+        location.href = location.pathname + "?id=" + newId;
+    }else if(newId){
+        alert("未找到该构件编号");
+    }
 }
 
 function moveGlow(x,y){glow.style.left=x+'px';glow.style.top=y+'px';glow.style.opacity='1';}
@@ -277,31 +273,23 @@ document.addEventListener('mouseleave',()=>glow.style.opacity='0');
 btnRotate.onclick = () => {
     rotate = !rotate; viewer.autoRotate = rotate;
     btnRotate.classList.toggle('active',rotate);
-    btnRotate.innerText = rotate ? "旋转中" : "自动旋转";
 }
 btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg 105%"; viewer.cameraTarget = "auto";}
 btnFull.onclick = async () => {
     try{
         if(!document.fullscreenElement){
             await fullWrap.requestFullscreen();
-            btnToggle.classList.remove('hide'); tipBanner.classList.remove('hide');
+            tipBanner.classList.remove('hide');
             tipTimer = setTimeout(()=>tipBanner.classList.add('hide'),5000);
-            btnFull.innerText = "⤢退出全屏";
         }else document.exitFullscreen();
     }catch(e){}
 }
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
-        btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
-        fullWrap.classList.remove('panel-hidden'); infoCard.classList.remove('hide');
-        clearTimeout(tipTimer); btnFull.innerText = "⛶全屏";
+        tipBanner.classList.add('hide');
+        clearTimeout(tipTimer);
     }
 });
-btnToggle.onclick = () => {
-    const h = infoCard.classList.toggle('hide');
-    fullWrap.classList.toggle('panel-hidden',h);
-    btnToggle.innerText = h ? "显示信息" : "隐藏信息";
-}
 tipBanner.onclick = () => {tipBanner.classList.add('hide');clearTimeout(tipTimer);}
 </script>
 </body>
