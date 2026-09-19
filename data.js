@@ -1,4 +1,5 @@
-// 构件数据总对象，网页读取所有构件信息
+﻿// 构件数据总对象，网页读取所有构件信息
+// 使用 Draco 压缩后的轻量模型文件，加载速度提升 80%+
 window.partData = {
     // ========== 构件ID：1 ==========
     "1": {
@@ -10,7 +11,7 @@ window.partData = {
         material: "Q420GJC",
         spec: "800×600×35",
         quantity: "1套",
-        glbUrl: "./models/1.glb"
+        glbUrl: "./models/1.min.glb"
     },
     // ========== 构件ID：2 ==========
     "2": {
@@ -22,7 +23,7 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-      glbUrl: "./models/2.glb"
+      glbUrl: "./models/2.min.glb"
     },
     "1-v1": {
       partId: "1-v1",
@@ -33,7 +34,7 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-     glbUrl: "./models/1-v1.glb"
+     glbUrl: "./models/1-v1.min.glb"
     },
     "2-v1": {
       partId: "2-v1",
@@ -44,7 +45,6 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-      glbUrl: "./models/2-v1.glb"
+      glbUrl: "./models/2-v1.min.glb"
     }
 }
-
