@@ -290,14 +290,14 @@
         /* 模型一键全屏：铺满无圆角 */
         .model-container.fs-model{border-radius:0;border-width:0;}
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
-        .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}        /* 模型一键全屏：背后的构件信息虚化成霜面，压淡，突出模型 */
+        .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
+        /* 模型一键全屏：构件信息清晰透在模型后面，只轻微淡化、一点点柔化 */
         .full-wrap.model-backdrop .info-card{
-            opacity:.13;
-            filter:blur(13px) saturate(.8) brightness(.98);
-            transform:scale(1.04);
-            transition:opacity .55s ease, filter .55s ease, transform .55s ease;
+            opacity:.62;
+            filter:blur(1px) saturate(.94);
+            transition:opacity .5s ease, filter .5s ease;
         }
-        .full-wrap.model-backdrop .model-container{background:rgba(229,241,252,.72);}
+        .full-wrap.model-backdrop .model-container{background:rgba(227,239,251,.4);}
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
         body.in-fs .model-container,
@@ -594,28 +594,32 @@ function toggleLandscape(){
     if(!fsState || fsState.type !== 'model') return;
     fsState.isLandscape = !fsState.isLandscape;
     const el = fsState.el;
+    /* 只动 transform（旋转+缩放），盒子始终 100vw×100vh，画布不重排、不重设，纯 GPU 合成不卡 */
+    el.style.transition = 'transform .52s ' + EASE_IN;
     el.style.transformOrigin = 'center center';
-    applyTransition(el, ['transform','width','height','left','top']);
     if(fsState.isLandscape){
-        el.style.width = '100vh'; el.style.height = '100vw';
-        el.style.left = '50%'; el.style.top = '50%';
-        el.style.transform = 'translate(-50%,-50%) rotate(90deg)';
+        const k = window.innerHeight / window.innerWidth;
+        el.style.transform = 'rotate(90deg) scale(' + k + ')';
         showToast('横屏模式');
     }else{
-        resetLandscape();
+        el.style.transform = 'none';
         showToast('竖屏模式');
     }
-    setTimeout(()=>safeResize(), 460);
 }
 function resetLandscape(immediate){
     if(!fsState) return;
     fsState.isLandscape = false;
     const el = fsState.el;
-    if(immediate){ el.style.transition = 'none'; }
-    el.style.width = '100vw'; el.style.height = '100vh';
-    el.style.left = '0px'; el.style.top = '0px';
-    el.style.transform = 'none'; el.style.transformOrigin = '0 0';
-    if(immediate){ void el.offsetHeight; el.style.transition = ''; }
+    el.style.transformOrigin = 'center center';
+    if(immediate){
+        el.style.transition = 'none';
+        el.style.transform = 'none';
+        void el.offsetHeight;
+        el.style.transition = '';
+    }else{
+        el.style.transition = 'transform .52s ' + EASE_IN;
+        el.style.transform = 'none';
+    }
 }
 
 /* 点按信息小格：触点涟漪扩散 + 该格外圈泛起光晕（仅整页全屏呈现） */
