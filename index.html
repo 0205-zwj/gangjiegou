@@ -32,7 +32,7 @@
             backdrop-filter:blur(36px) saturate(220%);
             -webkit-backdrop-filter:blur(36px) saturate(220%);
             color:#1e3a5f;padding:12px 16px;border-radius:22px;text-align:center;margin-bottom:10px;
-            box-shadow:0 8px 32px rgba(50,100,180,.12);
+            box-shadow:0 8px 32px rgba(50,100,180,.15), 0 0 24px rgba(140,180,255,.3);
             border:1px solid rgba(255,255,255,.9);
         }
         .header h2 {font-size:17px;font-weight:600;letter-spacing:.5px;}
@@ -44,7 +44,7 @@
             background:rgba(220,235,250,.7);
             backdrop-filter:blur(36px) saturate(220%);
             border-radius:26px;overflow:hidden;
-            box-shadow:0 16px 48px rgba(50,100,180,.18);
+            box-shadow:0 16px 48px rgba(50,100,180,.18), 0 0 32px rgba(140,180,255,.3);
             border:1px solid rgba(255,255,255,.9);
             will-change:height;
         }
@@ -59,7 +59,7 @@
             field-of-view:30deg;
             min-field-of-view:5deg;
             max-field-of-view:80deg;
-            // 全方位无死角旋转
+            /* 全方位无死角旋转 */
             polar-min:0deg;
             polar-max:180deg;
         }
@@ -193,7 +193,7 @@
             backdrop-filter:blur(36px) saturate(220%);
             -webkit-backdrop-filter:blur(36px) saturate(220%);
             padding:22px;border-radius:26px;margin-top:14px;
-            box-shadow:0 10px 40px rgba(50,100,180,.15);
+            box-shadow:0 10px 40px rgba(50,100,180,.15), 0 0 24px rgba(140,180,255,.3);
             border:1px solid rgba(255,255,255,.9);
         }
         .info-card h3{
@@ -319,7 +319,8 @@ btnModelFull.onclick = async () => {
         await fullWrap.requestFullscreen();
         fullWrap.classList.add('model-only-fullscreen');
         btnExitFull.classList.remove('hide');
-        toast.innerText = "模型已占满全屏，浏览器可横屏查看";
+        btnRotateScreen.classList.remove('hide');
+        toast.innerText = "模型已占满全屏，可点右下角按钮切换横竖屏";
         toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2000);
     }catch(e){}
 }
