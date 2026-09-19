@@ -51,7 +51,7 @@
         model-viewer {
             width:100%;height:100%;
             --poster-color:#e8f2fc;
-            touch-action:pan-y;
+            touch-action:none;
             interpolation-decay:0.05;
             min-image-width:512;
             camera-orbit:0deg 75deg auto;
@@ -59,7 +59,7 @@
             field-of-view:30deg;
             min-field-of-view:5deg;
             max-field-of-view:80deg;
-            // 开放360度上下左右旋转
+            // 全方位无死角旋转
             polar-min:0deg;
             polar-max:180deg;
         }
@@ -118,6 +118,17 @@
             .full-wrap:fullscreen .info-card .k{width:70px;display:block;font-size:11px;}
         }
         .full-wrap:fullscreen.panel-hidden .info-card{display:none;}
+        /* 模型一键全屏：模型占满整个屏幕，平滑过渡 */
+        .full-wrap:fullscreen.model-only-fullscreen{
+            padding:0;gap:0;
+        }
+        .full-wrap:fullscreen.model-only-fullscreen .model-container{
+            flex:1;border-radius:0;background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
+        }
+        .full-wrap:fullscreen.model-only-fullscreen .info-card,
+        .full-wrap:fullscreen.model-only-fullscreen .toolbar,
+        .full-wrap:fullscreen.model-only-fullscreen .tip-banner{display:none!important;}
+        .full-wrap{transition:all .35s cubic-bezier(.4,0,.2,1);}
 
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%);
@@ -201,8 +212,9 @@
 <body>
 <div class="glow" id="glow"></div>
 <div class="toast" id="toast">✅ 操作成功</div>
-<!-- 全屏退出按钮，body根级，任何全屏都显示 -->
-<button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">✕</button>
+<!-- 全屏控制按钮组，body根级，任何全屏都显示 -->
+<button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">↩️</button>
+<button class="btn hide" id="btnRotateScreen" style="position:fixed;bottom:24px;right:20px;z-index:999;width:48px;height:48px;font-size:20px;background:rgba(255,255,255,.9);" title="切换横竖屏">📱</button>
 
 <div class="header">
     <h2>中铁装配｜钢结构构件信息</h2>
@@ -272,7 +284,7 @@ if(id && partData[id]){
 
     function loadModel(){
         viewer.src = d.glbUrl;
-        viewer.autoRotateSpeed = 2.5;
+        viewer.autoRotateSpeed = 5;
     }
     loadModel();
 
@@ -301,19 +313,51 @@ if(id && partData[id]){
     loading.style.display = 'none';
 }
 
-// 一键模型占满全屏
+// 一键模型占满全屏：整个容器平滑缩放，退出按钮肯定显示
 btnModelFull.onclick = async () => {
     try{
-        await viewer.requestFullscreen();
+        await fullWrap.requestFullscreen();
+        fullWrap.classList.add('model-only-fullscreen');
         btnExitFull.classList.remove('hide');
-        toast.innerText = "模型已占满全屏";
-        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
+        toast.innerText = "模型已占满全屏，浏览器可横屏查看";
+        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2000);
     }catch(e){}
 }
 // 模型全屏退出按钮
 btnExitFull.onclick = () => {
     document.exitFullscreen();
     btnExitFull.classList.add('hide');
+    btnRotateScreen.classList.add('hide');
+}
+// 横竖屏切换按钮
+let isLandscape = false;
+const btnRotateScreen = $('#btnRotateScreen');
+btnRotateScreen.onclick = () => {
+    isLandscape = !isLandscape;
+    if(isLandscape){
+        viewer.style.transform = "rotate(90deg)";
+        viewer.style.width = "100vh";
+        viewer.style.height = "100vw";
+        viewer.style.position = "absolute";
+        viewer.style.top = "50%";
+        viewer.style.left = "50%";
+        viewer.style.transformOrigin = "center center";
+        viewer.style.marginTop = "-50vw";
+        viewer.style.marginLeft = "-50vh";
+        toast.innerText = "已切换为横屏";
+    }else{
+        viewer.style.transform = "";
+        viewer.style.width = "";
+        viewer.style.height = "";
+        viewer.style.position = "";
+        viewer.style.top = "";
+        viewer.style.left = "";
+        viewer.style.transformOrigin = "";
+        viewer.style.marginTop = "";
+        viewer.style.marginLeft = "";
+        toast.innerText = "已切换为竖屏";
+    }
+    toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
 }
 // 切换构件：弹出所有模型列表，直接点就切换
 const modelList = $('#modelList'), modelMask = $('#modelMask'), modelItems = $('#modelItems');
@@ -377,7 +421,8 @@ document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
         btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
         btnExitFull.classList.add('hide');
-        fullWrap.classList.remove('panel-hidden'); infoCard.classList.remove('hide');
+        fullWrap.classList.remove('panel-hidden','model-only-fullscreen');
+        infoCard.classList.remove('hide');
         clearTimeout(tipTimer);
     }
 });
