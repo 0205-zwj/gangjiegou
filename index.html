@@ -217,22 +217,23 @@
         .full-wrap.fs-page .info-card{
             flex:0 0 auto;margin-top:0;
             max-height:60vh;overflow:hidden;
-            padding:12px 18px 8px;border-radius:20px;
-            display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:0;
+            padding:12px 14px 14px;border-radius:20px;
+            display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;
             transition:opacity .4s ease, max-height .48s cubic-bezier(.22,1,.36,1),
                      padding .48s cubic-bezier(.22,1,.36,1),
                      border-width .48s ease, margin .48s ease;
         }
         .full-wrap.fs-page .info-card h3{
-            grid-column:1/-1;font-size:13px;margin-bottom:4px;padding-bottom:7px;
+            grid-column:1/-1;font-size:13px;margin-bottom:2px;padding-bottom:6px;
         }
         .full-wrap.fs-page .info-card .row{
-            padding:6px 0;font-size:12.5px;line-height:1.3;
-            border-bottom:1px solid rgba(50,100,180,.05);
+            flex-direction:column;align-items:flex-start;gap:3px;
+            padding:8px 11px;border-radius:12px;line-height:1.3;
+            background:rgba(255,255,255,.5);
+            border:1px solid rgba(255,255,255,.75);
         }
-        .full-wrap.fs-page .info-card .k{width:56px;font-size:11.5px;}
-        .full-wrap.fs-page .info-card .v{font-size:12.5px;}
-        .full-wrap.fs-page .info-card .row:nth-child(4){grid-column:1/-1;}
+        .full-wrap.fs-page .info-card .k{width:auto;font-size:10.5px;letter-spacing:.3px;}
+        .full-wrap.fs-page .info-card .v{font-size:13px;font-weight:600;width:100%;}
         .full-wrap.fs-page.info-collapsed .info-card{
             max-height:0;opacity:0;padding-top:0;padding-bottom:0;
             margin-top:0;border-width:0;pointer-events:none;
@@ -242,6 +243,11 @@
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
         .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
+        /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
+        body.in-fs .model-container,
+        body.in-fs .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        /* 进/出全屏过渡只走 transform，提升为合成层，避免重排重绘卡顿 */
+        .full-wrap.fs-anim, .model-container.fs-anim{will-change:transform;}
     </style>
 </head>
 <body>
@@ -397,33 +403,29 @@ function enterFullscreen(type){
     if(fsState) return;
     const el = type === 'model' ? modelContainer : fullWrap;
     const rect = el.getBoundingClientRect();
+    const srcRect = type === 'page' ? modelContainer.getBoundingClientRect() : rect;
+    const vw = window.innerWidth, vh = window.innerHeight;
     const saved = {
         position: el.style.position, left: el.style.left, top: el.style.top,
         width: el.style.width, height: el.style.height, zIndex: el.style.zIndex,
         borderRadius: el.style.borderRadius, transition: el.style.transition,
-        wrapZ: fullWrap.style.zIndex
+        transform: el.style.transform, transformOrigin: el.style.transformOrigin,
+        willChange: el.style.willChange, wrapZ: fullWrap.style.zIndex
     };
 
-    /* 关键：抬高整个 fullWrap 的层叠上下文，模型才不会被背景遮罩盖住 */
     fullWrap.style.zIndex = '9001';
 
     const bg = document.createElement('div');
-    bg.className = 'fs-bg';
-    document.body.appendChild(bg);
-
+    bg.className = 'fs-bg'; document.body.appendChild(bg);
     const ctrl = document.createElement('div');
-    ctrl.className = 'fs-ctrl-layer';
-    document.body.appendChild(ctrl);
-
+    ctrl.className = 'fs-ctrl-layer'; document.body.appendChild(ctrl);
     function makeBtn(cls, html, onclick){
         const b = document.createElement('div');
         b.className = 'fs-ctrl ' + cls;
         b.innerHTML = html; b.onclick = onclick;
-        ctrl.appendChild(b);
-        return b;
+        ctrl.appendChild(b); return b;
     }
     makeBtn('fs-exit', ICON_EXIT, exitFullscreen);
-
     if(type === 'model'){
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
         modelContainer.classList.add('fs-model');
@@ -433,52 +435,66 @@ function enterFullscreen(type){
             const collapsed = fullWrap.classList.toggle('info-collapsed');
             this.classList.toggle('active', collapsed);
             this.innerHTML = collapsed ? ICON_EYE_OFF : ICON_EYE;
-            setTimeout(()=>viewer.resize(), 480);
+            setTimeout(safeResize, 500);
         });
         fullWrap.classList.add('fs-page');
     }
 
-    el.style.position = 'fixed';
-    el.style.left = rect.left + 'px';
-    el.style.top = rect.top + 'px';
-    el.style.width = rect.width + 'px';
-    el.style.height = rect.height + 'px';
-    el.style.zIndex = '9002';
-    el.style.borderRadius = type === 'model' ? '26px' : '0px';
-
-    fsState = { el, type, saved, rect, bg, ctrl, isLandscape:false };
     document.body.classList.add('in-fs');
-    void el.offsetHeight;
 
-    el.style.transition = `left ${FS_MS}ms ${EASE}, top ${FS_MS}ms ${EASE}, width ${FS_MS}ms ${EASE}, height ${FS_MS}ms ${EASE}, border-radius ${FS_MS}ms ${EASE}`;
+    /* 最终布局一次性到位：fixed 铺满，画布只 resize 这一次 */
+    el.style.position = 'fixed';
+    el.style.left = '0px'; el.style.top = '0px';
+    el.style.width = '100vw'; el.style.height = '100vh';
+    el.style.zIndex = '9002';
+    el.style.transformOrigin = '0 0';
+    el.style.willChange = 'transform';
+    if(type === 'model') el.style.borderRadius = '26px';
+
+    /* Invert：用 transform 把全屏态视觉拉回起点（不触发任何重排） */
+    const sx = srcRect.width / vw, sy = srcRect.height / vh;
+    el.style.transform = 'translate(' + srcRect.left + 'px,' + srcRect.top + 'px) scale(' + sx + ',' + sy + ')';
+
+    fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false };
+    void el.offsetHeight;
+    safeResize();
+
     requestAnimationFrame(() => {
-        el.style.left = '0px'; el.style.top = '0px';
-        el.style.width = '100vw'; el.style.height = '100vh';
-        el.style.borderRadius = type === 'model' ? '0px' : '0px';
+        el.style.transition = 'transform ' + FS_MS + 'ms ' + EASE + ', border-radius ' + FS_MS + 'ms ' + EASE;
+        el.style.transform = 'translate(0px,0px) scale(1,1)';
+        if(type === 'model') el.style.borderRadius = '0px';
         bg.style.opacity = '1';
     });
-    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 120);
-    setTimeout(()=>viewer.resize(), FS_MS + 60);
+    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
+    setTimeout(()=>{ el.style.transform = 'none'; safeResize(); }, FS_MS + 60);
 }
+function safeResize(){ try{ if(typeof viewer.resize === 'function') viewer.resize(); else window.dispatchEvent(new Event('fs-nudge')); }catch(e){} }
 
 function exitFullscreen(){
     if(!fsState) return;
-    const { el, type, saved, rect, bg, ctrl } = fsState;
-    if(fsState.isLandscape){ resetLandscape(); }
+    const state = fsState;
+    const { el, type, saved, bg, ctrl } = state;
+    const srcRect = state.srcRect;
+    if(state.isLandscape){ resetLandscape(true); }
+    const vw = window.innerWidth, vh = window.innerHeight;
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.remove('show'));
     bg.style.opacity = '0';
 
-    el.style.transition = `left ${FS_MS}ms ${EASE}, top ${FS_MS}ms ${EASE}, width ${FS_MS}ms ${EASE}, height ${FS_MS}ms ${EASE}, border-radius ${FS_MS}ms ${EASE}`;
-    el.style.left = rect.left + 'px';
-    el.style.top = rect.top + 'px';
-    el.style.width = rect.width + 'px';
-    el.style.height = rect.height + 'px';
-    el.style.borderRadius = type === 'model' ? '26px' : saved.borderRadius;
-    document.body.classList.remove('in-fs');
+    /* 退出全程只动 transform（GPU 合成），不逐帧改尺寸，画布不重排、毛玻璃不重算 */
+    el.style.transition = 'transform ' + FS_MS + 'ms ' + EASE + ', border-radius ' + FS_MS + 'ms ' + EASE;
+    el.style.transformOrigin = '0 0';
+    const sx = srcRect.width / vw, sy = srcRect.height / vh;
+    requestAnimationFrame(() => {
+        el.style.transform = 'translate(' + srcRect.left + 'px,' + srcRect.top + 'px) scale(' + sx + ',' + sy + ')';
+        if(type === 'model') el.style.borderRadius = '26px';
+    });
 
     setTimeout(()=>{
         el.style.transition = saved.transition;
+        el.style.transform = saved.transform;
+        el.style.transformOrigin = saved.transformOrigin;
+        el.style.willChange = saved.willChange;
         el.style.position = saved.position;
         el.style.left = saved.left; el.style.top = saved.top;
         el.style.width = saved.width; el.style.height = saved.height;
@@ -487,45 +503,48 @@ function exitFullscreen(){
         fullWrap.style.zIndex = saved.wrapZ;
         fullWrap.classList.remove('fs-page','info-collapsed');
         modelContainer.classList.remove('fs-model');
+        document.body.classList.remove('in-fs');
         bg.remove(); ctrl.remove();
         fsState = null;
-        viewer.resize();
-    }, FS_MS);
+        safeResize();
+    }, FS_MS + 30);
 }
 
 function applyTransition(el, props){
-    el.style.transition = props.map(p => `${p} .45s ${EASE}`).join(',');
+    el.style.transition = props.map(p => p + ' .45s ' + EASE).join(',');
 }
 function toggleLandscape(){
     if(!fsState || fsState.type !== 'model') return;
     fsState.isLandscape = !fsState.isLandscape;
     const el = fsState.el;
+    el.style.transformOrigin = 'center center';
     applyTransition(el, ['transform','width','height','left','top']);
     if(fsState.isLandscape){
         el.style.width = '100vh'; el.style.height = '100vw';
         el.style.left = '50%'; el.style.top = '50%';
         el.style.transform = 'translate(-50%,-50%) rotate(90deg)';
-        el.style.transformOrigin = 'center center';
-        showToast("横屏模式");
+        showToast('横屏模式');
     }else{
         resetLandscape();
-        showToast("竖屏模式");
+        showToast('竖屏模式');
     }
-    setTimeout(()=>viewer.resize(), 460);
+    setTimeout(()=>safeResize(), 460);
 }
-function resetLandscape(){
+function resetLandscape(immediate){
     if(!fsState) return;
     fsState.isLandscape = false;
     const el = fsState.el;
+    if(immediate){ el.style.transition = 'none'; }
     el.style.width = '100vw'; el.style.height = '100vh';
     el.style.left = '0px'; el.style.top = '0px';
-    el.style.transform = ''; el.style.transformOrigin = '';
+    el.style.transform = 'none'; el.style.transformOrigin = '0 0';
+    if(immediate){ void el.offsetHeight; el.style.transition = ''; }
 }
 
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? exitFullscreen() : enterFullscreen('page');
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) exitFullscreen(); });
-window.addEventListener('resize', () => { if(fsState) viewer.resize(); });
+window.addEventListener('resize', () => { if(fsState) safeResize(); });
 </script>
 </body>
 </html>
