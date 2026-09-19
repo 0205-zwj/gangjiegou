@@ -1,11 +1,13 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>中铁装配 钢结构构件信息</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%232563a8%22/><path d=%22M50 24 L76 38 L76 64 L50 78 L24 64 L24 38 Z%22 fill=%22none%22 stroke=%22white%22 stroke-width=%225%22 stroke-linejoin=%22round%22/><path d=%22M50 24 L50 51 M24 38 L50 51 L76 38 M50 51 L50 78%22 fill=%22none%22 stroke=%22white%22 stroke-width=%225%22 stroke-linejoin=%22round%22/></svg>">
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
-    <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin>`n    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -32,7 +34,7 @@
             color:#1e3a5f;padding:14px 16px;border-radius:22px;text-align:center;margin-bottom:10px;
             box-shadow:0 8px 32px rgba(50,100,180,.12), 0 0 24px rgba(140,180,255,.25);
             border:1px solid rgba(255,255,255,.85);
-            transition:opacity .35s ease, transform .45s cubic-bezier(.22,1,.36,1);
+            transition:opacity .35s ease;
         }
         .header h2 {font-size:17px;font-weight:600;letter-spacing:.5px;}
         .header p {font-size:10px;opacity:.6;margin-top:4px;letter-spacing:2px;font-weight:400;}
@@ -63,6 +65,7 @@
         .toolbar{
             position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:20;
             display:flex;flex-direction:column;gap:10px;align-items:center;
+            transition:opacity .3s ease;
         }
         .btn{
             width:42px;height:42px;border-radius:50%;
@@ -89,7 +92,7 @@
         .tip-banner.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}
         .toast{
             position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
-            z-index:999;color:#2563a8;font-size:14px;font-weight:500;
+            z-index:9300;color:#2563a8;font-size:14px;font-weight:500;
             background:rgba(255,255,255,.92);backdrop-filter:blur(28px);
             padding:14px 28px;border-radius:26px;
             box-shadow:0 16px 48px rgba(50,100,180,.25);
@@ -98,7 +101,7 @@
         }
         .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
         .model-list{
-            position:fixed;left:0;right:0;bottom:0;z-index:99;
+            position:fixed;left:0;right:0;bottom:0;z-index:9201;
             background:rgba(238,243,249,.96);
             backdrop-filter:blur(40px) saturate(200%);
             -webkit-backdrop-filter:blur(40px) saturate(200%);
@@ -124,7 +127,7 @@
         .model-item .mid{color:#1e3a5f;font-size:13px;font-weight:600;}
         .model-item .mname{color:#6088b8;font-size:10px;margin-top:3px;line-height:1.3;}
         .model-mask{
-            position:fixed;inset:0;background:rgba(30,50,90,.2);z-index:98;
+            position:fixed;inset:0;background:rgba(30,50,90,.2);z-index:9200;
             opacity:0;pointer-events:none;transition:opacity .4s ease;
             backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
         }
@@ -173,20 +176,72 @@
         .k{width:90px;color:#6088b8;flex-shrink:0;font-weight:400;}
         .v{flex:1;color:#1e3a5f;word-break:break-all;font-weight:500;}
         .footer{text-align:center;color:#7098c8;font-size:11px;margin-top:18px;line-height:1.7;transition:opacity .3s;}
+
+        /* ===== 全屏背景遮罩 ===== */
+        .fs-bg{
+            position:fixed;inset:0;z-index:9000;pointer-events:none;
+            background:
+                radial-gradient(1200px 800px at 70% -10%, rgba(150,190,255,.35), transparent 60%),
+                radial-gradient(1000px 700px at 10% 110%, rgba(180,160,255,.28), transparent 60%),
+                linear-gradient(160deg,#eef3f9 0%,#e4edf7 50%,#e9e6f6 100%);
+            opacity:0;transition:opacity .45s ease;
+        }
+        /* ===== 全屏控制按钮层 ===== */
+        .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
-            position:absolute;width:44px;height:44px;border-radius:50%;
-            background:rgba(255,255,255,.88);backdrop-filter:blur(24px);
+            position:absolute;width:46px;height:46px;border-radius:50%;
+            background:rgba(255,255,255,.82);backdrop-filter:blur(24px) saturate(180%);
+            -webkit-backdrop-filter:blur(24px) saturate(180%);
             border:1px solid rgba(255,255,255,.9);
-            box-shadow:0 6px 20px rgba(50,100,180,.2);
+            box-shadow:0 8px 24px rgba(50,100,180,.22), 0 0 0 1px rgba(150,190,255,.2);
             display:flex;align-items:center;justify-content:center;
             cursor:pointer;color:#2563a8;pointer-events:auto;
-            transition:opacity .3s ease, transform .35s cubic-bezier(.22,1,.36,1), background .25s ease, color .25s ease;
+            opacity:0;transform:scale(.5);
+            transition:opacity .3s ease, transform .4s cubic-bezier(.34,1.56,.64,1), background .25s ease, color .25s ease;
         }
-        .fs-ctrl:active{transform:scale(.88);}
-        .fs-exit{top:16px;right:16px;}
-        .fs-rotate{bottom:20px;right:16px;}
-        .fs-eye{bottom:20px;right:16px;}
-        body.in-fs .header, body.in-fs .footer{opacity:0;pointer-events:none;}
+        .fs-ctrl.show{opacity:1;transform:scale(1);}
+        .fs-ctrl:active{transform:scale(.85);}
+        .fs-exit{top:calc(16px + env(safe-area-inset-top));right:16px;}
+        .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;}
+        .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));right:74px;}
+        .fs-ctrl.active{background:#2563a8;color:#fff;}
+
+        /* ===== 整页全屏：flex 布局，模型自适应占满 ===== */
+        .full-wrap.fs-page{
+            display:flex;flex-direction:column;gap:10px;padding:10px;
+        }
+        .full-wrap.fs-page .model-container{
+            flex:1 1 auto;height:auto!important;min-height:0;border-radius:20px;
+            box-shadow:0 20px 60px rgba(50,100,180,.22), 0 0 40px rgba(140,180,255,.3);
+        }
+        .full-wrap.fs-page .info-card{
+            flex:0 0 auto;margin-top:0;
+            max-height:60vh;overflow:hidden;
+            padding:12px 18px 8px;border-radius:20px;
+            display:grid;grid-template-columns:1fr 1fr;column-gap:18px;row-gap:0;
+            transition:opacity .4s ease, max-height .48s cubic-bezier(.22,1,.36,1),
+                     padding .48s cubic-bezier(.22,1,.36,1),
+                     border-width .48s ease, margin .48s ease;
+        }
+        .full-wrap.fs-page .info-card h3{
+            grid-column:1/-1;font-size:13px;margin-bottom:4px;padding-bottom:7px;
+        }
+        .full-wrap.fs-page .info-card .row{
+            padding:6px 0;font-size:12.5px;line-height:1.3;
+            border-bottom:1px solid rgba(50,100,180,.05);
+        }
+        .full-wrap.fs-page .info-card .k{width:56px;font-size:11.5px;}
+        .full-wrap.fs-page .info-card .v{font-size:12.5px;}
+        .full-wrap.fs-page .info-card .row:nth-child(4){grid-column:1/-1;}
+        .full-wrap.fs-page.info-collapsed .info-card{
+            max-height:0;opacity:0;padding-top:0;padding-bottom:0;
+            margin-top:0;border-width:0;pointer-events:none;
+        }
+        /* 模型一键全屏：铺满无圆角 */
+        .model-container.fs-model{border-radius:0;border-width:0;}
+        .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
+        .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
+        body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
     </style>
 </head>
 <body>
@@ -249,7 +304,7 @@ btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'
 glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast'), modelContainer = $('#modelContainer');
 let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
-if(id && partData[id]){
+if(id && window.partData && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
     viewer.src = d.glbUrl;
@@ -328,10 +383,16 @@ btnSwitch.onclick = () => {
 modelMask.onclick = () => { modelList.classList.remove('show'); modelMask.classList.remove('show'); };
 tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tipTimer); };
 
-/* FLIP 全屏 - 纯CSS不移动DOM */
+/* ============ FLIP 平滑全屏（纯CSS，不移动DOM，修复层叠上下文） ============ */
 const EASE = 'cubic-bezier(.22,1,.36,1)';
 const FS_MS = 480;
 let fsState = null;
+
+const ICON_EXIT = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
+const ICON_ROTATE = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="12" height="14" rx="1.5"/><rect x="10" y="3" width="12" height="14" rx="1.5" opacity="0.45"/></svg>';
+const ICON_EYE = '<svg class="ic-eye" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
 function enterFullscreen(type){
     if(fsState) return;
     const el = type === 'model' ? modelContainer : fullWrap;
@@ -339,88 +400,107 @@ function enterFullscreen(type){
     const saved = {
         position: el.style.position, left: el.style.left, top: el.style.top,
         width: el.style.width, height: el.style.height, zIndex: el.style.zIndex,
-        borderRadius: el.style.borderRadius, transition: el.style.transition
+        borderRadius: el.style.borderRadius, transition: el.style.transition,
+        wrapZ: fullWrap.style.zIndex
     };
-    el.style.position = 'fixed';
-    el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
-    el.style.width = rect.width + 'px'; el.style.height = rect.height + 'px';
-    el.style.zIndex = '100000'; el.style.borderRadius = '22px';
-    const bgLayer = document.createElement('div');
-    bgLayer.style.cssText = 'position:fixed;inset:0;z-index:99999;background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 50%,#edeaf5 100%);opacity:0;transition:opacity .4s ease;';
-    document.body.appendChild(bgLayer);
-    const ctrlLayer = document.createElement('div');
-    ctrlLayer.style.cssText = 'position:fixed;inset:0;z-index:100001;pointer-events:none;';
-    document.body.appendChild(ctrlLayer);
+
+    /* 关键：抬高整个 fullWrap 的层叠上下文，模型才不会被背景遮罩盖住 */
+    fullWrap.style.zIndex = '9001';
+
+    const bg = document.createElement('div');
+    bg.className = 'fs-bg';
+    document.body.appendChild(bg);
+
+    const ctrl = document.createElement('div');
+    ctrl.className = 'fs-ctrl-layer';
+    document.body.appendChild(ctrl);
+
     function makeBtn(cls, html, onclick){
         const b = document.createElement('div');
-        b.className = 'fs-ctrl ' + cls; b.innerHTML = html; b.onclick = onclick;
-        b.style.opacity = '0'; b.style.transform = 'scale(.5)';
-        ctrlLayer.appendChild(b); return b;
+        b.className = 'fs-ctrl ' + cls;
+        b.innerHTML = html; b.onclick = onclick;
+        ctrl.appendChild(b);
+        return b;
     }
-    makeBtn('fs-exit','<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>', exitFullscreen);
+    makeBtn('fs-exit', ICON_EXIT, exitFullscreen);
+
     if(type === 'model'){
-        makeBtn('fs-rotate','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="12" height="14" rx="1.5"/><rect x="10" y="3" width="12" height="14" rx="1.5" opacity="0.45"/></svg>', toggleLandscape);
+        makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
+        modelContainer.classList.add('fs-model');
     }
     if(type === 'page'){
-        let infoHidden = false;
-        makeBtn('fs-eye','<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
-            function(){
-                infoHidden = !infoHidden;
-                infoCard.style.transition = 'opacity .4s ease, transform .4s cubic-bezier(.22,1,.36,1)';
-                if(infoHidden){
-                    infoCard.style.opacity = '0'; infoCard.style.transform = 'translateY(30px)'; infoCard.style.pointerEvents = 'none';
-                    this.style.background = 'rgba(37,99,168,.9)'; this.style.color = '#fff';
-                }else{
-                    infoCard.style.opacity = '1'; infoCard.style.transform = 'translateY(0)'; infoCard.style.pointerEvents = 'auto';
-                    this.style.background = ''; this.style.color = '';
-                }
-            });
+        const eye = makeBtn('fs-eye', ICON_EYE, function(){
+            const collapsed = fullWrap.classList.toggle('info-collapsed');
+            this.classList.toggle('active', collapsed);
+            this.innerHTML = collapsed ? ICON_EYE_OFF : ICON_EYE;
+            setTimeout(()=>viewer.resize(), 480);
+        });
+        fullWrap.classList.add('fs-page');
     }
-    fsState = { el, saved, rect, type, bgLayer, ctrlLayer, isLandscape: false };
+
+    el.style.position = 'fixed';
+    el.style.left = rect.left + 'px';
+    el.style.top = rect.top + 'px';
+    el.style.width = rect.width + 'px';
+    el.style.height = rect.height + 'px';
+    el.style.zIndex = '9002';
+    el.style.borderRadius = type === 'model' ? '26px' : '0px';
+
+    fsState = { el, type, saved, rect, bg, ctrl, isLandscape:false };
     document.body.classList.add('in-fs');
     void el.offsetHeight;
+
     el.style.transition = `left ${FS_MS}ms ${EASE}, top ${FS_MS}ms ${EASE}, width ${FS_MS}ms ${EASE}, height ${FS_MS}ms ${EASE}, border-radius ${FS_MS}ms ${EASE}`;
     requestAnimationFrame(() => {
         el.style.left = '0px'; el.style.top = '0px';
         el.style.width = '100vw'; el.style.height = '100vh';
-        el.style.borderRadius = '0px';
-        bgLayer.style.opacity = '1';
+        el.style.borderRadius = type === 'model' ? '0px' : '0px';
+        bg.style.opacity = '1';
     });
-    setTimeout(() => {
-        ctrlLayer.querySelectorAll('.fs-ctrl').forEach(b => { b.style.opacity = '1'; b.style.transform = 'scale(1)'; });
-    }, 150);
-    setTimeout(() => viewer.resize(), FS_MS + 50);
+    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 120);
+    setTimeout(()=>viewer.resize(), FS_MS + 60);
 }
+
 function exitFullscreen(){
     if(!fsState) return;
-    const { el, saved, rect, bgLayer, ctrlLayer } = fsState;
-    if(fsState.isLandscape){
-        fsState.isLandscape = false;
-        el.style.transform = ''; el.style.transformOrigin = '';
-        el.style.width = '100vw'; el.style.height = '100vh';
-        el.style.top = '0px'; el.style.left = '0px';
-    }
-    ctrlLayer.querySelectorAll('.fs-ctrl').forEach(b => { b.style.opacity = '0'; b.style.transform = 'scale(.5)'; });
-    bgLayer.style.opacity = '0';
+    const { el, type, saved, rect, bg, ctrl } = fsState;
+    if(fsState.isLandscape){ resetLandscape(); }
+
+    ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.remove('show'));
+    bg.style.opacity = '0';
+
     el.style.transition = `left ${FS_MS}ms ${EASE}, top ${FS_MS}ms ${EASE}, width ${FS_MS}ms ${EASE}, height ${FS_MS}ms ${EASE}, border-radius ${FS_MS}ms ${EASE}`;
-    el.style.left = rect.left + 'px'; el.style.top = rect.top + 'px';
-    el.style.width = rect.width + 'px'; el.style.height = rect.height + 'px';
-    el.style.borderRadius = saved.borderRadius || '22px';
+    el.style.left = rect.left + 'px';
+    el.style.top = rect.top + 'px';
+    el.style.width = rect.width + 'px';
+    el.style.height = rect.height + 'px';
+    el.style.borderRadius = type === 'model' ? '26px' : saved.borderRadius;
     document.body.classList.remove('in-fs');
-    setTimeout(() => {
-        el.style.transition = saved.transition || '';
-        el.style.position = saved.position; el.style.left = saved.left; el.style.top = saved.top;
+
+    setTimeout(()=>{
+        el.style.transition = saved.transition;
+        el.style.position = saved.position;
+        el.style.left = saved.left; el.style.top = saved.top;
         el.style.width = saved.width; el.style.height = saved.height;
-        el.style.zIndex = saved.zIndex; el.style.borderRadius = saved.borderRadius;
-        bgLayer.remove(); ctrlLayer.remove();
-        fsState = null; viewer.resize();
+        el.style.zIndex = saved.zIndex;
+        el.style.borderRadius = saved.borderRadius;
+        fullWrap.style.zIndex = saved.wrapZ;
+        fullWrap.classList.remove('fs-page','info-collapsed');
+        modelContainer.classList.remove('fs-model');
+        bg.remove(); ctrl.remove();
+        fsState = null;
+        viewer.resize();
     }, FS_MS);
+}
+
+function applyTransition(el, props){
+    el.style.transition = props.map(p => `${p} .45s ${EASE}`).join(',');
 }
 function toggleLandscape(){
     if(!fsState || fsState.type !== 'model') return;
     fsState.isLandscape = !fsState.isLandscape;
     const el = fsState.el;
-    el.style.transition = `transform .45s ${EASE}, width .45s ${EASE}, height .45s ${EASE}, left .45s ${EASE}, top .45s ${EASE}`;
+    applyTransition(el, ['transform','width','height','left','top']);
     if(fsState.isLandscape){
         el.style.width = '100vh'; el.style.height = '100vw';
         el.style.left = '50%'; el.style.top = '50%';
@@ -428,13 +508,20 @@ function toggleLandscape(){
         el.style.transformOrigin = 'center center';
         showToast("横屏模式");
     }else{
-        el.style.width = '100vw'; el.style.height = '100vh';
-        el.style.left = '0px'; el.style.top = '0px';
-        el.style.transform = ''; el.style.transformOrigin = '';
+        resetLandscape();
         showToast("竖屏模式");
     }
-    setTimeout(()=>viewer.resize(), 450);
+    setTimeout(()=>viewer.resize(), 460);
 }
+function resetLandscape(){
+    if(!fsState) return;
+    fsState.isLandscape = false;
+    const el = fsState.el;
+    el.style.width = '100vw'; el.style.height = '100vh';
+    el.style.left = '0px'; el.style.top = '0px';
+    el.style.transform = ''; el.style.transformOrigin = '';
+}
+
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? exitFullscreen() : enterFullscreen('page');
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) exitFullscreen(); });
