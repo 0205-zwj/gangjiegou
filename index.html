@@ -21,11 +21,12 @@
         }
         @keyframes pageIn {from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
         .glow {
-            position:fixed;width:480px;height:480px;border-radius:50%;
+            position:fixed;left:0;top:0;width:480px;height:480px;border-radius:50%;
             background:radial-gradient(circle,rgba(140,120,255,.22) 0%,rgba(90,150,255,.14) 40%,transparent 70%);
             pointer-events:none;transform:translate(-50%,-50%);z-index:1;
-            opacity:0;transition:opacity .4s ease;will-change:transform;
+            opacity:0;transition:opacity .4s ease,width .3s ease,height .3s ease;will-change:transform;
         }
+        body.in-fs .glow{opacity:0!important;}
         .header {
             position:relative;z-index:2;
             background:rgba(220,235,250,.65);
@@ -179,7 +180,7 @@
 
         /* ===== 全屏背景遮罩 ===== */
         .fs-bg{
-            position:fixed;inset:0;z-index:9000;pointer-events:none;
+            position:fixed;inset:0;z-index:8999;pointer-events:none;
             background:
                 radial-gradient(1200px 800px at 70% -10%, rgba(150,190,255,.35), transparent 60%),
                 radial-gradient(1000px 700px at 10% 110%, rgba(180,160,255,.28), transparent 60%),
@@ -208,7 +209,7 @@
 
         /* ===== 整页全屏：flex 布局，模型自适应占满 ===== */
         .full-wrap.fs-page{
-            display:flex;flex-direction:column;gap:10px;padding:10px;
+            display:flex;flex-direction:column;gap:8px;padding:8px;
         }
         .full-wrap.fs-page .model-container{
             flex:1 1 auto;height:auto!important;min-height:0;border-radius:20px;
@@ -217,23 +218,50 @@
         .full-wrap.fs-page .info-card{
             flex:0 0 auto;margin-top:0;
             max-height:60vh;overflow:hidden;
-            padding:12px 14px 14px;border-radius:20px;
-            display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;
+            padding:8px 11px 10px;border-radius:18px;
+            display:grid;grid-template-columns:1fr 1fr;gap:5px 9px;
             transition:opacity .4s ease, max-height .48s cubic-bezier(.22,1,.36,1),
                      padding .48s cubic-bezier(.22,1,.36,1),
                      border-width .48s ease, margin .48s ease;
         }
         .full-wrap.fs-page .info-card h3{
-            grid-column:1/-1;font-size:13px;margin-bottom:2px;padding-bottom:6px;
+            grid-column:1/-1;font-size:12px;margin-bottom:0;padding-bottom:4px;
         }
         .full-wrap.fs-page .info-card .row{
-            flex-direction:column;align-items:flex-start;gap:3px;
-            padding:8px 11px;border-radius:12px;line-height:1.3;
+            position:relative;overflow:hidden;
+            flex-direction:column;align-items:flex-start;gap:1px;
+            padding:4px 10px;border-radius:10px;line-height:1.25;
             background:rgba(255,255,255,.5);
             border:1px solid rgba(255,255,255,.75);
+            transition:box-shadow .3s ease,border-color .3s ease,background .3s ease;
         }
-        .full-wrap.fs-page .info-card .k{width:auto;font-size:10.5px;letter-spacing:.3px;}
-        .full-wrap.fs-page .info-card .v{font-size:13px;font-weight:600;width:100%;}
+        /* 悬停：只在小格边缘泛起一小圈雾蓝柔光 */
+        .full-wrap.fs-page .info-card .row:hover{
+            border-color:rgba(158,188,228,.55);
+            background:rgba(255,255,255,.66);
+            box-shadow:0 0 10px rgba(145,178,230,.18),inset 0 0 8px rgba(190,210,240,.15);
+        }
+        .full-wrap.fs-page .info-card .row .ripple{
+            position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;pointer-events:none;
+            background:radial-gradient(circle,rgba(255,255,255,.78) 0%,rgba(180,204,242,.32) 46%,transparent 70%);
+            transform:translate(-50%,-50%) scale(0);
+            animation:cellRipple .7s cubic-bezier(.22,1,.36,1) forwards;
+        }
+        /* 点击：外圈较大光晕，雾蓝带一点暖白，柔和不刺眼 */
+        .full-wrap.fs-page .info-card .row.lit{
+            border-color:rgba(140,175,226,.7);background:rgba(255,255,255,.86);
+            box-shadow:0 0 0 1px rgba(160,190,232,.38),0 0 20px 4px rgba(150,180,230,.26),inset 0 0 12px rgba(198,214,242,.26);
+        }
+        @keyframes cellRipple{
+            0%{transform:translate(-50%,-50%) scale(0);opacity:.9;}
+            100%{transform:translate(-50%,-50%) scale(22);opacity:0;}
+        }
+        .model-container.fs-tap{
+            transition:box-shadow .32s ease;
+            box-shadow:0 0 0 2px rgba(145,178,228,.38),0 0 42px rgba(150,180,230,.28)!important;
+        }
+        .full-wrap.fs-page .info-card .k{width:auto;font-size:9.5px;letter-spacing:.3px;}
+        .full-wrap.fs-page .info-card .v{font-size:12px;font-weight:600;width:100%;line-height:1.3;}
         .full-wrap.fs-page.info-collapsed .info-card{
             max-height:0;opacity:0;padding-top:0;padding-bottom:0;
             margin-top:0;border-width:0;pointer-events:none;
@@ -246,6 +274,8 @@
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
         body.in-fs .model-container,
         body.in-fs .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        body.in-fs .model-container{background:rgba(223,237,251,.52);}
+        body.in-fs .info-card{background:rgba(226,239,252,.6);}
         /* 进/出全屏过渡只走 transform，提升为合成层，避免重排重绘卡顿 */
         .full-wrap.fs-anim, .model-container.fs-anim{will-change:transform;}
     </style>
@@ -349,11 +379,12 @@ let glowRAF = null;
 function moveGlow(x,y){
     if(glowRAF) return;
     glowRAF = requestAnimationFrame(()=>{
-        glow.style.left = x + 'px'; glow.style.top = y + 'px'; glow.style.opacity = '1'; glowRAF = null;
+        glow.style.transform = 'translate(' + x + 'px,' + y + 'px) translate(-50%,-50%)';
+        glow.style.opacity = '1'; glowRAF = null;
     });
 }
-document.addEventListener('mousemove', e => moveGlow(e.clientX, e.clientY));
-document.addEventListener('touchmove', e => { if(e.touches[0]) moveGlow(e.touches[0].clientX, e.touches[0].clientY); }, {passive:true});
+document.addEventListener('pointermove', e => moveGlow(e.clientX, e.clientY), {passive:true});
+document.addEventListener('pointerdown', e => moveGlow(e.clientX, e.clientY), {passive:true});
 document.addEventListener('mouseleave', () => glow.style.opacity = '0');
 btnRotate.onclick = () => { rotate = !rotate; viewer.autoRotate = rotate; btnRotate.classList.toggle('active', rotate); }
 btnReset.onclick = () => { viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; }
@@ -391,7 +422,9 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 
 /* ============ FLIP 平滑全屏（纯CSS，不移动DOM，修复层叠上下文） ============ */
 const EASE = 'cubic-bezier(.22,1,.36,1)';
+const EASE_IN = 'cubic-bezier(.3,.9,.32,1)';
 const FS_MS = 480;
+const FS_IN_MS = 560;
 let fsState = null;
 
 const ICON_EXIT = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
@@ -459,14 +492,15 @@ function enterFullscreen(type){
     void el.offsetHeight;
     safeResize();
 
-    requestAnimationFrame(() => {
-        el.style.transition = 'transform ' + FS_MS + 'ms ' + EASE + ', border-radius ' + FS_MS + 'ms ' + EASE;
+    /* 双 rAF：先让“缩小的起点”真实绘制一帧，再开始放大，避免一闪即全屏 */
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN;
         el.style.transform = 'translate(0px,0px) scale(1,1)';
         if(type === 'model') el.style.borderRadius = '0px';
         bg.style.opacity = '1';
-    });
+    }));
     setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
-    setTimeout(()=>{ el.style.transform = 'none'; safeResize(); }, FS_MS + 60);
+    setTimeout(()=>{ el.style.transform = 'none'; safeResize(); }, FS_IN_MS + 60);
 }
 function safeResize(){ try{ if(typeof viewer.resize === 'function') viewer.resize(); else window.dispatchEvent(new Event('fs-nudge')); }catch(e){} }
 
@@ -541,6 +575,30 @@ function resetLandscape(immediate){
     if(immediate){ void el.offsetHeight; el.style.transition = ''; }
 }
 
+/* 点按信息小格：触点涟漪扩散 + 该格外圈泛起光晕（仅整页全屏呈现） */
+document.querySelectorAll('.info-card .row').forEach(row => {
+    let litTimer = null;
+    row.addEventListener('pointerdown', e => {
+        const r = row.getBoundingClientRect();
+        const rip = document.createElement('span');
+        rip.className = 'ripple';
+        rip.style.left = (e.clientX - r.left) + 'px';
+        rip.style.top = (e.clientY - r.top) + 'px';
+        row.appendChild(rip);
+        rip.addEventListener('animationend', () => rip.remove());
+        row.classList.add('lit');
+        clearTimeout(litTimer);
+        litTimer = setTimeout(() => row.classList.remove('lit'), 700);
+    });
+});
+/* 整页全屏时点按模型卡片，边缘轻亮一下作为触达反馈 */
+let modelTapTimer = null;
+modelContainer.addEventListener('pointerdown', () => {
+    if(!document.body.classList.contains('in-fs') || (fsState && fsState.type === 'model')) return;
+    modelContainer.classList.add('fs-tap');
+    clearTimeout(modelTapTimer);
+    modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
+});
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? exitFullscreen() : enterFullscreen('page');
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) exitFullscreen(); });
