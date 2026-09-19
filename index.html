@@ -59,11 +59,9 @@
             field-of-view:30deg;
             min-field-of-view:5deg;
             max-field-of-view:80deg;
-            /* 全方位无死角旋转 */
             polar-min:0deg;
             polar-max:180deg;
         }
-        /* 模型全屏时背景和主页统一淡蓝磨砂，不是黑色 */
         model-viewer:fullscreen, model-viewer:-webkit-full-screen {
             background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%) !important;
             --poster-color:#e8f2fc;
@@ -90,7 +88,7 @@
         .full-wrap:fullscreen{
             background:linear-gradient(160deg,#eef3f9 0%,#e4edf7 100%);
             padding:16px;display:flex;flex-direction:column;gap:12px;
-            transition:all .3s cubic-bezier(.4,0,.2,1);
+            transition:all .35s cubic-bezier(.4,0,.2,1);
         }
         .full-wrap:fullscreen .model-container{
             flex:1;height:auto;background:rgba(220,235,250,.75);border-radius:20px;
@@ -118,7 +116,6 @@
             .full-wrap:fullscreen .info-card .k{width:70px;display:block;font-size:11px;}
         }
         .full-wrap:fullscreen.panel-hidden .info-card{display:none;}
-        /* 模型一键全屏：模型占满整个屏幕，平滑过渡 */
         .full-wrap:fullscreen.model-only-fullscreen{
             padding:0;gap:0;
         }
@@ -128,7 +125,6 @@
         .full-wrap:fullscreen.model-only-fullscreen .info-card,
         .full-wrap:fullscreen.model-only-fullscreen .toolbar,
         .full-wrap:fullscreen.model-only-fullscreen .tip-banner{display:none!important;}
-        .full-wrap{transition:all .35s cubic-bezier(.4,0,.2,1);}
 
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%);
@@ -146,7 +142,7 @@
             opacity:0;pointer-events:none;transition:opacity .25s;
         }
         .toast.show{opacity:1;}
-        /* 模型选择底部抽屉效果 */
+
         .model-list{
             position:fixed;left:0;right:0;bottom:0;z-index:99;
             background:rgba(238,243,249,.95);backdrop-filter:blur(40px);
@@ -212,7 +208,6 @@
 <body>
 <div class="glow" id="glow"></div>
 <div class="toast" id="toast">✅ 操作成功</div>
-<!-- 全屏控制按钮组，body根级，任何全屏都显示 -->
 <button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">↩️</button>
 <button class="btn hide" id="btnRotateScreen" style="position:fixed;bottom:24px;right:20px;z-index:999;width:48px;height:48px;font-size:20px;background:rgba(255,255,255,.9);" title="切换横竖屏">📱</button>
 
@@ -226,7 +221,6 @@
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
         <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto" polar-min="-180deg" polar-max="180deg" min-field-of-view="5deg" max-field-of-view="80deg"></model-viewer>
-        <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnReset" title="重置视角">🎯</button>
@@ -313,7 +307,6 @@ if(id && partData[id]){
     loading.style.display = 'none';
 }
 
-// 一键模型占满全屏：整个容器平滑缩放，退出按钮肯定显示
 btnModelFull.onclick = async () => {
     try{
         await fullWrap.requestFullscreen();
@@ -324,13 +317,11 @@ btnModelFull.onclick = async () => {
         toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2000);
     }catch(e){}
 }
-// 模型全屏退出按钮
 btnExitFull.onclick = () => {
     document.exitFullscreen();
     btnExitFull.classList.add('hide');
     btnRotateScreen.classList.add('hide');
 }
-// 横竖屏切换按钮
 let isLandscape = false;
 const btnRotateScreen = $('#btnRotateScreen');
 btnRotateScreen.onclick = () => {
@@ -360,7 +351,7 @@ btnRotateScreen.onclick = () => {
     }
     toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
 }
-// 切换构件：弹出所有模型列表，直接点就切换
+
 const modelList = $('#modelList'), modelMask = $('#modelMask'), modelItems = $('#modelItems');
 btnSwitch.onclick = () => {
     modelItems.innerHTML = '';
@@ -392,7 +383,7 @@ btnRotate.onclick = () => {
     btnRotate.classList.toggle('active',rotate);
 }
 btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m";}
-// 三击模型任意位置，以该点为中心旋转放大（双击保持默认缩放功能）
+
 let clickCount = 0, clickTimer = null;
 viewer.addEventListener('click', (e) => {
     clickCount++;
@@ -409,6 +400,7 @@ viewer.addEventListener('click', (e) => {
         clickCount = 0;
     }, 350);
 });
+
 btnFull.onclick = async () => {
     try{
         if(!document.fullscreenElement){
@@ -421,7 +413,7 @@ btnFull.onclick = async () => {
 document.addEventListener('fullscreenchange',()=>{
     if(!document.fullscreenElement){
         btnToggle.classList.add('hide'); tipBanner.classList.add('hide');
-        btnExitFull.classList.add('hide');
+        btnExitFull.classList.add('hide'); btnRotateScreen.classList.add('hide');
         fullWrap.classList.remove('panel-hidden','model-only-fullscreen');
         infoCard.classList.remove('hide');
         clearTimeout(tipTimer);
@@ -432,12 +424,8 @@ btnToggle.onclick = () => {
     fullWrap.classList.toggle('panel-hidden',h);
 }
 tipBanner.onclick = () => {tipBanner.classList.add('hide');clearTimeout(tipTimer);}
-// 微信切出去回消息再切回来，不重新加载，保持原来的模型和视角
-document.addEventListener('visibilitychange', () => {
-    if(!document.hidden && viewer.src){
-        // 切回来自动保持原来的状态，不重载
-    }
-});
+
+document.addEventListener('visibilitychange', () => {});
 </script>
 </body>
 </html>
