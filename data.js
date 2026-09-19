@@ -10,7 +10,7 @@ window.partData = {
         material: "Q420GJC",
         spec: "800×600×35",
         quantity: "1套",
-        glbUrl: "https://gcore.jsdelivr.net/gh/0205-zwj/ztzp@main/fangan1/models/1.glb"
+        glbUrl: "./models/1.glb"
     },
     // ========== 构件ID：2 ==========
     "2": {
@@ -22,7 +22,7 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-      glbUrl: "https://gcore.jsdelivr.net/gh/0205-zwj/ztzp@main/fangan1/models/2.glb"
+      glbUrl: "./models/2.glb"
     },
     "1-v1": {
       partId: "1-v1",
@@ -33,7 +33,7 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-     glbUrl: "https://gcore.jsdelivr.net/gh/0205-zwj/ztzp@main/fangan1/models/1-v1.glb"
+     glbUrl: "./models/1-v1.glb"
     },
     "2-v1": {
       partId: "2-v1",
@@ -44,6 +44,6 @@ window.partData = {
       material: "Q420热轧钢",
       spec: "200*100*60",
       quantity: "20",
-      glbUrl: "https://gcore.jsdelivr.net/gh/0205-zwj/ztzp@main/fangan1/models/2-v1.glb"
+      glbUrl: "./models/2-v1.glb"
     }
 }
