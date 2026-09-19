@@ -1,4 +1,4 @@
-﻿// 构件数据总对象，网页读取所有构件信息
+// 构件数据总对象，网页读取所有构件信息
 // 使用 Draco 压缩后的轻量模型文件，加载速度提升 80%+
 window.partData = {
     // ========== 构件ID：1 ==========
@@ -15,48 +15,38 @@ window.partData = {
     },
     // ========== 构件ID：2 ==========
     "2": {
-      partId: "2",
-      workNo: "GL-1-2",
-      projectName: "昆明长水国际机场项目",
-      section: "梁柱",
-      partType: "H型",
-      material: "Q420热轧钢",
-      spec: "200*100*60",
-      quantity: "20",
-      glbUrl: "./models/2.min.glb"
+        partId: "2",
+        workNo: "GL-1-2",
+        projectName: "昆明长水国际机场项目",
+        section: "梁柱",
+        partType: "H型",
+        material: "Q420热轧钢",
+        spec: "200*100*60",
+        quantity: "20",
+        glbUrl: "./models/2.min.glb"
     },
-    "1": {
-     partId: "",
-     workNo: "GL-1-2",
-     projectName: "昆明长水国际机场项目",
-     section: "梁柱",
-     partType: "H型",
-     material: "Q420热轧钢",
-     spec: "200*100*60",
-     quantity: "20",
-     glbUrl: "./models/1.glb"
-    },
-
+    // ========== 构件ID：1-v1 ==========
     "1-v1": {
-      partId: "1-v1",
-      workNo: "GL-1-3",
-      projectName: "昆明长水国际机场项目",
-      section: "梁柱",
-      partType: "H型",
-      material: "Q420热轧钢",
-      spec: "200*100*60",
-      quantity: "20",
-     glbUrl: "./models/1-v1.min.glb"
+        partId: "1-v1",
+        workNo: "GL-1-3",
+        projectName: "昆明长水国际机场项目",
+        section: "梁柱",
+        partType: "H型",
+        material: "Q420热轧钢",
+        spec: "200*100*60",
+        quantity: "20",
+        glbUrl: "./models/1-v1.min.glb"
     },
+    // ========== 构件ID：2-v1 ==========
     "2-v1": {
-      partId: "2-v1",
-      workNo: "GL-1-3",
-      projectName: "昆明长水国际机场项目",
-      section: "梁柱",
-      partType: "H型",
-      material: "Q420热轧钢",
-      spec: "200*100*60",
-      quantity: "20",
-      glbUrl: "./models/2-v1.min.glb"
+        partId: "2-v1",
+        workNo: "GL-1-3",
+        projectName: "昆明长水国际机场项目",
+        section: "梁柱",
+        partType: "H型",
+        material: "Q420热轧钢",
+        spec: "200*100*60",
+        quantity: "20",
+        glbUrl: "./models/2-v1.min.glb"
     }
 }
