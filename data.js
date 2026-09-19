@@ -47,3 +47,4 @@ window.partData = {
       glbUrl: "./models/2-v1.glb"
     }
 }
+
