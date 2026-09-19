@@ -134,6 +134,28 @@
             opacity:0;pointer-events:none;transition:opacity .25s;
         }
         .toast.show{opacity:1;}
+        /* 模型选择底部抽屉效果 */
+        .model-list{
+            position:fixed;left:0;right:0;bottom:0;z-index:99;
+            background:rgba(238,243,249,.95);backdrop-filter:blur(40px);
+            border-radius:24px 24px 0 0;padding:20px 16px 30px;
+            max-height:85vh;overflow-y:auto;
+            transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
+            box-shadow:0 -10px 40px rgba(50,100,180,.2);
+        }
+        .model-list.show{transform:translateY(0);}
+        .model-list h3{color:#1e3a5f;font-size:15px;margin-bottom:18px;text-align:center;font-weight:600;}
+        .model-item{
+            padding:14px 16px;background:rgba(255,255,255,.75);border-radius:18px;margin-bottom:10px;
+            cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);
+            box-shadow:0 4px 16px rgba(50,100,180,.08);
+            border:1px solid rgba(255,255,255,.9);
+        }
+        .model-item:active{transform:scale(.98);box-shadow:0 8px 24px rgba(50,100,180,.15);}
+        .model-item .mid{color:#1e3a5f;font-size:14px;font-weight:600;}
+        .model-item .mname{color:#6088b8;font-size:11px;margin-top:3px;line-height:1.4;}
+        .model-mask{position:fixed;inset:0;background:rgba(0,0,0,.15);z-index:98;opacity:0;pointer-events:none;transition:opacity .3s;}
+        .model-mask.show{opacity:1;pointer-events:auto;}
 
         .progress{position:absolute;top:0;left:0;width:100%;height:6px;background:rgba(160,200,240,.3);z-index:11;overflow:hidden;transition:opacity .3s;}
         .progress.done{opacity:0;}
@@ -177,6 +199,8 @@
 <body>
 <div class="glow" id="glow"></div>
 <div class="toast" id="toast">✅ 操作成功</div>
+<!-- 全屏退出按钮，body根级，任何全屏都显示 -->
+<button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">✕</button>
 
 <div class="header">
     <h2>中铁装配｜钢结构构件信息</h2>
@@ -187,9 +211,7 @@
     <div class="tip-banner hide" id="tipBanner">💡竖屏横屏都可查看，拖动旋转360度看模型</div>
     <div class="model-container">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto" polar-min="0deg" polar-max="180deg" min-field-of-view="5deg" max-field-of-view="80deg"></model-viewer>
-        <!-- 模型全屏退出按钮，做大更明显 -->
-        <button class="btn hide" id="btnExitFull" style="position:fixed;top:20px;right:20px;z-index:999;width:48px;height:48px;font-size:22px;background:rgba(255,255,255,.9);" title="退出全屏">✕</button>
+        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.5" camera-controls interaction-prompt="auto" polar-min="-180deg" polar-max="180deg" min-field-of-view="5deg" max-field-of-view="80deg"></model-viewer>
         <!-- 右边竖排图标按钮 -->
         <div class="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
@@ -220,6 +242,12 @@
         <div class="row"><div class="k">规格</div><div class="v" id="spec">-</div></div>
         <div class="row"><div class="k">数量</div><div class="v" id="quantity">-</div></div>
     </div>
+</div>
+
+<div class="model-mask" id="modelMask"></div>
+<div class="model-list" id="modelList">
+    <h3>选择要查看的构件</h3>
+    <div id="modelItems"></div>
 </div>
 
 <p class="footer">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰</p>
@@ -285,15 +313,27 @@ btnExitFull.onclick = () => {
     document.exitFullscreen();
     btnExitFull.classList.add('hide');
 }
-// 切换构件
+// 切换构件：弹出所有模型列表，直接点就切换
+const modelList = $('#modelList'), modelMask = $('#modelMask'), modelItems = $('#modelItems');
 btnSwitch.onclick = () => {
-    const newId = prompt("请输入要查看的构件编号：", "2");
-    if(newId && partData[newId]){
-        location.href = location.pathname + "?id=" + newId;
-    }else if(newId){
-        alert("未找到该构件编号");
-    }
-}
+    modelItems.innerHTML = '';
+    Object.keys(partData).forEach(pid => {
+        const d = partData[pid];
+        const item = document.createElement('div');
+        item.className = 'model-item';
+        item.innerHTML = `<div class="mid">构件编号：${d.partId || pid}</div><div class="mname">${d.projectName || ''} · ${d.partType || ''}</div>`;
+        item.onclick = () => {
+            location.href = location.pathname + "?id=" + pid;
+        };
+        modelItems.appendChild(item);
+    });
+    modelList.classList.add('show');
+    modelMask.classList.add('show');
+};
+modelMask.onclick = () => {
+    modelList.classList.remove('show');
+    modelMask.classList.remove('show');
+};
 
 function moveGlow(x,y){glow.style.left=x+'px';glow.style.top=y+'px';glow.style.opacity='1';}
 document.addEventListener('mousemove',e=>moveGlow(e.clientX,e.clientY));
@@ -305,14 +345,22 @@ btnRotate.onclick = () => {
     btnRotate.classList.toggle('active',rotate);
 }
 btnReset.onclick = () => {viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m";}
-// 双击模型任意位置，以该点为中心旋转放大
-viewer.addEventListener('dblclick', (e) => {
-    const p = e.intersectionPoint;
-    if(p){
-        viewer.cameraTarget = `${p.x}m ${p.y}m ${p.z}m`;
-        toast.innerText = "已定位到该点，可围绕该点旋转放大";
-        toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
-    }
+// 三击模型任意位置，以该点为中心旋转放大（双击保持默认缩放功能）
+let clickCount = 0, clickTimer = null;
+viewer.addEventListener('click', (e) => {
+    clickCount++;
+    clearTimeout(clickTimer);
+    clickTimer = setTimeout(() => {
+        if(clickCount === 3){
+            const p = e.intersectionPoint;
+            if(p){
+                viewer.cameraTarget = `${p.x}m ${p.y}m ${p.z}m`;
+                toast.innerText = "已定位到该点，可围绕该点旋转放大";
+                toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),1500);
+            }
+        }
+        clickCount = 0;
+    }, 350);
 });
 btnFull.onclick = async () => {
     try{
@@ -336,6 +384,12 @@ btnToggle.onclick = () => {
     fullWrap.classList.toggle('panel-hidden',h);
 }
 tipBanner.onclick = () => {tipBanner.classList.add('hide');clearTimeout(tipTimer);}
+// 微信切出去回消息再切回来，不重新加载，保持原来的模型和视角
+document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && viewer.src){
+        // 切回来自动保持原来的状态，不重载
+    }
+});
 </script>
 </body>
 </html>
