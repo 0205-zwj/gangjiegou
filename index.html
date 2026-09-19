@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -79,7 +79,7 @@
             color:#2563a8;border:1px solid rgba(255,255,255,.9);
             font-size:18px;cursor:pointer;
             box-shadow:0 4px 14px rgba(50,100,180,.12);
-            transition:all .18s cubic-bezier(.4,0,.2,1);will-change:transform;
+            transition:all .35s cubic-bezier(.25,.1,.25,1);will-change:transform;
             display:flex;align-items:center;justify-content:center;
         }
         .btn:active{transform:scale(.92);}
@@ -209,6 +209,10 @@
 
         .footer{text-align:center;color:#7098c8;font-size:11px;margin-top:18px;line-height:1.7;}
         .hide{display:none!important;}
+        .btn{opacity:0;transform:translateX(20px);transition:all .4s cubic-bezier(.25,.1,.25,1);}
+        .btn:not(.hide){opacity:1;transform:translateX(0);}
+        .info-card{opacity:1;transition:all .45s cubic-bezier(.25,.1,.25,1);}
+        .info-card.hide{opacity:0;transform:translateY(20px);pointer-events:none;}
     </style>
 </head>
 <body>
