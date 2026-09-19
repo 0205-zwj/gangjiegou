@@ -291,13 +291,27 @@
         .model-container.fs-model{border-radius:0;border-width:0;}
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
         .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
-        /* 模型一键全屏：构件信息清晰透在模型后面，只轻微淡化、一点点柔化 */
+        /* 模型一键全屏：信息做成一条条毛玻璃浮层标签（文字始终清晰），模型在标签间隙完整呈现，无生硬光斑 */
         .full-wrap.model-backdrop .info-card{
-            opacity:.62;
-            filter:blur(1px) saturate(.94);
-            transition:opacity .5s ease, filter .5s ease;
+            position:relative;z-index:9003;opacity:1;filter:none;padding:0;background:transparent;border:none;box-shadow:none;
+            display:flex;flex-direction:column;align-items:flex-start;gap:7px;pointer-events:none;
         }
-        .full-wrap.model-backdrop .model-container{background:rgba(227,239,251,.4);}
+        .full-wrap.model-backdrop .info-head{
+            pointer-events:auto;width:auto;margin:0 0 2px;padding:8px 14px;
+            background:rgba(243,249,255,.62);border:1px solid rgba(255,255,255,.7);border-radius:14px;
+            backdrop-filter:blur(13px) saturate(165%);-webkit-backdrop-filter:blur(13px) saturate(165%);
+            box-shadow:0 6px 18px rgba(60,110,190,.1);
+        }
+        .full-wrap.model-backdrop .info-head .info-tools{pointer-events:auto;}
+        .full-wrap.model-backdrop .info-card .row{
+            display:inline-flex;width:auto;align-items:center;gap:10px;padding:6px 14px;border-radius:12px;
+            background:rgba(243,249,255,.7);border:1px solid rgba(255,255,255,.72);
+            box-shadow:0 6px 16px rgba(60,110,190,.1);
+            backdrop-filter:blur(13px) saturate(165%);-webkit-backdrop-filter:blur(13px) saturate(165%);
+        }
+        .full-wrap.model-backdrop .info-card .k{width:auto;min-width:62px;font-size:11.5px;}
+        .full-wrap.model-backdrop .info-card .v{font-size:12.5px;}
+        .full-wrap.model-backdrop .model-container{background:linear-gradient(160deg,rgba(233,243,252,.74),rgba(219,233,249,.62));}
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
         body.in-fs .model-container,
@@ -306,11 +320,121 @@
         body.in-fs .info-card{background:rgba(226,239,252,.6);}
         /* 进/出全屏过渡只走 transform，提升为合成层，避免重排重绘卡顿 */
         .full-wrap.fs-anim, .model-container.fs-anim{will-change:transform;}
+
+        /* ===== 信息卡标题行工具按钮（复制 / 管理员） ===== */
+        .info-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;padding-bottom:12px;border-bottom:1px solid rgba(50,100,180,.12);}
+        .info-head h3{margin:0;padding:0;border:none;}
+        .info-tools{display:flex;gap:8px;}
+        .icon-btn{width:32px;height:32px;border-radius:10px;border:1px solid rgba(255,255,255,.85);
+            background:rgba(255,255,255,.55);color:#5b86c0;display:grid;place-items:center;cursor:pointer;
+            box-shadow:0 4px 12px rgba(60,110,190,.10);
+            transition:box-shadow .28s ease,border-color .28s ease,background .28s ease,transform .15s ease;}
+        .icon-btn:hover{border-color:rgba(158,188,228,.7);background:rgba(255,255,255,.75);
+            box-shadow:0 0 12px rgba(145,178,230,.28),inset 0 0 8px rgba(190,210,240,.18);}
+        .icon-btn:active{transform:scale(.92);}
+
+        /* ===== 管理员密码弹窗 ===== */
+        .modal-mask{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;
+            background:rgba(40,70,130,.28);backdrop-filter:blur(10px) saturate(160%);-webkit-backdrop-filter:blur(10px) saturate(160%);
+            opacity:0;pointer-events:none;transition:opacity .32s ease;padding:24px;}
+        .modal-mask.show{opacity:1;pointer-events:auto;}
+        .modal-card{width:100%;max-width:340px;background:rgba(238,246,255,.92);border:1px solid rgba(255,255,255,.9);
+            border-radius:22px;padding:24px 22px 20px;box-shadow:0 24px 70px rgba(40,80,150,.32);
+            transform:translateY(18px) scale(.96);transition:transform .38s cubic-bezier(.22,1,.36,1);}
+        .modal-mask.show .modal-card{transform:translateY(0) scale(1);}
+        .modal-title{font-size:17px;font-weight:700;color:#1e3a5f;}
+        .modal-sub{font-size:12.5px;color:#6f93c2;margin-top:5px;line-height:1.5;}
+        .modal-input{width:100%;box-sizing:border-box;margin-top:16px;height:46px;border-radius:13px;border:1.5px solid rgba(120,160,225,.4);
+            background:rgba(255,255,255,.85);padding:0 14px;font-size:16px;color:#1e3a5f;letter-spacing:2px;outline:none;
+            transition:border-color .25s ease,box-shadow .25s ease;}
+        .modal-input:focus{border-color:rgba(110,155,240,.85);box-shadow:0 0 0 3px rgba(130,170,240,.18);}
+        .modal-err{height:18px;margin-top:8px;font-size:12.5px;color:#e0566b;opacity:0;transition:opacity .2s;}
+        .modal-err.show{opacity:1;}
+        .modal-card.shake{animation:modalShake .4s ease;}
+        @keyframes modalShake{0%,100%{transform:translateX(0);}20%,60%{transform:translateX(-8px);}40%,80%{transform:translateX(8px);}}
+        .modal-btns{display:flex;gap:10px;margin-top:6px;}
+        .mbtn{flex:1;height:44px;border-radius:13px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:transform .15s,box-shadow .25s,background .25s;}
+        .mbtn:active{transform:scale(.96);}
+        .mbtn.ghost{background:rgba(255,255,255,.7);color:#5b86c0;border:1px solid rgba(120,160,225,.35);}
+        .mbtn.primary{background:linear-gradient(135deg,#5b93e6,#4a7fd6);color:#fff;box-shadow:0 8px 20px rgba(80,130,220,.35);}
+
+        /* ===== 编辑模式：字段可编辑 ===== */
+        .info-card.editing .v{background:rgba(255,255,255,.92);border:1.5px dashed rgba(110,155,240,.65);
+            border-radius:8px;padding:2px 8px;margin:-2px 0;min-height:20px;cursor:text;outline:none;
+            transition:border-color .2s,box-shadow .2s;}
+        .info-card.editing .v:focus{border-style:solid;border-color:#4a7fd6;box-shadow:0 0 0 3px rgba(130,170,240,.2);}
+        .info-card.editing .row[data-lock="1"] .v{border-color:transparent;background:transparent;cursor:default;box-shadow:none;}
+        .admin-bar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,140%);z-index:9520;
+            display:flex;gap:8px;max-width:calc(100vw - 24px);padding:10px;border-radius:18px;
+            background:rgba(238,246,255,.9);border:1px solid rgba(255,255,255,.9);
+            backdrop-filter:blur(18px) saturate(180%);-webkit-backdrop-filter:blur(18px) saturate(180%);
+            box-shadow:0 18px 50px rgba(40,80,150,.3);opacity:0;pointer-events:none;
+            transition:transform .42s cubic-bezier(.22,1,.36,1),opacity .3s ease;}
+        .admin-bar.show{transform:translate(-50%,0);opacity:1;pointer-events:auto;}
+        .abtn{border:none;white-space:nowrap;height:40px;padding:0 15px;border-radius:11px;font-size:13.5px;font-weight:600;cursor:pointer;
+            background:linear-gradient(135deg,#5b93e6,#4a7fd6);color:#fff;box-shadow:0 6px 14px rgba(80,130,220,.3);transition:transform .15s;}
+        .abtn:active{transform:scale(.94);}
+        .abtn.ghost{background:rgba(255,255,255,.8);color:#5b86c0;box-shadow:none;border:1px solid rgba(120,160,225,.3);}
+        body.editing{padding-bottom:96px;}
+        .admin-bar{flex-wrap:wrap;justify-content:center;}
+        .admin-bar{flex-wrap:nowrap;gap:6px;padding:8px;}
+        .admin-bar .abtn{height:38px;padding:0 12px;font-size:13px;}
+
+        /* ===== 一键小窗（澎湃 OS 风格） ===== */
+        .mini-backdrop{position:fixed;inset:0;z-index:9040;background:radial-gradient(circle at 50% 30%,rgba(120,160,230,.16),rgba(40,70,130,.26));
+            opacity:0;pointer-events:none;transition:opacity .4s ease;}
+        .mini-backdrop.show{opacity:1;}
+        .full-wrap.mini{position:fixed;z-index:9050;overflow:hidden;border-radius:26px;touch-action:none;
+            box-shadow:0 30px 90px rgba(25,60,120,.42),0 0 0 5px rgba(255,255,255,.55),0 0 60px rgba(120,160,235,.25);
+            transition:transform .42s cubic-bezier(.3,.9,.32,1),border-radius .42s ease;}
+        .full-wrap.mini.dragging{transition:none;}
+        .full-wrap.mini .toolbar,.full-wrap.mini .tip-banner{opacity:0!important;pointer-events:none;}
+        .full-wrap.mini .model-container{border-radius:0;border-width:0;}
+        .mini-drag{position:absolute;inset:0;z-index:6;touch-action:none;cursor:grab;}
+        .mini-chrome{position:absolute;top:10px;right:10px;z-index:7;display:flex;gap:7px;}
+        .mini-chrome .mc-btn{width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.85);
+            background:rgba(255,255,255,.7);color:#4a7fd6;display:grid;place-items:center;cursor:pointer;
+            box-shadow:0 6px 16px rgba(40,80,150,.25);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);}
+        .mini-hint{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:9045;
+            background:rgba(30,60,110,.78);color:#fff;font-size:13px;padding:9px 18px;border-radius:30px;
+            opacity:0;pointer-events:none;transition:opacity .4s ease;white-space:nowrap;}
+        .mini-hint.show{opacity:1;}
+        body.in-mini .header,body.in-mini .footer{opacity:0;pointer-events:none;}
+        /* 功能圆键点按：柔光玻璃光晕从触点漾开 */
+        .glow-press{position:relative;overflow:hidden;isolation:isolate;}
+        .glow-press>svg,.glow-press>span{position:relative;z-index:2;}
+        .glow-press .gp-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
+            background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(170,200,245,.55) 42%,rgba(170,200,245,0) 72%);
+            transform:translate(-50%,-50%) scale(0);animation:gpWave .6s cubic-bezier(.22,1,.36,1) forwards;}
+        @keyframes gpWave{0%{opacity:.9;transform:translate(-50%,-50%) scale(0);}100%{opacity:0;transform:translate(-50%,-50%) scale(1);}}
+        /* 小窗右下角自由缩放手柄 */
+        .mini-resize{position:absolute;right:6px;bottom:6px;width:30px;height:30px;z-index:8;cursor:nwse-resize;touch-action:none;display:grid;place-items:center;color:rgba(74,127,214,.85);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(220,234,250,.35));box-shadow:0 3px 10px rgba(60,110,190,.22);}
+        .mini-resize::before{content:'';position:absolute;right:8px;bottom:8px;width:11px;height:11px;border-right:2.4px solid currentColor;border-bottom:2.4px solid currentColor;border-bottom-right-radius:3px;}
     </style>
 </head>
 <body>
 <div class="glow" id="glow"></div>
 <div class="toast" id="toast">✅</div>
+<div class="modal-mask" id="adminMask">
+    <div class="modal-card" id="adminCard">
+        <div class="modal-title">管理员验证</div>
+        <div class="modal-sub">请输入管理密码，验证后可在线修改本构件的基本信息</div>
+        <input type="password" id="adminPwd" class="modal-input" inputmode="numeric" autocomplete="off" placeholder="请输入密码" />
+        <div class="modal-err" id="adminErr">密码不正确，请重新输入</div>
+        <div class="modal-btns">
+            <button class="mbtn ghost" id="adminCancel">取消</button>
+            <button class="mbtn primary" id="adminOk">确认</button>
+        </div>
+    </div>
+</div>
+<div class="admin-bar" id="adminBar">
+    <button class="abtn" id="adminSave">保存修改</button>
+    <button class="abtn ghost" id="adminExport">导出 data.js</button>
+    <button class="abtn ghost" id="adminClear">还原</button>
+    <button class="abtn ghost" id="adminDone">完成</button>
+</div>
+<div class="mini-backdrop" id="miniBackdrop"></div>
+<div class="mini-hint" id="miniHint">小窗：拖动移动 · 双指或右下角缩放 · 点按恢复</div>
 <div class="header">
     <h2>中铁装配｜钢结构构件信息</h2>
     <p>CHINA RAILWAY ASSEMBLY</p>
@@ -325,6 +449,7 @@
             <button class="btn" id="btnFull" title="整页全屏">⛶</button>
             <button class="btn" id="btnModelFull" title="模型占满全屏">🖥️</button>
             <button class="btn" id="btnSwitch" title="切换构件">🔀</button>
+            <button class="btn" id="btnMini" title="小窗模式"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><rect x="11.5" y="11.5" width="7" height="4.5" rx="1" fill="currentColor" stroke="none"/></svg></button>
         </div>
         <div class="tip-banner" id="tipBanner">💡拖动旋转360度查看模型</div>
         <div class="loading" id="loading">
@@ -340,7 +465,13 @@
         <div class="error" id="error"><p>3D模型加载失败，请检查网络刷新</p></div>
     </div>
     <div class="info-card" id="infoCard">
-        <h3>构件基本信息</h3>
+        <div class="info-head">
+            <h3>构件基本信息</h3>
+            <div class="info-tools">
+                <button class="icon-btn" id="btnCopy" title="复制构件信息"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+                <button class="icon-btn" id="btnAdmin" title="管理员入口"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></button>
+            </div>
+        </div>
         <div class="row"><div class="k">构件编号</div><div class="v" id="partId">-</div></div>
         <div class="row"><div class="k">加工号</div><div class="v" id="workNo">-</div></div>
         <div class="row"><div class="k">项目名称</div><div class="v" id="projectName">-</div></div>
@@ -368,6 +499,15 @@ btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'
 glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast'), modelContainer = $('#modelContainer');
 let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
+/* 管理员在本机保存的修改：渲染前合并到数据（仅保存在本设备浏览器，导出 data.js 才能同步到线上） */
+const OV_KEY = 'gangjiegou_overrides_v1';
+function loadOverrides(){
+    try{
+        const ov = JSON.parse(localStorage.getItem(OV_KEY) || '{}');
+        Object.keys(ov).forEach(k => { if(window.partData && partData[k]) Object.assign(partData[k], ov[k]); });
+    }catch(e){}
+}
+loadOverrides();
 if(id && window.partData && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
@@ -461,9 +601,10 @@ let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
 
 const ICON_EXIT = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
-const ICON_ROTATE = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="12" height="14" rx="1.5"/><rect x="10" y="3" width="12" height="14" rx="1.5" opacity="0.45"/></svg>';
+const ICON_ROTATE = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9.6" y="3" width="10.8" height="15.6" rx="2.7" opacity="0.4"/><rect x="3.6" y="5.2" width="10.8" height="15.6" rx="2.7"/></svg>';
 const ICON_EYE = '<svg class="ic-eye" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+const ICON_EXPAND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 
 function enterFullscreen(type){
     if(fsState) return;
@@ -662,6 +803,256 @@ btnFull.onclick = () => fsState ? requestExitFullscreen() : enterFullscreen('pag
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) requestExitFullscreen(); });
 window.addEventListener('resize', () => { if(fsState) safeResize(); });
 if(location.hash && /full/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
+/* ===================== 一键复制构件信息 ===================== */
+function copyText(t){
+    return new Promise(res => {
+        let ok=false;
+        try{
+            const ta=document.createElement('textarea');
+            ta.value=t; ta.setAttribute('readonly','');
+            ta.style.cssText='position:fixed;top:6px;left:6px;width:1px;height:1px;padding:0;border:0;opacity:0;';
+            document.body.appendChild(ta); ta.focus();
+            ta.select(); ta.setSelectionRange(0,t.length);
+            try{ ok=document.execCommand('copy'); }catch(e){}
+            ta.remove();
+        }catch(e){}
+        if(ok) return res(true);
+        if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(t).then(()=>res(true)).catch(()=>res(false));
+        } else res(false);
+    });
+}
+$('#btnCopy').onclick = async () => {
+    if(!id || !partData[id]){ showToast('暂无可复制的信息'); return; }
+    const d = partData[id];
+    const labels = {partId:'构件编号',workNo:'加工号',projectName:'项目名称',section:'分部工程',partType:'构件类型',material:'材质',spec:'规格',quantity:'数量'};
+    let txt = fields.map(f => labels[f] + '：' + (d[f] || '')).join('\n') + '\n昆明长水国际机场项目 · 钢结构构件一物一码';
+    const ok = await copyText(txt);
+    showToast(ok ? '构件信息已复制，可粘贴发送' : '复制失败，请长按选择文字');
+};
+
+/* ===================== 管理员入口 / 在线编辑 ===================== */
+const editFields = ['workNo','projectName','section','partType','material','spec','quantity'];
+const ADMIN_PWD = 'zwj0503';
+const adminMask=$('#adminMask'), adminCard=$('#adminCard'), adminPwd=$('#adminPwd'), adminErr=$('#adminErr'), adminBar=$('#adminBar');
+let adminOn = false;
+function openAdmin(){
+    adminMask.classList.add('show'); adminErr.classList.remove('show');
+    adminCard.classList.remove('shake'); adminPwd.value='';
+    setTimeout(()=>adminPwd.focus(),140);
+}
+function closeAdmin(){ adminMask.classList.remove('show'); adminPwd.value=''; }
+$('#btnAdmin').onclick = openAdmin;
+$('#adminCancel').onclick = closeAdmin;
+adminMask.addEventListener('click', e => { if(e.target===adminMask) closeAdmin(); });
+function submitPwd(){
+    if(adminPwd.value === ADMIN_PWD){ closeAdmin(); enterEdit(); }
+    else{
+        adminErr.classList.add('show');
+        adminCard.classList.remove('shake'); void adminCard.offsetWidth; adminCard.classList.add('shake');
+        adminPwd.select();
+    }
+}
+$('#adminOk').onclick = submitPwd;
+adminPwd.addEventListener('keydown', e => { if(e.key==='Enter') submitPwd(); if(e.key==='Escape') closeAdmin(); });
+
+function enterEdit(){
+    adminOn = true;
+    document.body.classList.add('editing'); infoCard.classList.add('editing');
+    editFields.forEach(f => { const el=$('#'+f); if(el) el.setAttribute('contenteditable','true'); });
+    const pidEl=$('#partId'); if(pidEl && pidEl.parentElement) pidEl.parentElement.setAttribute('data-lock','1');
+    adminBar.classList.add('show');
+    showToast('已进入编辑模式，改完点“保存修改”');
+}
+function exitEdit(){
+    adminOn = false;
+    document.body.classList.remove('editing'); infoCard.classList.remove('editing');
+    editFields.forEach(f => { const el=$('#'+f); if(el) el.removeAttribute('contenteditable'); });
+    adminBar.classList.remove('show');
+}
+function collectEdits(){
+    const rec={};
+    editFields.forEach(f => { const el=$('#'+f); if(el) rec[f]=el.innerText.trim(); });
+    return rec;
+}
+$('#adminSave').onclick = () => {
+    if(!id || !partData[id]){ showToast('当前构件不可编辑'); return; }
+    const rec = collectEdits();
+    Object.assign(partData[id], rec);
+    let ov={}; try{ ov=JSON.parse(localStorage.getItem(OV_KEY)||'{}'); }catch(e){}
+    ov[id] = Object.assign({}, ov[id], rec);
+    localStorage.setItem(OV_KEY, JSON.stringify(ov));
+    showToast('已保存到本机，导出后可同步线上');
+};
+$('#adminDone').onclick = exitEdit;
+$('#adminClear').onclick = () => {
+    try{ const ov=JSON.parse(localStorage.getItem(OV_KEY)||'{}');
+        if(ov[id]){ delete ov[id]; localStorage.setItem(OV_KEY, JSON.stringify(ov)); }
+    }catch(e){}
+    location.reload();
+};
+$('#adminExport').onclick = () => {
+    let txt = '// 构件数据总对象，网页读取所有构件信息\r\n';
+    txt += '// 由管理员在页面“导出 data.js”生成：用本文件替换仓库中的 data.js，再用 GitHub Desktop 提交推送即可同步线上\r\n';
+    txt += 'window.partData = ' + JSON.stringify(window.partData, null, 4) + ';\r\n';
+    const blob = new Blob([txt], {type:'text/javascript;charset=utf-8'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = 'data.js';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    showToast('已导出 data.js，请替换仓库文件并提交', 2600);
+};
+
+/* ===================== 一键小窗（澎湃 OS 风格缩放/拖动） ===================== */
+const miniBackdrop=$('#miniBackdrop'), miniHint=$('#miniHint');
+let miniState=null;
+$('#btnMini').onclick = () => { if(!fsState && !miniState) enterMini(); };
+function enterMini(){
+    const wrap=fullWrap, rect=wrap.getBoundingClientRect();
+    let sW=Math.min(280, window.innerWidth*0.8);
+    let s=sW/rect.width, sH=rect.height*s, maxH=window.innerHeight*0.78;
+    if(sH>maxH){ s=maxH/rect.height; sH=rect.height*s; sW=rect.width*s; }
+    const margin=14;
+    const tx=window.innerWidth-rect.width*s-margin-rect.left;
+    const ty=window.innerHeight-rect.height*s-margin-rect.top;
+    const chrome=document.createElement('div'); chrome.className='mini-chrome';
+    chrome.innerHTML='<button class="mc-btn" id="miniExpand" title="恢复">'+ICON_EXPAND+'</button>';
+    const drag=document.createElement('div'); drag.className='mini-drag';
+    const rsz=document.createElement('div'); rsz.className='mini-resize'; rsz.title='拖动缩放';
+    wrap.appendChild(chrome); wrap.appendChild(drag); wrap.appendChild(rsz);
+    bindGlowPress(chrome.querySelector('#miniExpand'));
+    miniBackdrop.classList.add('show'); document.body.classList.add('in-mini');
+    const sMin=Math.min(0.26, 170/rect.width);
+    const sGo=Math.min(1.02, window.innerWidth*0.9/rect.width);
+    miniState={rect,s,tx,ty,drag,rsz,chrome,wrap,ptrs:new Map(),mode:'none',sMin,sGo,moved:false,
+        saved:{position:wrap.style.position,left:wrap.style.left,top:wrap.style.top,width:wrap.style.width,height:wrap.style.height,
+               z:wrap.style.zIndex,transition:wrap.style.transition,transform:wrap.style.transform,origin:wrap.style.transformOrigin,radius:wrap.style.borderRadius}};
+    wrap.style.transition='none';
+    wrap.style.position='fixed'; wrap.style.left=rect.left+'px'; wrap.style.top=rect.top+'px';
+    wrap.style.width=rect.width+'px'; wrap.style.height=rect.height+'px'; wrap.style.zIndex='9050';
+    wrap.style.transformOrigin='0 0'; wrap.style.transform='translate(0,0) scale(1)';
+    void wrap.offsetHeight;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        wrap.classList.add('mini');
+        applyMini();
+    }));
+    miniHint.classList.add('show'); clearTimeout(miniHint._t);
+    miniHint._t=setTimeout(()=>miniHint.classList.remove('show'),2400);
+    chrome.querySelector('#miniExpand').onclick=(e)=>{ e.stopPropagation(); exitMini(); };
+    setupMiniControls(wrap);
+}
+function miniSize(){ const r=miniState.rect; return {w:r.width*miniState.s, h:r.height*miniState.s}; }
+function clampPos(tx,ty,w,h){
+    let nx = w>=window.innerWidth ? (window.innerWidth-w)/2 : Math.max(8,Math.min(window.innerWidth-w-8,tx));
+    let ny = h>=window.innerHeight ? (window.innerHeight-h)/2 : Math.max(8,Math.min(window.innerHeight-h-8,ty));
+    return {nx,ny};
+}
+function clampScale(v){ return Math.max(miniState.sMin, Math.min(miniState.sGo, v)); }
+function applyMini(anim){
+    const {wrap,tx,ty,s}=miniState;
+    if(!anim){ wrap.style.transition='none'; }
+    wrap.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
+}
+function exitMini(){
+    if(!miniState) return;
+    const {wrap,drag,rsz,chrome,saved}=miniState;
+    wrap.classList.remove('dragging');
+    wrap.style.transition='transform .42s cubic-bezier(.3,.9,.32,1),border-radius .42s ease';
+    wrap.style.transform='translate(0,0) scale(1)';
+    miniBackdrop.classList.remove('show'); miniHint.classList.remove('show');
+    document.body.classList.remove('in-mini');
+    setTimeout(()=>{
+        wrap.classList.remove('mini');
+        wrap.style.position=saved.position;wrap.style.left=saved.left;wrap.style.top=saved.top;
+        wrap.style.width=saved.width;wrap.style.height=saved.height;wrap.style.zIndex=saved.z;
+        wrap.style.transition=saved.transition;wrap.style.transform=saved.transform;
+        wrap.style.transformOrigin=saved.origin;wrap.style.borderRadius=saved.radius;
+        drag.remove(); rsz.remove(); chrome.remove(); miniState=null; safeResize();
+    },440);
+}
+function setupMiniControls(wrap){
+    let sx=0,sy=0,ox=0,oy=0,s0=0,pinchD=0,focal={x:0,y:0};
+    const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+    const onMove=e=>{
+        const st=miniState; if(!st) return;
+        st.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(st.mode==='pinch' && st.ptrs.size>=2){
+            const ps=[...st.ptrs.values()];
+            const d=dist(ps[0],ps[1]);
+            st.s=clampScale(s0*d/pinchD);
+            const {w,h}=miniSize(); const p=clampPos(focal.x-w/2,focal.y-h/2,w,h);
+            st.tx=p.nx; st.ty=p.ny; applyMini(false);
+        }else if(st.mode==='resize'){
+            st.s=clampScale(s0+(e.clientX-sx)/st.rect.width+(e.clientY-sy)/st.rect.height);
+            const {w,h}=miniSize(); const p=clampPos(ox,oy,w,h); st.tx=p.nx; st.ty=p.ny;
+            applyMini(false);
+        }else if(st.mode==='move'){
+            const dx=e.clientX-sx, dy=e.clientY-sy;
+            if(Math.abs(dx)+Math.abs(dy)>6) st.moved=true;
+            const {w,h}=miniSize(); const p=clampPos(ox+dx,oy+dy,w,h);
+            st.tx=p.nx; st.ty=p.ny; applyMini(false);
+        }
+    };
+    const onUp=e=>{
+        const st=miniState; if(!st) return;
+        const wasMode=st.mode;
+        st.ptrs.delete(e.pointerId);
+        if(wasMode==='pinch' && st.ptrs.size===1){
+            const p=[...st.ptrs.values()][0];
+            st.mode='move'; st.moved=true; sx=p.x; sy=p.y; ox=st.tx; oy=st.ty; s0=st.s;
+            return;
+        }
+        if(st.ptrs.size>=1){ return; }
+        window.removeEventListener('pointermove',onMove); window.removeEventListener('pointerup',onUp); window.removeEventListener('pointercancel',onUp);
+        wrap.classList.remove('dragging');
+        if(wasMode==='pinch'||wasMode==='resize'){
+            st.mode='none';
+            if(st.s>=st.sGo){ exitMini(); return; }  // 拖到接近全屏 -> 放大成全屏
+        }else if(wasMode==='move'){
+            if(!st.moved){ exitMini(); return; }    // 点按=恢复
+            const {w}=miniSize(); const center=st.tx+w/2;
+            st.tx=center<window.innerWidth/2?14:(window.innerWidth-w-14);
+            wrap.style.transition='transform .3s cubic-bezier(.22,1,.36,1)'; applyMini(true);
+            st.mode='none'; return;
+        }
+        st.mode='none';
+    };
+    const begin=(mode,e)=>{
+        const st=miniState; if(!st) return;
+        if(st.mode==='none') st.ptrs.clear();
+        st.ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
+        if(st.ptrs.size===2){ // 第二指按下 -> 双指捏合
+            st.mode='pinch'; const ps=[...st.ptrs.values()];
+            pinchD=Math.max(20,dist(ps[0],ps[1])); s0=st.s;
+            focal={x:(ps[0].x+ps[1].x)/2,y:(ps[0].y+ps[1].y)/2};
+        }else{
+            st.mode=mode; st.moved=false;
+            sx=e.clientX; sy=e.clientY; ox=st.tx; oy=st.ty; s0=st.s;
+            wrap.classList.add('dragging');
+        }
+        window.addEventListener('pointermove',onMove);
+        window.addEventListener('pointerup',onUp);
+        window.addEventListener('pointercancel',onUp);
+        e.preventDefault();
+    };
+    miniState.drag.addEventListener('pointerdown',e=>begin('move',e));
+    miniState.rsz.addEventListener('pointerdown',e=>{e.stopPropagation();begin('resize',e);});
+}
+
+/* 功能按钮点按柔光光晕（静态按钮 + 动态生成按钮均可用） */
+function bindGlowPress(el){
+    if(!el || el.__glowBound) return; el.__glowBound=true;
+    el.classList.add('glow-press');
+    el.addEventListener('pointerdown',function(e){
+        const r=el.getBoundingClientRect();
+        const x=(e.clientX||r.left+r.width/2)-r.left, y=(e.clientY||r.top+r.height/2)-r.top;
+        const d=Math.max(r.width,r.height)*2.6;
+        const sp=document.createElement('span'); sp.className='gp-ripple';
+        sp.style.left=x+'px'; sp.style.top=y+'px'; sp.style.width=d+'px'; sp.style.height=d+'px';
+        el.appendChild(sp); setTimeout(()=>sp.remove(),640);
+    });
+}
+document.querySelectorAll('.toolbar .btn,.icon-btn,.mbtn,.abtn').forEach(bindGlowPress);
 </script>
 </body>
 </html>
