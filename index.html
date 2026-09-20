@@ -53,8 +53,8 @@
         .full-wrap {position:relative;z-index:2;width:100%;}
         .model-container {
             position:relative;width:100%;height:520px;
-            background:rgba(220,235,250,.65);
-            backdrop-filter:blur(36px) saturate(220%);
+            background:rgba(220,235,250,.5);
+            backdrop-filter:blur(46px) saturate(230%);
             border-radius:26px;overflow:hidden;
             box-shadow:0 16px 48px rgba(50,100,180,.15), 0 0 32px rgba(140,180,255,.28);
             border:1px solid rgba(255,255,255,.85);
@@ -97,7 +97,8 @@
         }
         .btn:active{transform:scale(.88);transition-duration:.1s;}
         .btn:hover{border-color:#fff;box-shadow:0 6px 20px rgba(50,100,180,.2),inset 0 1px 1px #fff,0 0 0 1px rgba(150,190,255,.34),0 0 24px rgba(150,190,255,.55);}
-        .btn.active{background:#2563a8;color:#fff;box-shadow:0 6px 20px rgba(37,99,168,.4);}
+        .btn.active{background:linear-gradient(145deg,rgba(214,234,254,.98),rgba(184,214,248,.92));color:#1d5fae;border-color:rgba(255,255,255,1);box-shadow:0 0 0 2.5px rgba(123,168,240,.42),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 22px rgba(150,190,255,.6);animation:activeBreath 2.8s ease-in-out infinite;}
+        @keyframes activeBreath{0%,100%{box-shadow:0 0 0 2.5px rgba(123,168,240,.42),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 20px rgba(150,190,255,.5);}50%{box-shadow:0 0 0 2.5px rgba(123,168,240,.30),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 28px rgba(150,190,255,.72);}}
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%) translateY(-8px);
             top:20px;z-index:21;color:#2563a8;font-size:12px;
@@ -148,31 +149,35 @@
             padding:2px 2px 6px;scrollbar-width:thin;scrollbar-color:rgba(123,168,240,.5) transparent;}
         .ml-scroll::-webkit-scrollbar{width:5px;}
         .ml-scroll::-webkit-scrollbar-thumb{background:rgba(123,168,240,.45);border-radius:3px;}
-        .ml-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+        .ml-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(132px,1fr));gap:8px;}
         .ml-fade{position:absolute;left:0;right:0;height:22px;pointer-events:none;z-index:2;opacity:0;transition:opacity .25s ease;}
         .ml-fade-bottom{bottom:0;background:linear-gradient(to top,rgba(236,243,250,.95),transparent);}
         .ml-fade.on{opacity:1;}
         .ml-empty{display:none;text-align:center;color:#8aa6cc;font-size:13px;padding:40px 0;}
         .ml-empty.on{display:block;animation:softIn .35s ease backwards;}
         .model-item{position:relative;overflow:hidden;
-            padding:13px 14px;border-radius:15px;cursor:pointer;
+            padding:8px 11px;border-radius:13px;cursor:pointer;
             background:linear-gradient(150deg,rgba(255,255,255,.78),rgba(231,240,252,.6));
             border:1px solid rgba(255,255,255,.92);
             box-shadow:0 4px 14px rgba(50,100,180,.1),inset 0 1px 1px rgba(255,255,255,.9),0 0 0 1px rgba(150,190,255,.08);
-            opacity:0;transform:translateY(16px);
-            transition:opacity .4s ease,transform .26s cubic-bezier(.22,1,.36,1),box-shadow .28s ease,border-color .28s ease,background .28s ease;}
+            opacity:0;transform:translateY(14px);
+            transition:opacity .38s ease,transform .24s var(--e-settle),box-shadow .26s ease,border-color .26s ease,background .26s ease;}
         .model-list.show .model-item{opacity:1;transform:translateY(0);}
-        @media(hover:hover){.model-item:hover{transform:translateY(-3px);border-color:rgba(150,190,255,.75);
+        /* 按压：描边整体亮起一圈柔光环 + 边框发光扩散 */
+        .model-item.pressing{border-color:rgba(150,190,255,.95);transform:scale(.965);
+            box-shadow:0 0 0 2px rgba(123,168,240,.34),0 0 18px 3px rgba(150,190,255,.5),inset 0 1px 2px #fff;}
+        .model-item.fadeout{transition:box-shadow .5s ease,border-color .5s ease,transform .3s var(--e-settle);}
+        @media(hover:hover){.model-item:hover{transform:translateY(-2px);border-color:rgba(150,190,255,.75);
             box-shadow:0 10px 26px rgba(50,100,180,.18),inset 0 1px 1px #fff,0 0 0 1px rgba(150,190,255,.3),0 0 22px rgba(150,190,255,.5);}}
         .model-item:active{transform:scale(.96);transition-duration:.08s;}
         .model-item.current{border-color:rgba(123,168,240,.85);
             background:linear-gradient(150deg,rgba(225,238,255,.95),rgba(210,228,252,.78));
             box-shadow:0 8px 22px rgba(50,100,180,.2),inset 0 1px 1px #fff,0 0 0 1.5px rgba(123,168,240,.55),0 0 20px rgba(140,180,255,.5);}
-        .model-item .cur-badge{position:absolute;top:8px;right:9px;font-size:9px;color:#fff;background:linear-gradient(135deg,#5b90e0,#2563a8);
+        .model-item .cur-badge{position:absolute;top:6px;right:8px;font-size:9px;color:#fff;background:linear-gradient(135deg,#5b90e0,#2563a8);
             padding:2px 7px;border-radius:10px;letter-spacing:.5px;box-shadow:0 3px 8px rgba(37,99,168,.4);}
-        .model-item .mid{color:#1e3a5f;font-size:13px;font-weight:600;padding-right:34px;}
-        .model-item .mname{color:#6088b8;font-size:10px;margin-top:3px;line-height:1.35;}
-        .model-item .mno{color:#8aa6cc;font-size:9.5px;margin-top:2px;letter-spacing:.2px;}
+        .model-item .mid{color:#1e3a5f;font-size:12px;font-weight:600;padding-right:32px;line-height:1.3;}
+        .model-item .mname{color:#6088b8;font-size:9.5px;margin-top:2px;line-height:1.3;}
+        .model-item .mno{color:#8aa6cc;font-size:9px;margin-top:1px;letter-spacing:.2px;line-height:1.25;}
         .model-mask{
             position:fixed;inset:0;background:rgba(30,50,90,.2);z-index:9200;
             opacity:0;pointer-events:none;transition:opacity .4s ease;
@@ -256,7 +261,8 @@
             display:flex;align-items:center;justify-content:center;
             cursor:pointer;color:#2563a8;pointer-events:auto;
             opacity:0;transform:scale(.92) translateY(8px);
-            transition:opacity .42s var(--e-expo), transform .56s var(--e-settle), background .25s ease, color .25s ease;
+            transition:opacity .42s var(--e-expo), transform .56s var(--e-settle), background .25s ease, color .25s ease,
+                       left .52s var(--e-settle), right .52s var(--e-settle), top .52s var(--e-settle), bottom .52s var(--e-settle);
         }
         .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);animation:ctrlGlow 5.6s ease-in-out .9s infinite;}
         @keyframes ctrlGlow{
@@ -266,9 +272,22 @@
         .fs-ctrl:active{transform:scale(.85);}
         .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;}
         .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;}
-        .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;}
+        .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;}
+        .fs-panbtn{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;}
         .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));left:70px;right:auto;}
-        .fs-ctrl.active{background:#2563a8;color:#fff;}
+        /* 内容顺时针转 90°，观看时手机向左旋：物理右上 = 视觉左上，据此换算各键飞行落位；图标同转 90° 保持正读 */
+        .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
+        .fs-ctrl-layer.fs-ls .fs-ctrl:active{transform:scale(.85) rotate(90deg);}
+        .fs-ls .fs-exit{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
+        .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;bottom:auto;}
+        .fs-ls .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
+        .fs-ls .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:70px;left:auto;top:auto;}
+        .fs-ls .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;top:auto;}
+        /* 悬浮眼睛按钮里嵌小字提示 */
+        .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
+        .fs-eye.collapsed .eye-badge{display:block;}
+        .fs-ctrl.active{background:linear-gradient(145deg,rgba(206,229,252,.97),rgba(172,206,244,.92));color:#1d5fae;border-color:#fff;box-shadow:0 0 0 2.5px rgba(123,168,240,.4),0 6px 18px rgba(90,140,210,.25),0 0 22px rgba(150,190,255,.6);}
+        .icon-btn.active{color:#1d5fae;border-color:rgba(150,190,255,.9);background:linear-gradient(145deg,rgba(214,234,254,.98),rgba(184,214,248,.9));box-shadow:0 0 0 2px rgba(123,168,240,.35),0 0 16px rgba(150,190,255,.55);}
 
         /* ===== 整页全屏：flex 布局，模型自适应占满 ===== */
         .full-wrap.fs-page{
@@ -376,6 +395,13 @@
         .full-wrap.model-backdrop .info-card .v{font-size:12px;font-weight:600;text-shadow:none;}
         .full-wrap.model-backdrop .model-container{background:transparent;}
         body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(18px) saturate(170%)!important;-webkit-backdrop-filter:blur(18px) saturate(170%)!important;}
+        /* 横屏态：内容顺时针 90°，视觉左下 = 物理左上；卡片带位移动画飞过去并自旋保持正读，渐隐随卡片整体旋转无需镜像 */
+        .full-wrap.model-backdrop .info-card{transition:left .52s var(--e-settle),right .52s var(--e-settle),top .52s var(--e-settle),bottom .52s var(--e-settle),transform .52s var(--e-settle);}
+        .full-wrap.model-backdrop.ls-card .info-card{
+            left:12px;right:auto;top:calc(12px + env(safe-area-inset-top));bottom:auto;
+            transform:rotate(90deg);transform-origin:center center;
+            width:min(300px,60vh);
+        }
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
         body.in-fs .model-container,
@@ -658,6 +684,15 @@ if(id && window.partData && partData[id]){
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
     viewer.src = d.glbUrl;
     viewer.autoRotateSpeed = 5;
+    /* 进页面即自旋；一旦用户手势操控自动暂停，🔄 按钮可随时开关 */
+    viewer.autoRotate = true; rotate = true;
+    if(btnRotate) btnRotate.classList.add('active');
+    viewer.addEventListener('camera-change', e => {
+        if(e.detail && e.detail.source === 'user-interaction' && rotate){
+            rotate = false; viewer.autoRotate = false;
+            btnRotate.classList.remove('active');
+        }
+    });
     viewer.addEventListener('progress', e => {
         if(e.total){
             const p = Math.round(e.loaded/e.total*100);
@@ -722,7 +757,10 @@ const modelList = $('#modelList'), modelMask = $('#modelMask'), modelItems = $('
       modelSearch=$('#modelSearch'), modelSearchClear=$('#modelSearchClear'), modelCount=$('#modelCount'),
       modelEmpty=$('#modelEmpty'), mlScroll=document.querySelector('#modelList .ml-scroll'),
       mlFadeBottom=document.querySelector('#modelList .ml-fade-bottom');
-function closeModelList(){ modelList.classList.remove('show'); modelMask.classList.remove('show'); }
+function closeModelList(){
+    modelItems.querySelectorAll('.model-item').forEach(it=>it.style.transitionDelay='0s');
+    modelList.classList.remove('show'); modelMask.classList.remove('show');
+}
 function renderModelList(kw){
     kw=(kw||'').trim().toLowerCase();
     modelItems.innerHTML=''; let n=0;
@@ -739,6 +777,8 @@ function renderModelList(kw){
             +'<div class="mname">'+(d.projectName||'')+' · '+(d.partType||'')+'</div>'
             +(d.workNo?'<div class="mno">加工号 '+d.workNo+'</div>':'');
         item.onclick=()=>{ closeModelList(); setTimeout(()=>{ location.href=location.pathname+'?id='+pid; },260); };
+        item.addEventListener('pointerdown',()=>{ item.classList.remove('fadeout'); item.classList.add('pressing'); });
+        ['pointerup','pointercancel','pointerleave'].forEach(ev=>item.addEventListener(ev,()=>{ if(item.classList.contains('pressing')){ item.classList.remove('pressing'); item.classList.add('fadeout'); setTimeout(()=>item.classList.remove('fadeout'),500); } }));
         bindGlowPress(item);
         modelItems.appendChild(item); n++;
     });
@@ -748,10 +788,10 @@ function renderModelList(kw){
 }
 function updateMlFade(){ if(!mlScroll)return; mlFadeBottom.classList.toggle('on', mlScroll.scrollTop+mlScroll.clientHeight < mlScroll.scrollHeight-8); }
 /* 面板高度按构件数量自适应：行少贴内容、行多封顶约半屏，再多交给内部滚动 */
-const ML_TOP = 106;   /* 握把 + 标题 + 搜索框 + 内边距 */
-const ML_ROW = 92;    /* 单元格高度 + 间距 */
+const ML_TOP = 100;   /* 握把 + 标题 + 搜索框 + 内边距 */
+const ML_ROW = 74;    /* 压扁后单元格高度 + 间距 */
 function fitModelListHeight(n){
-    const cols = Math.max(1, Math.round(modelItems.clientWidth / 160)) || 2;
+    const cols = Math.max(1, Math.round(modelItems.clientWidth / 136)) || 2;
     const rows = Math.max(1, Math.ceil(n / cols));
     const h = ML_TOP + rows * ML_ROW + 10;
     /* 半屏封顶、内部滚动为主；构件非常多（≥15）才放宽到 2/3 屏 */
@@ -780,7 +820,7 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 const EASE = 'cubic-bezier(.32,.72,0,1)';
 const EASE_IN = 'cubic-bezier(.16,1,.3,1)';
 const FS_IN_MS = 520;
-const FLY_MS = 360;
+const FLY_MS = 400;
 let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
 let pendingFs = null;   // 两种全屏之间切换时的目标模式
@@ -790,6 +830,7 @@ const ICON_ROTATE = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none"
 const ICON_EYE = '<svg class="ic-eye" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
 const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 const ICON_EXPAND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+const ICON_PAN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M8 7l4-4 4 4M7 8l-4 4 4 4M17 8l4 4-4 4M8 17l4 4 4-4"/></svg>';
 
 function enterFullscreen(type, isSwitch){
     if(fsState){
@@ -826,18 +867,25 @@ function enterFullscreen(type, isSwitch){
     if(type === 'model'){
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
         makeBtn('fs-pagebtn', ICON_EXPAND, () => switchFullscreen('page'));
+        const panBtn = makeBtn('fs-panbtn', ICON_PAN, () => setPanMode(!panMode));
+        panBtn.classList.toggle('active', panMode);
         modelContainer.classList.add('fs-model');
         fullWrap.classList.add('model-backdrop');
     }
     if(type === 'page'){
         const eye=$('#btnEyeInline');
-        eye.innerHTML=ICON_EYE; eye.classList.remove('active');
-        eye.onclick=function(){
+        const floatEye=makeBtn('fs-eye', ICON_EYE, toggleInfoCollapse);
+        floatEye.innerHTML=ICON_EYE+'<i class="eye-badge"></i>';
+        function toggleInfoCollapse(src){
             const collapsed=fullWrap.classList.toggle('info-collapsed');
-            this.classList.toggle('active',collapsed);
-            this.innerHTML=collapsed?ICON_EYE_OFF:ICON_EYE;
+            eye.classList.toggle('active',collapsed);
+            eye.innerHTML=collapsed?ICON_EYE_OFF:ICON_EYE;
+            floatEye.classList.toggle('collapsed',collapsed);
+            floatEye.classList.toggle('active',collapsed);
+            floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
             setTimeout(safeResize,500);
-        };
+        }
+        eye.onclick=toggleInfoCollapse;
         fullWrap.classList.add('fs-page');
     }
 
@@ -871,7 +919,10 @@ function enterFullscreen(type, isSwitch){
         bg.style.opacity = '1';
     }));
     setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach((b,i)=>{ b.style.transitionDelay=(i*60)+'ms'; b.classList.add('show'); }); }, 120);
-    setTimeout(()=>{ el.style.transform = 'none'; safeResize(); }, FS_IN_MS + 60);
+    fsState.inTimer = setTimeout(()=>{
+        if(!fsState || fsState.exiting) return;
+        el.style.transform = 'none'; safeResize();
+    }, FS_IN_MS + 60);
 }
 function safeResize(){ try{ if(typeof viewer.resize === 'function') viewer.resize(); else window.dispatchEvent(new Event('fs-nudge')); }catch(e){} }
 
@@ -890,51 +941,62 @@ function exitFullscreen(){
     const { el, type, saved, bg, ctrl, rect } = state;
     if(state.isLandscape){ resetLandscape(true); }
     state.exiting = true;
+    if(state.inTimer){ clearTimeout(state.inTimer); state.inTimer = null; }
     const switching = pendingFs; pendingFs = null;
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
 
-    /* 连续缩回：全屏层沿 transform 一路收回原始版面矩形（透明度全程保留，布局在终点帧无缝切换），
-       信息卡在收回过程中先淡出，避免两列小格被压扁；杜绝"弹一下卡出来" */
+    /* 连续 FLIP 缩回：全屏层一段 transform 滑回原块位（只动 transform/圆角，零重排），
+       信息卡提前柔和淡出（fs-exiting），收尾在同一帧清零 transform 并恢复真实布局——
+       无两段式交接、无残影跳帧，即"从全屏丝滑收回卡片里" */
     const r0 = el.getBoundingClientRect();
     const kx = rect.width / r0.width, ky = rect.height / r0.height;
     fullWrap.classList.add('fs-exiting');
     el.style.transformOrigin = '0 0';
     el.style.willChange = 'transform';
     el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE + ', border-radius ' + FLY_MS + 'ms ' + EASE;
+    void el.offsetHeight;
     requestAnimationFrame(() => {
         el.style.transform = 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + kx + ',' + ky + ')';
         if(type === 'model') el.style.borderRadius = '26px';
-        bg.style.transition = 'opacity 260ms ease-in ' + (FLY_MS - 180) + 'ms';
+        bg.style.transition = 'opacity 300ms ease ' + (FLY_MS - 240) + 'ms';
         bg.style.opacity = '0';
     });
-
-    setTimeout(()=>{
-        /* 此刻视觉已与普通布局重合：一次性恢复真实布局，画面无跳变 */
+    let landed = false;
+    const land = () => {
+        if(landed) return; landed = true;
+        restoreLayout(el, state, bg, ctrl);
         el.style.transition = 'none';
-        el.style.transformOrigin = saved.transformOrigin;
-        el.style.position = saved.position;
-        el.style.left = saved.left; el.style.top = saved.top;
-        el.style.width = saved.width; el.style.height = saved.height;
-        el.style.zIndex = saved.zIndex;
-        el.style.borderRadius = saved.borderRadius;
-        el.style.willChange = saved.willChange;
-        fullWrap.style.zIndex = saved.wrapZ;
-        fullWrap.classList.remove('fs-page','info-collapsed');
-    (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-        fullWrap.classList.remove('model-backdrop','fs-exiting');
-        modelContainer.classList.remove('fs-model');
-        document.body.classList.remove('in-fs');
-        bg.remove(); ctrl.remove();
-        fsState = null;
-        safeResize();
+        el.style.transform = '';
         void el.offsetHeight;
-        requestAnimationFrame(()=>{
+        safeResize();
+        requestAnimationFrame(() => {
             el.style.transition = '';
-            el.style.transform = '';
-            if(switching){ pendingFs = null; enterFullscreen(switching, true); }
+            if(switching) enterFullscreen(switching, true);
         });
-    }, FLY_MS + 24);
+    };
+    el.addEventListener('transitionend', land, {once:true});
+    setTimeout(land, FLY_MS + 140);
+}
+/* 把真实 DOM 一次性恢复到普通布局（在幽灵层淡入前调用，画面由全屏层暂时遮住） */
+function restoreLayout(el, state, bg, ctrl){
+    const { saved } = state;
+    el.style.transition = 'none';
+    el.style.transformOrigin = saved.transformOrigin;
+    el.style.position = saved.position;
+    el.style.left = saved.left; el.style.top = saved.top;
+    el.style.width = saved.width; el.style.height = saved.height;
+    el.style.zIndex = saved.zIndex;
+    el.style.borderRadius = saved.borderRadius;
+    fullWrap.style.zIndex = saved.wrapZ;
+    fullWrap.classList.remove('fs-page','info-collapsed');
+    (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
+    fullWrap.classList.remove('model-backdrop','fs-exiting','ls-card');
+    modelContainer.classList.remove('fs-model');
+    document.body.classList.remove('in-fs');
+    bg.remove(); ctrl.remove();
+    fsState = null;
+    void el.offsetHeight;
 }
 /* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
 function switchFullscreen(type){
@@ -954,6 +1016,9 @@ function toggleLandscape(){
     /* 只动 transform（旋转+缩放），盒子始终 100vw×100vh，画布不重排、不重设，纯 GPU 合成不卡 */
     el.style.transition = 'transform .52s ' + EASE_IN;
     el.style.transformOrigin = 'center center';
+    /* 按钮层与信息卡同步：旋转 90° 抵消自旋保持正读，位置沿横屏视觉角飞位 */
+    if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', fsState.isLandscape);
+    fullWrap.classList.toggle('ls-card', fsState.isLandscape);
     if(fsState.isLandscape){
         const k = window.innerHeight / window.innerWidth;
         el.style.transform = 'rotate(90deg) scale(' + k + ')';
@@ -962,6 +1027,7 @@ function toggleLandscape(){
         el.style.transform = 'none';
         showToast('竖屏模式');
     }
+    setTimeout(safeResize, 560);
 }
 function resetLandscape(immediate){
     if(!fsState || fsState.exiting) return;
@@ -1003,42 +1069,85 @@ modelContainer.addEventListener('pointerdown', () => {
     clearTimeout(modelTapTimer);
     modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
 });
-/* ===== 移动模式：单指直接拖移模型（不必再双指找位），双指仍为旋转/缩放 ===== */
-let panMode = false, panDrag = null;
+/* ===== 平移手势：移动模式单指=平移 / 双指=捏合缩放；桌面鼠标中键=平移 =====
+   会话期间暂停内置 camera-controls（并在容器捕获层拦截事件），抬手自动还原 */
+let panMode = false, panSession = null, pinch = null;
+const PAN_K = 1.35;
+function touchDist(e){
+    const a = e.touches[0], b = e.touches[1];
+    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+}
+function panStart(pid,x,y){
+    if(panSession) return;
+    panSession = {id:pid, x, y};
+    try{ viewer.cameraControls = false; }catch(e){}
+}
+function panMove(x,y){
+    if(!panSession || pinch) return;
+    const orbit = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
+    const k = -orbit.radius / box.height * PAN_K;
+    const tg = viewer.getCameraTarget();
+    tg.x += (x - panSession.x) * k;
+    tg.y -= (y - panSession.y) * k;
+    viewer.cameraTarget = tg.toString();
+    viewer.jumpCameraToGoal();
+    panSession.x = x; panSession.y = y;
+}
+function pinchMove(d){
+    if(!pinch) return;
+    const o = viewer.getCameraOrbit();
+    const r = Math.max(o.radius * pinch.r0 / d, 0.05);
+    viewer.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + r + 'm';
+    viewer.jumpCameraToGoal();
+}
+function panEnd(){
+    panSession = null; pinch = null;
+    try{ viewer.cameraControls = true; }catch(e){}
+}
+function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 function setPanMode(on){
-    panMode = on;
-    btnPan.classList.toggle('active', on);
-    try{ viewer.disableTap = on; }catch(e){}
-    if(!on) panDrag = null;
+    panMode = !!on;
+    syncPanBtns();
+    if(!panMode) panEnd();
     showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
-viewer.addEventListener('touchstart', e => {
-    if(!panMode || e.touches.length !== 1 || panDrag) return;
-    const t = e.touches[0];
-    panDrag = {x:t.clientX, y:t.clientY, id:t.identifier};
-}, {capture:true, passive:true});
-viewer.addEventListener('touchmove', e => {
-    if(!panMode || !panDrag) return;
-    let t = null;
-    for(let i=0;i<e.touches.length;i++){ if(e.touches[i].identifier === panDrag.id){ t = e.touches[i]; break; } }
-    if(!t){ return; }
-    /* 与 model-viewer 内部平移同一套换算：位移 = 像素差 × 半径 / 画布高 */
-    const orbit = viewer.getCameraOrbit();
-    const box = viewer.getBoundingClientRect();
-    const k = -orbit.radius / box.height;
-    const target = viewer.getCameraTarget();
-    target.x += (t.clientX - panDrag.x) * k;
-    target.y -= (t.clientY - panDrag.y) * k;
-    viewer.cameraTarget = target.toString();
-    viewer.jumpCameraToGoal();
-    panDrag.x = t.clientX; panDrag.y = t.clientY;
+modelContainer.addEventListener('pointerdown', e => {
+    const touch = e.pointerType === 'touch';
+    if((touch && panMode && e.isPrimary) || (!touch && e.button === 1)){
+        e.stopPropagation();
+        if(!touch) e.preventDefault();
+        panStart(e.pointerId, e.clientX, e.clientY);
+    }
+}, true);
+modelContainer.addEventListener('pointermove', e => {
+    if(!panSession || e.pointerId !== panSession.id) return;
     e.stopPropagation();
+    panMove(e.clientX, e.clientY);
+}, true);
+const panUp = e => { if(panSession && e.pointerId === panSession.id) panEnd(); };
+modelContainer.addEventListener('pointerup', panUp, true);
+modelContainer.addEventListener('pointercancel', panUp, true);
+/* 移动模式内接管全部触摸：二指落下进入捏合缩放，抬起回单指平移 */
+modelContainer.addEventListener('touchstart', e => {
+    if(!panMode) return;
+    e.stopPropagation();
+    if(e.touches.length >= 2){
+        const o = viewer.getCameraOrbit();
+        pinch = {d0: touchDist(e), r0: o.radius};
+    }
 }, {capture:true, passive:false});
-const endPan = e => { if(!panDrag) return; if(e.touches){ for(let i=0;i<e.touches.length;i++){ if(e.touches[i].identifier === panDrag.id){ panDrag = null; return; } } } else panDrag = null; };
-viewer.addEventListener('touchend', endPan, {capture:true, passive:true});
-viewer.addEventListener('touchcancel', endPan, {capture:true, passive:true});
-viewer.addEventListener('interact-stopped', () => { panDrag = null; });
+modelContainer.addEventListener('touchmove', e => {
+    if(!panMode) return;
+    e.stopPropagation();
+    if(e.touches.length >= 2 && pinch){ pinchMove(touchDist(e)); }
+}, {capture:true, passive:false});
+modelContainer.addEventListener('touchend', e => {
+    if(!panMode) return;
+    if(e.touches.length < 2 && pinch){ pinch = null; if(e.touches.length === 1){ const t=e.touches[0]; panSession={id:t.identifier,x:t.clientX,y:t.clientY}; } }
+    if(e.touches.length === 0) panEnd();
+}, {capture:true, passive:true});
+modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
 
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? requestExitFullscreen() : enterFullscreen('page');
