@@ -1141,8 +1141,9 @@ function setPanMode(on){
 }
 btnPan.onclick = () => setPanMode(!panMode);
 
-btnModelFull.onclick = () => enterFullscreen('model');
-btnFull.onclick = () => fsState ? requestExitFullscreen() : enterFullscreen('page');
+(function(){var ei=document.getElementById('btnEyeInline'); if(ei && !ei.innerHTML.trim()) ei.innerHTML=ICON_EYE;})();
+btnModelFull.onclick = () => { if(fsState && !document.body.classList.contains('in-fs')){ fsState=null; } enterFullscreen('model'); };
+btnFull.onclick = () => { if(fsState && !document.body.classList.contains('in-fs')){ fsState=null; } fsState ? requestExitFullscreen() : enterFullscreen('page'); };
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) requestExitFullscreen(); });
 window.addEventListener('resize', () => { if(fsState) safeResize(); });
 if(location.hash && /full/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
