@@ -965,6 +965,7 @@ function exitFullscreen(){
     let landed = false;
     const land = () => {
         if(landed) return; landed = true;
+        el.removeEventListener('transitionend', onEnd);
         restoreLayout(el, state, bg, ctrl);
         el.style.transition = 'none';
         el.style.transform = '';
@@ -975,7 +976,12 @@ function exitFullscreen(){
             if(switching) enterFullscreen(switching, true);
         });
     };
-    el.addEventListener('transitionend', land, {once:true});
+    /* 只认本层的 transform 收尾：子元素（信息卡淡出等）的 transitionend 会冒泡上来，必须过滤掉 */
+    const onEnd = e => {
+        if(e.target !== el || e.propertyName !== 'transform') return;
+        land();
+    };
+    el.addEventListener('transitionend', onEnd);
     setTimeout(land, FLY_MS + 140);
 }
 /* 把真实 DOM 一次性恢复到普通布局（在幽灵层淡入前调用，画面由全屏层暂时遮住） */
@@ -1094,9 +1100,10 @@ function panMove(x,y){
     panSession.x = x; panSession.y = y;
 }
 function pinchMove(d){
-    if(!pinch) return;
+    if(!pinch || !d) return;
     const o = viewer.getCameraOrbit();
-    const r = Math.max(o.radius * pinch.r0 / d, 0.05);
+    /* 半径与指距成反比：以捏合起始的半径/指距为基线，避免逐帧复利漂移 */
+    const r = Math.max(pinch.r0 * pinch.d0 / d, 0.05);
     viewer.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + r + 'm';
     viewer.jumpCameraToGoal();
 }
