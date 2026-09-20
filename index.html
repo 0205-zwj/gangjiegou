@@ -402,6 +402,7 @@
         .full-wrap.model-backdrop .info-card .k{width:68px;min-width:0;font-size:11px;}
         .full-wrap.model-backdrop .info-card .v{font-size:12px;font-weight:600;text-shadow:none;}
         .full-wrap.model-backdrop .model-container{background:transparent;}
+        .full-wrap.model-backdrop.info-collapsed .info-card{opacity:0;pointer-events:none;max-height:0;padding-top:0;padding-bottom:0;margin:0;border-width:0;}
         body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(18px) saturate(170%)!important;-webkit-backdrop-filter:blur(18px) saturate(170%)!important;}
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
@@ -867,10 +868,19 @@ function enterFullscreen(type, isSwitch){
     }
     makeBtn('fs-exit', ICON_EXIT, requestExitFullscreen);
     if(type === 'model'){
+        /* 进入模型全屏一律先复位竖屏/横屏残留 */
+        fsState.isLandscape = false;
+        fullWrap.classList.remove('ls-card');
+        modelContainer.style.transform = 'none';
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
         makeBtn('fs-pagebtn', ICON_EXPAND, () => switchFullscreen('page'));
         const panBtn = makeBtn('fs-panbtn', ICON_PAN, () => setPanMode(!panMode));
         panBtn.classList.toggle('active', panMode);
+        const mEye = makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => {
+            const c = fullWrap.classList.toggle('info-collapsed');
+            mEye.classList.toggle('active', c);
+            mEye.innerHTML = (c?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
+        });
         modelContainer.classList.add('fs-model');
         fullWrap.classList.add('model-backdrop');
     }
@@ -986,9 +996,9 @@ function restoreLayout(el, state, bg, ctrl){
     el.style.opacity = '';
     el.style.transform = saved.transform || 'none';
     fullWrap.style.zIndex = saved.wrapZ;
-    fullWrap.classList.remove('fs-page','info-collapsed');
+    fullWrap.classList.remove('fs-page','info-collapsed','model-backdrop','fs-exiting','ls-card');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-    fullWrap.classList.remove('model-backdrop','fs-exiting');
+    modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';}
     modelContainer.classList.remove('fs-model');
     document.body.classList.remove('in-fs');
     bg.remove(); ctrl.remove();
@@ -1089,7 +1099,7 @@ const onUI = e => e.target && e.target.closest && e.target.closest('.btn,.icon-b
 modelContainer.addEventListener('pointerdown', e => {
     if(!panMode || onUI(e)) return;
     if(e.pointerType === 'mouse'){ if(e.button !== 0) return; }
-    if(!e.isPrimary) return;            /* 第二根手指：放行，内置捏合缩放 */
+    if(!e.isPrimary){ gt=null; return; }   /* 第二根手指：立刻放行，交给内置做双指捏合缩放 */
     e.preventDefault(); e.stopPropagation();
     gt = {x:e.clientX, y:e.clientY, id:e.pointerId};
 }, {capture:true, passive:false});
