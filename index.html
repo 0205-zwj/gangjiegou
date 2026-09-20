@@ -275,23 +275,8 @@
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
-        /* 横屏：内容顺旋90°、手机向左旋观看，物理角→视觉角为 右上=视左上/右下=视右上/左下=视右下/左上=视左下；
-           按键钉在物理四角（拇指永远够得着），图标自旋90°保持正读 */
-        .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
-        .fs-ctrl-layer.fs-ls .fs-ctrl:active{transform:scale(.85) rotate(90deg);}
-        .fs-ls .fs-exit{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
-        .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
-        .fs-ls .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));left:74px;right:auto;top:auto;}
-        .fs-ls .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;top:auto;}
-        .fs-ls .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
-        /* 横屏信息卡压紧：行高字号缩小，整卡不再占据半屏 */
-        .full-wrap.model-backdrop.ls-card .info-card .row{padding:3px 8px;font-size:10.5px;gap:6px;}
-        .full-wrap.model-backdrop.ls-card .info-card .k{width:56px;font-size:10px;}
-        .full-wrap.model-backdrop.ls-card .info-card .v{font-size:10.5px;}
-        .full-wrap.model-backdrop.ls-card .info-head{padding:0 4px 4px;margin:0;}
-        .full-wrap.model-backdrop.ls-card .info-head h3{font-size:11px;}
-        .fs-ls .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;top:auto;}
-        /* 悬浮眼睛按钮里嵌小字提示 */
+        /* 横屏：与原版一致——按键与信息卡固定物理角原位，不做旋转飞位 */
+        /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
         .fs-ctrl.active{background:linear-gradient(145deg,rgba(206,229,252,.97),rgba(172,206,244,.92));color:#1d5fae;border-color:#fff;box-shadow:0 0 0 2.5px rgba(123,168,240,.4),0 6px 18px rgba(90,140,210,.25),0 0 22px rgba(150,190,255,.6);}
@@ -403,13 +388,6 @@
         .full-wrap.model-backdrop .info-card .v{font-size:12px;font-weight:600;text-shadow:none;}
         .full-wrap.model-backdrop .model-container{background:transparent;}
         body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(18px) saturate(170%)!important;-webkit-backdrop-filter:blur(18px) saturate(170%)!important;}
-        /* 横屏态：内容顺时针 90°，视觉左下 = 物理左上；卡片带位移动画飞过去并自旋保持正读，渐隐随卡片整体旋转无需镜像 */
-        .full-wrap.model-backdrop .info-card{transition:left .52s var(--e-settle),right .52s var(--e-settle),top .52s var(--e-settle),bottom .52s var(--e-settle),transform .52s var(--e-settle);}
-        .full-wrap.model-backdrop.ls-card .info-card{
-            left:12px;right:auto;top:calc(12px + env(safe-area-inset-top));bottom:auto;
-            transform:rotate(90deg);transform-origin:center center;
-            width:min(240px,40vh);max-height:none;
-        }
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
         body.in-fs .model-container,
@@ -828,7 +806,8 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 const EASE = 'cubic-bezier(.32,.72,0,1)';
 const EASE_IN = 'cubic-bezier(.16,1,.3,1)';
 const FS_IN_MS = 520;
-const FLY_MS = 400;
+const FLY_MS = 380;
+const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
 let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
 let pendingFs = null;   // 两种全屏之间切换时的目标模式
@@ -954,44 +933,37 @@ function exitFullscreen(){
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
 
-    /* 连续 FLIP 缩回：全屏层一段 transform 滑回原块位（只动 transform/圆角，零重排），
-       信息卡提前柔和淡出（fs-exiting），收尾在同一帧清零 transform 并恢复真实布局——
-       无两段式交接、无残影跳帧，即"从全屏丝滑收回卡片里" */
-    const r0 = el.getBoundingClientRect();
-    const kx = rect.width / r0.width, ky = rect.height / r0.height;
-    fullWrap.classList.add('fs-exiting');
-    el.style.transformOrigin = '0 0';
-    el.style.willChange = 'transform';
-    el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE + ', border-radius ' + FLY_MS + 'ms ' + EASE;
-    void el.offsetHeight;
+    /* 飞退消散（最初认可的版本）：全屏层只轻微下移+淡出（中心锚点），不做压缩缩回；
+       消失后普通布局一次性到位，再柔和升起淡入回位——两段都干净，无重影无挤压 */
+    el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE_FLY + ', opacity ' + (FLY_MS - 60) + 'ms ease-in, border-radius ' + FLY_MS + 'ms ' + EASE_FLY;
+    el.style.transformOrigin = 'center center';
     requestAnimationFrame(() => {
-        el.style.transform = 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + kx + ',' + ky + ')';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(26px) scale(.9)';
         if(type === 'model') el.style.borderRadius = '26px';
-        /* 背景前段保持不透明避免重影，末段 220ms 淡出并恰在落位帧归零后整体移除 */
-        bg.style.transition = 'opacity 220ms ease ' + Math.max(FLY_MS - 200, 0) + 'ms';
         bg.style.opacity = '0';
     });
-    let landed = false;
-    const land = () => {
-        if(landed) return; landed = true;
-        el.removeEventListener('transitionend', onEnd);
-        restoreLayout(el, state, bg, ctrl);
+
+    setTimeout(()=>{
+        /* 此刻全屏层已不可见，一次性恢复普通布局，避免逐帧重排 */
         el.style.transition = 'none';
-        el.style.transform = '';
-        void el.offsetHeight;
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(14px) scale(.985)';
+        restoreLayout(el, state, bg, ctrl);
         safeResize();
-        requestAnimationFrame(() => {
-            el.style.transition = '';
-            if(switching) enterFullscreen(switching, true);
-        });
-    };
-    /* 只认本层的 transform 收尾：子元素（信息卡淡出等）的 transitionend 会冒泡上来，必须过滤掉 */
-    const onEnd = e => {
-        if(e.target !== el || e.propertyName !== 'transform') return;
-        land();
-    };
-    el.addEventListener('transitionend', onEnd);
-    setTimeout(land, FLY_MS + 140);
+        void el.offsetHeight;
+        /* 普通层柔和升起、淡入回位 */
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            el.style.transition = 'opacity 440ms ease, transform 480ms ' + EASE_IN;
+            el.style.opacity = '1';
+            el.style.transform = '';
+            setTimeout(()=>{
+                el.style.transition = '';
+                el.style.opacity = '';
+                if(switching) enterFullscreen(switching, true);
+            }, 540);
+        }));
+    }, FLY_MS + 30);
 }
 /* 把真实 DOM 一次性恢复到普通布局（在幽灵层淡入前调用，画面由全屏层暂时遮住） */
 function restoreLayout(el, state, bg, ctrl){
@@ -1003,10 +975,11 @@ function restoreLayout(el, state, bg, ctrl){
     el.style.width = saved.width; el.style.height = saved.height;
     el.style.zIndex = saved.zIndex;
     el.style.borderRadius = saved.borderRadius;
+    el.style.willChange = saved.willChange;
     fullWrap.style.zIndex = saved.wrapZ;
     fullWrap.classList.remove('fs-page','info-collapsed');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-    fullWrap.classList.remove('model-backdrop','fs-exiting','ls-card');
+    fullWrap.classList.remove('model-backdrop','fs-exiting');
     modelContainer.classList.remove('fs-model');
     document.body.classList.remove('in-fs');
     bg.remove(); ctrl.remove();
@@ -1031,9 +1004,6 @@ function toggleLandscape(){
     /* 只动 transform（旋转+缩放），盒子始终 100vw×100vh，画布不重排、不重设，纯 GPU 合成不卡 */
     el.style.transition = 'transform .52s ' + EASE_IN;
     el.style.transformOrigin = 'center center';
-    /* 按钮层与信息卡同步：旋转 90° 抵消自旋保持正读，位置沿横屏视觉角飞位 */
-    if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', fsState.isLandscape);
-    fullWrap.classList.toggle('ls-card', fsState.isLandscape);
     if(fsState.isLandscape){
         const k = window.innerHeight / window.innerWidth;
         el.style.transform = 'rotate(90deg) scale(' + k + ')';
@@ -1084,102 +1054,72 @@ modelContainer.addEventListener('pointerdown', () => {
     clearTimeout(modelTapTimer);
     modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
 });
-/* ===== 手势层（统一捕获接管，根治横屏/移动模式方向错乱与发飘）=====
-   竖屏旋转模式：完全不接管，交还 model-viewer 内置手势（你熟悉的手感）。
-   横屏 或 移动模式：捕获层全程接管 touch（中途不交还），单指按模式旋转/平移、
-   双指=捏合缩放+质心平移；横屏时把屏幕位移换算回旋转后的内容坐标轴。
-   桌面：左键旋转（内置）、中键平移（自绘），互不干扰。 */
-let panMode = false;
-const PAN_K = 1.35, ROT_K = 0.011;
-let gt = null;            /* 当前触摸会话 */
-function touchInfo(e){
-    const t = e.touches;
-    if(t.length === 1) return {n:1, x:t[0].clientX, y:t[0].clientY};
-    const a = t[0], b = t[1];
-    return {n:2, x:(a.clientX+b.clientX)/2, y:(a.clientY+b.clientY)/2, d:Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY)};
-}
-/* 屏幕位移 → 内容轴位移：横屏内容顺旋90°，内容+x = 屏幕-y，内容+y = 屏幕+x */
-function mapLS(dx, dy){ return fsState && fsState.isLandscape ? {dx:dy, dy:-dx} : {dx, dy}; }
-function applyRotate(dx, dy){
-    const m = mapLS(dx, dy), o = viewer.getCameraOrbit();
-    viewer.cameraOrbit = (o.theta - m.dx * ROT_K) + 'rad ' + Math.min(Math.max(o.phi - m.dy * ROT_K, .05), 3.1) + 'rad ' + o.radius + 'm';
-    viewer.jumpCameraToGoal();
+/* ===== 手势层（最终版：内置手势为主，仅两处自绘）=====
+   ① 移动模式：单指=纯平移（x 方向按真机实测校正）；双指一落下立即交还内置=平移+捏合缩放；
+   ② 桌面鼠标中键：按下即自绘平移，松开即还原；
+   ③ 旋转模式 / 横屏：零接管，完全交还 model-viewer 内置（与最初版本手感一致）。
+   注意：触摸捕获必须放行工具栏/控制键上的点击，否则"点移动键后其他都点不动"。 */
+let panMode = false, gt = null, midPan = null;
+const PAN_K = 1.0;
+function takeover(on){
+    try{ viewer.cameraControls = on ? false : true; }catch(e){}
+    if(!on) gt = null;
 }
 function applyPan(dx, dy){
-    const m = mapLS(dx, dy), o = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
-    const vs = (fsState && fsState.isLandscape) ? box.width : box.height;
-    const k = -o.radius / vs * PAN_K;
+    const o = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
+    const s = o.radius / box.height * PAN_K;
     const tg = viewer.getCameraTarget();
-    tg.x += m.dx * k; tg.y -= m.dy * k;
+    tg.x += dx * s;   /* 往右拖 → 内容跟手往右（真机实测校正） */
+    tg.y += dy * s;   /* 往下拖 → 内容跟手往下 */
     viewer.cameraTarget = tg.toString();
     viewer.jumpCameraToGoal();
 }
-function applyPinch(d, cx, cy){
-    if(!gt || !d) return;
-    if(!gt.d0){ gt.d0 = d; gt.r0 = viewer.getCameraOrbit().radius; gt.x = cx; gt.y = cy; return; }
-    const o = viewer.getCameraOrbit();
-    viewer.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + Math.max(gt.r0 * gt.d0 / d, .05) + 'm';
-    viewer.jumpCameraToGoal();
-    /* 捏合同时按质心位移平移，双指"抓着模型走" */
-    const pdx = cx - gt.x, pdy = cy - gt.y;
-    if(Math.abs(pdx) + Math.abs(pdy) > 0) applyPan(pdx, pdy);
-    gt.x = cx; gt.y = cy; gt.d0 = d;
-}
-function takeOver(on){
-    if(on){ try{ viewer.cameraControls = false; }catch(e){} }
-    else { gt = null; try{ viewer.cameraControls = true; }catch(e){} }
-}
-function needTakeover(){ return panMode || (fsState && fsState.isLandscape); }
+const onCtrlUI = e => e.target && e.target.closest && e.target.closest('.btn,.icon-btn,.fs-ctrl,.ml-search,input,button');
 modelContainer.addEventListener('touchstart', e => {
-    if(!needTakeover()) return;                 /* 竖屏旋转模式：内置手势 */
+    if(!panMode || onCtrlUI(e)) return;
+    if(e.touches.length >= 2){ takeover(false); return; }   /* 双指：交还内置（平移+捏合缩放） */
     e.stopPropagation(); e.preventDefault();
-    const t = touchInfo(e);
-    gt = {x:t.x, y:t.y, d0:t.d || 0, r0:viewer.getCameraOrbit().radius, n:t.n};
-    takeOver(true);
+    takeover(true);
+    const t = e.touches[0];
+    gt = {x:t.clientX, y:t.clientY};
 }, {capture:true, passive:false});
 modelContainer.addEventListener('touchmove', e => {
-    if(!needTakeover() || !gt) return;
+    if(!panMode || !gt || onCtrlUI(e)) return;
     e.stopPropagation(); e.preventDefault();
-    const t = touchInfo(e);
-    if(t.n >= 2){ applyPinch(t.d, t.x, t.y); }
-    else if(gt.n >= 2){ gt = {x:t.x, y:t.y, d0:0, r0:viewer.getCameraOrbit().radius, n:1}; }
-    else {
-        const dx = t.x - gt.x, dy = t.y - gt.y;
-        if(panMode) applyPan(dx, dy); else applyRotate(dx, dy);
-        gt.x = t.x; gt.y = t.y;
-    }
+    const t = e.touches[0];
+    applyPan(t.clientX - gt.x, t.clientY - gt.y);
+    gt.x = t.clientX; gt.y = t.clientY;
 }, {capture:true, passive:false});
 const gtEnd = e => {
-    if(!needTakeover()) return;
-    e.stopPropagation();
-    if(e.touches.length === 0){ gt = null; takeOver(false); }
+    if(!panMode) return;
+    if(gt && e.touches.length === 0) takeover(false);
 };
-modelContainer.addEventListener('touchend', gtEnd, {capture:true, passive:false});
-modelContainer.addEventListener('touchcancel', gtEnd, {capture:true, passive:false});
-/* 桌面鼠标中键平移（左键留给内置旋转） */
-let midPan = null;
+modelContainer.addEventListener('touchend', gtEnd, {capture:true, passive:true});
+modelContainer.addEventListener('touchcancel', gtEnd, {capture:true, passive:true});
+/* 桌面：中键按下=平移，左键仍走内置旋转 */
 modelContainer.addEventListener('pointerdown', e => {
-    if(e.pointerType !== 'mouse' || e.button !== 1) return;
+    if(e.pointerType !== 'mouse' || e.button !== 1 || onCtrlUI(e)) return;
     e.preventDefault(); e.stopPropagation();
     midPan = {x:e.clientX, y:e.clientY};
-    takeOver(true);
+    takeover(true);
 }, true);
 modelContainer.addEventListener('pointermove', e => {
     if(!midPan) return;
     e.stopPropagation();
-    const dx = e.clientX - midPan.x, dy = e.clientY - midPan.y;
-    applyPan(dx, dy); midPan.x = e.clientX; midPan.y = e.clientY;
+    applyPan(e.clientX - midPan.x, e.clientY - midPan.y);
+    midPan.x = e.clientX; midPan.y = e.clientY;
 }, true);
-const midUp = e => { if(midPan){ midPan = null; takeOver(false); } };
+const midUp = () => { if(midPan){ midPan = null; takeover(false); } };
 modelContainer.addEventListener('pointerup', midUp, true);
 modelContainer.addEventListener('pointercancel', midUp, true);
 modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
+/* 移动开关与全屏互切时，保证内置控制始终可用 */
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 function setPanMode(on){
     panMode = !!on;
     syncPanBtns();
-    if(!panMode) takeOver(false);
-    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指缩放');
+    takeover(false);
+    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
 
