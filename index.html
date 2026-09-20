@@ -270,18 +270,26 @@
             50%{box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.40),0 0 24px rgba(150,190,255,.48);}
         }
         .fs-ctrl:active{transform:scale(.85);}
-        .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;}
-        .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;}
-        .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;}
-        .fs-panbtn{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;}
-        .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));left:70px;right:auto;}
-        /* 内容顺时针转 90°，观看时手机向左旋：物理右上 = 视觉左上，据此换算各键飞行落位；图标同转 90° 保持正读 */
+        .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;bottom:auto;}
+        .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
+        .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
+        .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
+        .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
+        /* 横屏：内容顺旋90°、手机向左旋观看，物理角→视觉角为 右上=视左上/右下=视右上/左下=视右下/左上=视左下；
+           按键钉在物理四角（拇指永远够得着），图标自旋90°保持正读 */
         .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
         .fs-ctrl-layer.fs-ls .fs-ctrl:active{transform:scale(.85) rotate(90deg);}
         .fs-ls .fs-exit{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
-        .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;bottom:auto;}
+        .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
+        .fs-ls .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));left:74px;right:auto;top:auto;}
+        .fs-ls .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;top:auto;}
         .fs-ls .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
-        .fs-ls .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:70px;left:auto;top:auto;}
+        /* 横屏信息卡压紧：行高字号缩小，整卡不再占据半屏 */
+        .full-wrap.model-backdrop.ls-card .info-card .row{padding:3px 8px;font-size:10.5px;gap:6px;}
+        .full-wrap.model-backdrop.ls-card .info-card .k{width:56px;font-size:10px;}
+        .full-wrap.model-backdrop.ls-card .info-card .v{font-size:10.5px;}
+        .full-wrap.model-backdrop.ls-card .info-head{padding:0 4px 4px;margin:0;}
+        .full-wrap.model-backdrop.ls-card .info-head h3{font-size:11px;}
         .fs-ls .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;top:auto;}
         /* 悬浮眼睛按钮里嵌小字提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
@@ -400,7 +408,7 @@
         .full-wrap.model-backdrop.ls-card .info-card{
             left:12px;right:auto;top:calc(12px + env(safe-area-inset-top));bottom:auto;
             transform:rotate(90deg);transform-origin:center center;
-            width:min(300px,60vh);
+            width:min(240px,40vh);max-height:none;
         }
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
         /* 全屏背景不透明，毛玻璃模糊无视觉作用且逐帧重算很贵，整段关闭以保证动画流畅 */
@@ -599,7 +607,7 @@
 <div class="full-wrap" id="fullWrap">
     <div class="model-container" id="modelContainer">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.3" camera-controls interaction-prompt="auto" orbit-sensitivity="1.05" pan-sensitivity="1.5" zoom-sensitivity="1.25" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
+        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.3" camera-controls interaction-prompt="auto" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
         <div class="toolbar" id="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnPan" title="移动模式（单指拖移）">✋</button>
@@ -959,7 +967,8 @@ function exitFullscreen(){
     requestAnimationFrame(() => {
         el.style.transform = 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + kx + ',' + ky + ')';
         if(type === 'model') el.style.borderRadius = '26px';
-        bg.style.transition = 'opacity 300ms ease ' + (FLY_MS - 240) + 'ms';
+        /* 背景前段保持不透明避免重影，末段 220ms 淡出并恰在落位帧归零后整体移除 */
+        bg.style.transition = 'opacity 220ms ease ' + Math.max(FLY_MS - 200, 0) + 'ms';
         bg.style.opacity = '0';
     });
     let landed = false;
@@ -1075,86 +1084,104 @@ modelContainer.addEventListener('pointerdown', () => {
     clearTimeout(modelTapTimer);
     modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
 });
-/* ===== 平移手势：移动模式单指=平移 / 双指=捏合缩放；桌面鼠标中键=平移 =====
-   会话期间暂停内置 camera-controls（并在容器捕获层拦截事件），抬手自动还原 */
-let panMode = false, panSession = null, pinch = null;
-const PAN_K = 1.35;
-function touchDist(e){
-    const a = e.touches[0], b = e.touches[1];
-    return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+/* ===== 手势层（统一捕获接管，根治横屏/移动模式方向错乱与发飘）=====
+   竖屏旋转模式：完全不接管，交还 model-viewer 内置手势（你熟悉的手感）。
+   横屏 或 移动模式：捕获层全程接管 touch（中途不交还），单指按模式旋转/平移、
+   双指=捏合缩放+质心平移；横屏时把屏幕位移换算回旋转后的内容坐标轴。
+   桌面：左键旋转（内置）、中键平移（自绘），互不干扰。 */
+let panMode = false;
+const PAN_K = 1.35, ROT_K = 0.011;
+let gt = null;            /* 当前触摸会话 */
+function touchInfo(e){
+    const t = e.touches;
+    if(t.length === 1) return {n:1, x:t[0].clientX, y:t[0].clientY};
+    const a = t[0], b = t[1];
+    return {n:2, x:(a.clientX+b.clientX)/2, y:(a.clientY+b.clientY)/2, d:Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY)};
 }
-function panStart(pid,x,y){
-    if(panSession) return;
-    panSession = {id:pid, x, y};
-    try{ viewer.cameraControls = false; }catch(e){}
+/* 屏幕位移 → 内容轴位移：横屏内容顺旋90°，内容+x = 屏幕-y，内容+y = 屏幕+x */
+function mapLS(dx, dy){ return fsState && fsState.isLandscape ? {dx:dy, dy:-dx} : {dx, dy}; }
+function applyRotate(dx, dy){
+    const m = mapLS(dx, dy), o = viewer.getCameraOrbit();
+    viewer.cameraOrbit = (o.theta - m.dx * ROT_K) + 'rad ' + Math.min(Math.max(o.phi - m.dy * ROT_K, .05), 3.1) + 'rad ' + o.radius + 'm';
+    viewer.jumpCameraToGoal();
 }
-function panMove(x,y){
-    if(!panSession || pinch) return;
-    const orbit = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
-    const k = -orbit.radius / box.height * PAN_K;
+function applyPan(dx, dy){
+    const m = mapLS(dx, dy), o = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
+    const vs = (fsState && fsState.isLandscape) ? box.width : box.height;
+    const k = -o.radius / vs * PAN_K;
     const tg = viewer.getCameraTarget();
-    tg.x += (x - panSession.x) * k;
-    tg.y -= (y - panSession.y) * k;
+    tg.x += m.dx * k; tg.y -= m.dy * k;
     viewer.cameraTarget = tg.toString();
     viewer.jumpCameraToGoal();
-    panSession.x = x; panSession.y = y;
 }
-function pinchMove(d){
-    if(!pinch || !d) return;
+function applyPinch(d, cx, cy){
+    if(!gt || !d) return;
+    if(!gt.d0){ gt.d0 = d; gt.r0 = viewer.getCameraOrbit().radius; gt.x = cx; gt.y = cy; return; }
     const o = viewer.getCameraOrbit();
-    /* 半径与指距成反比：以捏合起始的半径/指距为基线，避免逐帧复利漂移 */
-    const r = Math.max(pinch.r0 * pinch.d0 / d, 0.05);
-    viewer.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + r + 'm';
+    viewer.cameraOrbit = o.theta + 'rad ' + o.phi + 'rad ' + Math.max(gt.r0 * gt.d0 / d, .05) + 'm';
     viewer.jumpCameraToGoal();
+    /* 捏合同时按质心位移平移，双指"抓着模型走" */
+    const pdx = cx - gt.x, pdy = cy - gt.y;
+    if(Math.abs(pdx) + Math.abs(pdy) > 0) applyPan(pdx, pdy);
+    gt.x = cx; gt.y = cy; gt.d0 = d;
 }
-function panEnd(){
-    panSession = null; pinch = null;
-    try{ viewer.cameraControls = true; }catch(e){}
+function takeOver(on){
+    if(on){ try{ viewer.cameraControls = false; }catch(e){} }
+    else { gt = null; try{ viewer.cameraControls = true; }catch(e){} }
 }
+function needTakeover(){ return panMode || (fsState && fsState.isLandscape); }
+modelContainer.addEventListener('touchstart', e => {
+    if(!needTakeover()) return;                 /* 竖屏旋转模式：内置手势 */
+    e.stopPropagation(); e.preventDefault();
+    const t = touchInfo(e);
+    gt = {x:t.x, y:t.y, d0:t.d || 0, r0:viewer.getCameraOrbit().radius, n:t.n};
+    takeOver(true);
+}, {capture:true, passive:false});
+modelContainer.addEventListener('touchmove', e => {
+    if(!needTakeover() || !gt) return;
+    e.stopPropagation(); e.preventDefault();
+    const t = touchInfo(e);
+    if(t.n >= 2){ applyPinch(t.d, t.x, t.y); }
+    else if(gt.n >= 2){ gt = {x:t.x, y:t.y, d0:0, r0:viewer.getCameraOrbit().radius, n:1}; }
+    else {
+        const dx = t.x - gt.x, dy = t.y - gt.y;
+        if(panMode) applyPan(dx, dy); else applyRotate(dx, dy);
+        gt.x = t.x; gt.y = t.y;
+    }
+}, {capture:true, passive:false});
+const gtEnd = e => {
+    if(!needTakeover()) return;
+    e.stopPropagation();
+    if(e.touches.length === 0){ gt = null; takeOver(false); }
+};
+modelContainer.addEventListener('touchend', gtEnd, {capture:true, passive:false});
+modelContainer.addEventListener('touchcancel', gtEnd, {capture:true, passive:false});
+/* 桌面鼠标中键平移（左键留给内置旋转） */
+let midPan = null;
+modelContainer.addEventListener('pointerdown', e => {
+    if(e.pointerType !== 'mouse' || e.button !== 1) return;
+    e.preventDefault(); e.stopPropagation();
+    midPan = {x:e.clientX, y:e.clientY};
+    takeOver(true);
+}, true);
+modelContainer.addEventListener('pointermove', e => {
+    if(!midPan) return;
+    e.stopPropagation();
+    const dx = e.clientX - midPan.x, dy = e.clientY - midPan.y;
+    applyPan(dx, dy); midPan.x = e.clientX; midPan.y = e.clientY;
+}, true);
+const midUp = e => { if(midPan){ midPan = null; takeOver(false); } };
+modelContainer.addEventListener('pointerup', midUp, true);
+modelContainer.addEventListener('pointercancel', midUp, true);
+modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 function setPanMode(on){
     panMode = !!on;
     syncPanBtns();
-    if(!panMode) panEnd();
-    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
+    if(!panMode) takeOver(false);
+    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
-modelContainer.addEventListener('pointerdown', e => {
-    const touch = e.pointerType === 'touch';
-    if((touch && panMode && e.isPrimary) || (!touch && e.button === 1)){
-        e.stopPropagation();
-        if(!touch) e.preventDefault();
-        panStart(e.pointerId, e.clientX, e.clientY);
-    }
-}, true);
-modelContainer.addEventListener('pointermove', e => {
-    if(!panSession || e.pointerId !== panSession.id) return;
-    e.stopPropagation();
-    panMove(e.clientX, e.clientY);
-}, true);
-const panUp = e => { if(panSession && e.pointerId === panSession.id) panEnd(); };
-modelContainer.addEventListener('pointerup', panUp, true);
-modelContainer.addEventListener('pointercancel', panUp, true);
-/* 移动模式内接管全部触摸：二指落下进入捏合缩放，抬起回单指平移 */
-modelContainer.addEventListener('touchstart', e => {
-    if(!panMode) return;
-    e.stopPropagation();
-    if(e.touches.length >= 2){
-        const o = viewer.getCameraOrbit();
-        pinch = {d0: touchDist(e), r0: o.radius};
-    }
-}, {capture:true, passive:false});
-modelContainer.addEventListener('touchmove', e => {
-    if(!panMode) return;
-    e.stopPropagation();
-    if(e.touches.length >= 2 && pinch){ pinchMove(touchDist(e)); }
-}, {capture:true, passive:false});
-modelContainer.addEventListener('touchend', e => {
-    if(!panMode) return;
-    if(e.touches.length < 2 && pinch){ pinch = null; if(e.touches.length === 1){ const t=e.touches[0]; panSession={id:t.identifier,x:t.clientX,y:t.clientY}; } }
-    if(e.touches.length === 0) panEnd();
-}, {capture:true, passive:true});
-modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
 
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? requestExitFullscreen() : enterFullscreen('page');
