@@ -275,7 +275,21 @@
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
-        /* 横屏：与原版一致——按键与信息卡固定物理角原位，不做旋转飞位 */
+        /* 横屏映射（内容顺旋90°，用户逆旋手机观看）：视觉左上=物理右上、视觉右上=物理右下、
+           视觉右下=物理左下、视觉左下=物理左上；按键图标同顺旋90°在视觉里保持正读 */
+        .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
+        .fs-ctrl-layer.fs-ls .fs-ctrl:active{transform:scale(.85) rotate(90deg);}
+        .fs-ls .fs-exit{top:16px;right:16px;left:auto;bottom:auto;}
+        .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{top:auto;bottom:16px;right:16px;left:auto;}
+        .fs-ls .fs-rotate{bottom:70px;left:16px;top:auto;right:auto;}
+        .fs-ls .fs-panbtn{top:auto;bottom:16px;left:16px;right:auto;}
+        .fs-ls .fs-eye{top:auto;bottom:16px;right:16px;left:auto;}
+        /* 横屏信息卡：视觉左下 = 物理左上，顺旋90°保持正读 */
+        .full-wrap.model-backdrop.ls-card .info-card{
+            left:12px;top:calc(12px + env(safe-area-inset-top));right:auto;bottom:auto;
+            transform:rotate(90deg);transform-origin:center center;
+        }
+        .full-wrap.model-backdrop .info-card{transition:left .5s var(--e-settle),right .5s var(--e-settle),top .5s var(--e-settle),bottom .5s var(--e-settle),transform .5s var(--e-settle);}
         /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
@@ -360,6 +374,7 @@
         .model-container.fs-model{border-radius:0;border-width:0;}
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
         .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
+        body.in-fs .toolbar{opacity:0!important;pointer-events:none!important;}
         /* 模型一键全屏：构件信息做成与扫码页同款卡片，收成左下角毛玻璃小面板（模型在上可遮挡卡片） */
         .full-wrap.model-backdrop .info-card{
             position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9001;
@@ -804,8 +819,8 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 /* 动效基调：进入用超慢出（expo-out，只减速永不回弹），离场用加速消失，
    对齐 OPPO/vivo 系统面板的手感；杜绝 spring 过冲带来的“弹一下”卡通感 */
 const EASE = 'cubic-bezier(.32,.72,0,1)';
-const EASE_IN = 'cubic-bezier(.16,1,.3,1)';
-const FS_IN_MS = 520;
+const EASE_IN = 'cubic-bezier(.3,.9,.32,1)';
+const FS_IN_MS = 560;
 const FLY_MS = 380;
 const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
 let fsState = null;
@@ -860,16 +875,12 @@ function enterFullscreen(type, isSwitch){
         fullWrap.classList.add('model-backdrop');
     }
     if(type === 'page'){
+        makeBtn('fs-modelbtn', ICON_EXPAND, () => switchFullscreen('model'));
         const eye=$('#btnEyeInline');
-        const floatEye=makeBtn('fs-eye', ICON_EYE, toggleInfoCollapse);
-        floatEye.innerHTML=ICON_EYE+'<i class="eye-badge"></i>';
-        function toggleInfoCollapse(src){
+        function toggleInfoCollapse(){
             const collapsed=fullWrap.classList.toggle('info-collapsed');
             eye.classList.toggle('active',collapsed);
             eye.innerHTML=collapsed?ICON_EYE_OFF:ICON_EYE;
-            floatEye.classList.toggle('collapsed',collapsed);
-            floatEye.classList.toggle('active',collapsed);
-            floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
             setTimeout(safeResize,500);
         }
         eye.onclick=toggleInfoCollapse;
@@ -900,12 +911,12 @@ function enterFullscreen(type, isSwitch){
 
     /* 双 rAF：先真实绘制"起点"那一帧，再开始放大，避免一闪即全屏 */
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN + ', opacity ' + (FS_IN_MS - 160) + 'ms ease-out';
+        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN;
         el.style.transform = 'translate(0px,0px) scale(1,1)';
         if(type === 'model') el.style.borderRadius = '0px';
         bg.style.opacity = '1';
     }));
-    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach((b,i)=>{ b.style.transitionDelay=(i*60)+'ms'; b.classList.add('show'); }); }, 120);
+    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
     fsState.inTimer = setTimeout(()=>{
         if(!fsState || fsState.exiting) return;
         el.style.transform = 'none'; safeResize();
@@ -928,13 +939,14 @@ function exitFullscreen(){
     const { el, type, saved, bg, ctrl, rect } = state;
     if(state.isLandscape){ resetLandscape(true); }
     state.exiting = true;
+    panMode = false; syncPanBtns(); restoreControls();
     if(state.inTimer){ clearTimeout(state.inTimer); state.inTimer = null; }
     const switching = pendingFs; pendingFs = null;
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
 
-    /* 飞退消散（最初认可的版本）：全屏层只轻微下移+淡出（中心锚点），不做压缩缩回；
-       消失后普通布局一次性到位，再柔和升起淡入回位——两段都干净，无重影无挤压 */
+    /* 飞退消散（参考版）：全屏层轻微下移+缩小淡出（中心锚点），不缩回小矩形、无挤压；
+       消失后普通布局一次到位，再柔和升起淡入回位——两段都干净，你实测认可的就是这套 */
     el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE_FLY + ', opacity ' + (FLY_MS - 60) + 'ms ease-in, border-radius ' + FLY_MS + 'ms ' + EASE_FLY;
     el.style.transformOrigin = 'center center';
     requestAnimationFrame(() => {
@@ -943,9 +955,8 @@ function exitFullscreen(){
         if(type === 'model') el.style.borderRadius = '26px';
         bg.style.opacity = '0';
     });
-
     setTimeout(()=>{
-        /* 此刻全屏层已不可见，一次性恢复普通布局，避免逐帧重排 */
+        /* 此刻全屏层已不可见：一次性恢复普通布局，避免逐帧重排 */
         el.style.transition = 'none';
         el.style.opacity = '0';
         el.style.transform = 'translateY(14px) scale(.985)';
@@ -1063,14 +1074,27 @@ let panMode = false, gt = null, midPan = null;
 const PAN_K = 1.0;
 function takeover(on){
     try{ viewer.cameraControls = on ? false : true; }catch(e){}
-    if(!on) gt = null;
+    if(!on) { gt = null; midPan = null; }
+}
+/* 任何手势结束 / 退出全屏 / 取消移动，都强制把内置控制交还，杜绝"卡住" */
+function restoreControls(){
+    try{ viewer.cameraControls = true; }catch(e){}
+    gt = null; midPan = null;
 }
 function applyPan(dx, dy){
     const o = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
-    const s = o.radius / box.height * PAN_K;
+    /* 位移 = 手指像素 × (半径/视口短边)：目标沿"相机屏幕轴"移动，
+       right=(cosθ,0,-sinθ)、up=(-cosφ·sinθ, sinφ, -cosφ·cosθ)，与模型转到哪个角度无关，
+       永远跟手同向；半径 r 不参与修改 → 纯平行移动，绝无缩放感 */
+    const s = o.radius / Math.min(box.width, box.height) * PAN_K;
+    const th = o.theta, ph = o.phi;
+    const rx = Math.cos(th), rz = -Math.sin(th);
+    const ux = -Math.cos(ph) * Math.sin(th), uy = Math.sin(ph), uz = -Math.cos(ph) * Math.cos(th);
     const tg = viewer.getCameraTarget();
-    tg.x += dx * s;   /* 往右拖 → 内容跟手往右（真机实测校正） */
-    tg.y += dy * s;   /* 往下拖 → 内容跟手往下 */
+    /* 目标移动与手指反向：相机中心跟过去后，画面内容正好顺着手指方向走 */
+    tg.x += (-dx * rx + dy * ux) * s;
+    tg.y += (dy * uy) * s;
+    tg.z += (-dx * rz + dy * uz) * s;
     viewer.cameraTarget = tg.toString();
     viewer.jumpCameraToGoal();
 }
@@ -1091,8 +1115,7 @@ modelContainer.addEventListener('touchmove', e => {
     gt.x = t.clientX; gt.y = t.clientY;
 }, {capture:true, passive:false});
 const gtEnd = e => {
-    if(!panMode) return;
-    if(gt && e.touches.length === 0) takeover(false);
+    if(e.touches.length === 0) restoreControls();
 };
 modelContainer.addEventListener('touchend', gtEnd, {capture:true, passive:true});
 modelContainer.addEventListener('touchcancel', gtEnd, {capture:true, passive:true});
@@ -1112,13 +1135,17 @@ modelContainer.addEventListener('pointermove', e => {
 const midUp = () => { if(midPan){ midPan = null; takeover(false); } };
 modelContainer.addEventListener('pointerup', midUp, true);
 modelContainer.addEventListener('pointercancel', midUp, true);
+/* 窗口级兜底：抬手点在容器外时也必须交还内置控制，杜绝"卡住点不动" */
+window.addEventListener('touchend', e => { if(e.touches.length === 0 && gt) restoreControls(); }, true);
+window.addEventListener('touchcancel', () => { if(gt) restoreControls(); }, true);
+window.addEventListener('pointerup', () => { if(midPan){ midPan = null; try{ viewer.cameraControls = true; }catch(e){} } }, true);
 modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
 /* 移动开关与全屏互切时，保证内置控制始终可用 */
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 function setPanMode(on){
     panMode = !!on;
     syncPanBtns();
-    takeover(false);
+    if(!on) restoreControls();
     showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
