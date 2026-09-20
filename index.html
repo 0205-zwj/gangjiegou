@@ -10,6 +10,14 @@
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
     <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
+        /* 动效曲线：一律只减速、不回弹，贴近 ColorOS / OriginOS 的面板手感；
+           同时把光斑的尺寸/颜色/强度收敛成变量，鼠标与手指走不同取值 */
+        :root{
+            --e-settle:cubic-bezier(.32,.72,0,1);
+            --e-expo:cubic-bezier(.16,1,.3,1);
+            --e-leave:cubic-bezier(.5,0,.68,.3);
+            --gs:440px;--ga:1;--gc1:rgba(140,120,255,.22);--gc2:rgba(90,150,255,.14);
+        }
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
         html,body{height:100%;overscroll-behavior:none;}
         body {
@@ -21,12 +29,15 @@
         }
         @keyframes pageIn {from{opacity:0;transform:translateY(12px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
         .glow {
-            position:fixed;left:0;top:0;width:480px;height:480px;border-radius:50%;
-            background:radial-gradient(circle,rgba(140,120,255,.22) 0%,rgba(90,150,255,.14) 40%,transparent 70%);
+            position:fixed;left:0;top:0;width:var(--gs);height:var(--gs);border-radius:50%;
+            background:radial-gradient(circle,var(--gc1) 0%,var(--gc2) 40%,transparent 70%);
             pointer-events:none;transform:translate(-50%,-50%);z-index:1;
-            opacity:0;transition:opacity .4s ease,width .3s ease,height .3s ease;will-change:transform;
+            opacity:0;transition:opacity .55s var(--e-settle),width .5s var(--e-settle),height .5s var(--e-settle);will-change:transform;
         }
         body.in-fs .glow{opacity:0!important;}
+        /* 鼠标轻悬 = 大范围柔光；按下 = 光斑收拢并提亮；触屏 = 小而聚的光团 */
+        .glow.press{width:calc(var(--gs)*.74);height:calc(var(--gs)*.74);--gc1:rgba(118,104,255,.34);--gc2:rgba(82,146,255,.21);}
+        @media (hover:none){:root{--gs:230px;--gc1:rgba(126,152,255,.30);--gc2:rgba(96,180,235,.17);}}
         .header {
             position:relative;z-index:2;
             background:rgba(220,235,250,.65);
@@ -110,11 +121,11 @@
         .model-list{
             position:fixed;left:0;right:0;bottom:0;z-index:9201;
             display:flex;flex-direction:column;
-            height:82vh;max-height:86vh;padding:14px 14px calc(18px + env(safe-area-inset-bottom));
+            height:52vh;max-height:70vh;padding:14px 14px calc(18px + env(safe-area-inset-bottom));
             background:rgba(236,243,250,.82);
             backdrop-filter:blur(40px) saturate(200%);-webkit-backdrop-filter:blur(40px) saturate(200%);
             border-radius:28px 28px 0 0;border-top:1px solid rgba(255,255,255,.9);
-            transform:translateY(105%);transition:transform .52s cubic-bezier(.22,1,.36,1);
+            transform:translateY(105%);transition:transform .56s var(--e-settle),height .42s var(--e-settle);
             box-shadow:0 -14px 50px rgba(50,100,180,.28),0 0 40px rgba(140,180,255,.18);
         }
         .model-list.show{transform:translateY(0);}
@@ -244,18 +255,19 @@
             box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.28),0 0 18px rgba(150,190,255,.4);
             display:flex;align-items:center;justify-content:center;
             cursor:pointer;color:#2563a8;pointer-events:auto;
-            opacity:0;transform:scale(.5);
-            transition:opacity .3s ease, transform .4s cubic-bezier(.34,1.56,.64,1), background .25s ease, color .25s ease;
+            opacity:0;transform:scale(.92) translateY(8px);
+            transition:opacity .42s var(--e-expo), transform .56s var(--e-settle), background .25s ease, color .25s ease;
         }
-        .fs-ctrl.show{opacity:1;transform:scale(1);animation:ctrlGlow 3.4s ease-in-out .6s infinite;}
+        .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);animation:ctrlGlow 5.6s ease-in-out .9s infinite;}
         @keyframes ctrlGlow{
-            0%,100%{box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.24),0 0 14px rgba(150,190,255,.32);}
-            50%{box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.45),0 0 28px rgba(150,190,255,.58);}
+            0%,100%{box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.24),0 0 14px rgba(150,190,255,.30);}
+            50%{box-shadow:0 8px 24px rgba(50,100,180,.22),inset 0 1px 2px rgba(255,255,255,.95),0 0 0 1px rgba(150,190,255,.40),0 0 24px rgba(150,190,255,.48);}
         }
         .fs-ctrl:active{transform:scale(.85);}
         .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;}
         .fs-rotate{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;}
         .fs-eye{bottom:calc(20px + env(safe-area-inset-bottom));left:16px;right:auto;}
+        .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));left:70px;right:auto;}
         .fs-ctrl.active{background:#2563a8;color:#fff;}
 
         /* ===== 整页全屏：flex 布局，模型自适应占满 ===== */
@@ -339,12 +351,18 @@
         /* 模型一键全屏：构件信息做成与扫码页同款卡片，收成左下角毛玻璃小面板（模型在上可遮挡卡片） */
         .full-wrap.model-backdrop .info-card{
             position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9001;
-            width:min(300px,60vw);max-height:58vh;overflow:hidden;margin-top:0;padding:10px 10px 8px;gap:5px;
+            width:min(320px,64vw);max-height:58vh;overflow:hidden;margin-top:0;padding:10px 12px 8px;gap:5px;
             display:flex;flex-direction:column;border-radius:18px;
-            background:rgba(236,245,255,.68);border:1px solid rgba(255,255,255,.8);
-            box-shadow:0 16px 44px rgba(50,100,180,.26),0 0 26px rgba(140,180,255,.3);
-            backdrop-filter:blur(18px) saturate(170%)!important;-webkit-backdrop-filter:blur(18px) saturate(170%)!important;
-            pointer-events:none;animation:miniCardIn .6s cubic-bezier(.22,1,.36,1) .16s backwards;
+            background:rgba(238,246,255,.58);border:1px solid rgba(255,255,255,.72);
+            box-shadow:-10px 14px 40px rgba(50,100,180,.2),0 0 22px rgba(140,180,255,.22);
+            backdrop-filter:blur(22px) saturate(180%)!important;-webkit-backdrop-filter:blur(22px) saturate(180%)!important;
+            -webkit-mask-image:linear-gradient(95deg,#000 0%,#000 55%,rgba(0,0,0,.62) 78%,transparent 100%),linear-gradient(#000 0,#000 calc(100% - 26px),transparent 100%);
+            -webkit-mask-composite:source-in;mask-composite:intersect;
+            mask-image:linear-gradient(95deg,#000 0%,#000 55%,rgba(0,0,0,.62) 78%,transparent 100%),linear-gradient(#000 0,#000 calc(100% - 26px),transparent 100%);
+            pointer-events:none;animation:miniCardIn .66s var(--e-settle) .16s backwards;
+        }
+        @supports ((mask-composite:intersect) or (-webkit-mask-composite:source-in)){
+            .full-wrap.model-backdrop .info-card{border-radius:18px 0 0 18px;border-right:none;}
         }
         @keyframes miniCardIn{from{opacity:0;transform:translateY(26px) scale(.94);}to{opacity:1;transform:translateY(0) scale(1);}}
         .full-wrap.model-backdrop .info-head{padding:2px 4px 6px;margin:0;background:transparent;border:none;box-shadow:none;pointer-events:none;}
@@ -432,7 +450,7 @@
         .mini-backdrop.show{opacity:1;}
         .full-wrap.mini{position:fixed;z-index:9050;overflow:hidden;border-radius:26px;touch-action:none;
             box-shadow:0 30px 90px rgba(25,60,120,.42),0 0 0 5px rgba(255,255,255,.55),0 0 60px rgba(120,160,235,.25);
-            transition:transform .42s cubic-bezier(.3,.9,.32,1),border-radius .42s ease;}
+            transition:transform .42s cubic-bezier(.16,1,.3,1),border-radius .42s ease;}
         .full-wrap.mini.dragging{transition:none;}
         .full-wrap.mini .toolbar,.full-wrap.mini .tip-banner{opacity:0!important;pointer-events:none;}
         .full-wrap.mini .model-container{border-radius:0;border-width:0;}
@@ -444,7 +462,7 @@
             border:1px solid rgba(255,255,255,.95);
             box-shadow:0 8px 24px rgba(50,100,180,.32),inset 0 1px 2px #fff,0 0 18px rgba(150,190,255,.55);
             transform:translateY(-50%);transition:top .32s cubic-bezier(.22,1,.36,1),opacity .3s ease,transform .3s ease;
-            animation:tabIn .5s cubic-bezier(.34,1.56,.64,1) .1s backwards;}
+            animation:tabIn .5s cubic-bezier(.32,.72,0,1) .1s backwards;}
         @keyframes tabIn{from{opacity:0;transform:translateX(40px) translateY(-50%);}to{opacity:1;transform:translateX(0) translateY(-50%);}}
         .mini-edge-tab:active{transform:translateY(-50%) scale(.9);}
         .mini-edge-tab.out{opacity:0;transform:translateX(46px) translateY(-50%);}
@@ -487,10 +505,10 @@
         .modal-mask.show .fg-mock{animation:softIn .55s cubic-bezier(.22,1,.36,1) .18s backwards;}
         .modal-mask.show .fg-note{animation:softIn .5s cubic-bezier(.22,1,.36,1) .27s backwards;}
         .modal-mask.show .modal-btns{animation:softIn .5s cubic-bezier(.22,1,.36,1) .3s backwards;}
-        .toast{transition:opacity .32s ease,transform .46s cubic-bezier(.34,1.56,.64,1);}
+        .toast{transition:opacity .32s ease,transform .46s cubic-bezier(.32,.72,0,1);}
         .model-list.show .drag-handle{animation:softIn .5s cubic-bezier(.22,1,.36,1) .03s backwards;}
         .model-list.show .ml-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .07s backwards;}
-        .admin-bar.show{animation:barIn .5s cubic-bezier(.34,1.56,.64,1) both;}
+        .admin-bar.show{animation:barIn .5s cubic-bezier(.32,.72,0,1) both;}
         @keyframes barIn{from{opacity:0;transform:translate(-50%,26px);}to{opacity:1;transform:translate(-50%,0);}}
         /* 小窗右下角自由缩放手柄 */
         .mini-resize{position:absolute;right:6px;bottom:6px;width:30px;height:30px;z-index:8;cursor:nwse-resize;touch-action:none;display:grid;place-items:center;color:rgba(74,127,214,.85);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(220,234,250,.35));box-shadow:0 3px 10px rgba(60,110,190,.22);}
@@ -555,9 +573,10 @@
 <div class="full-wrap" id="fullWrap">
     <div class="model-container" id="modelContainer">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.3" camera-controls interaction-prompt="auto" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
+        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.3" camera-controls interaction-prompt="auto" orbit-sensitivity="1.05" pan-sensitivity="1.5" zoom-sensitivity="1.25" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
         <div class="toolbar" id="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
+            <button class="btn" id="btnPan" title="移动模式（单指拖移）">✋</button>
             <button class="btn" id="btnReset" title="重置视角">🎯</button>
             <button class="btn" id="btnFull" title="整页全屏">⛶</button>
             <button class="btn" id="btnModelFull" title="模型占满全屏">🖥️</button>
@@ -621,7 +640,8 @@ const id = new URLSearchParams(location.search).get('id');
 const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), percent = $('#percent'),
 error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnModelFull = $('#btnModelFull'),
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
-glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast'), modelContainer = $('#modelContainer');
+glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast'), modelContainer = $('#modelContainer'),
+btnPan = $('#btnPan');
 let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 /* 管理员在本机保存的修改：渲染前合并到数据（仅保存在本设备浏览器，导出 data.js 才能同步到线上） */
@@ -676,9 +696,11 @@ function moveGlow(x,y){
         glow.style.opacity = '1'; glowRAF = null;
     });
 }
-document.addEventListener('pointermove', e => moveGlow(e.clientX, e.clientY), {passive:true});
-document.addEventListener('pointerdown', e => moveGlow(e.clientX, e.clientY), {passive:true});
-document.addEventListener('mouseleave', () => glow.style.opacity = '0');
+document.addEventListener('pointermove', e => { if(e.pointerType !== 'touch') moveGlow(e.clientX, e.clientY); }, {passive:true});
+document.addEventListener('pointerdown', e => { glow.classList.add('press'); moveGlow(e.clientX, e.clientY); }, {passive:true});
+document.addEventListener('pointerup', e => { glow.classList.remove('press'); if(e.pointerType === 'touch') glow.style.opacity = '0'; }, {passive:true});
+document.addEventListener('pointercancel', () => glow.classList.remove('press'), {passive:true});
+document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; glow.classList.remove('press'); });
 btnRotate.onclick = () => { rotate = !rotate; viewer.autoRotate = rotate; btnRotate.classList.toggle('active', rotate); }
 btnReset.onclick = () => { viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; }
 let clickCount = 0, clickTimer = null;
@@ -721,13 +743,27 @@ function renderModelList(kw){
         modelItems.appendChild(item); n++;
     });
     modelEmpty.classList.toggle('on',n===0);
+    if(modelList.classList.contains('show')) fitModelListHeight(n);
     requestAnimationFrame(updateMlFade);
 }
 function updateMlFade(){ if(!mlScroll)return; mlFadeBottom.classList.toggle('on', mlScroll.scrollTop+mlScroll.clientHeight < mlScroll.scrollHeight-8); }
+/* 面板高度按构件数量自适应：行少贴内容、行多封顶约半屏，再多交给内部滚动 */
+const ML_TOP = 106;   /* 握把 + 标题 + 搜索框 + 内边距 */
+const ML_ROW = 92;    /* 单元格高度 + 间距 */
+function fitModelListHeight(n){
+    const cols = Math.max(1, Math.round(modelItems.clientWidth / 160)) || 2;
+    const rows = Math.max(1, Math.ceil(n / cols));
+    const h = ML_TOP + rows * ML_ROW + 10;
+    /* 半屏封顶、内部滚动为主；构件非常多（≥15）才放宽到 2/3 屏 */
+    const cap = window.innerHeight * (n >= 15 ? .66 : .5);
+    modelList.style.height = Math.round(Math.max(230, Math.min(h, cap))) + 'px';
+}
 function openModelList(){
     modelSearch.value=''; modelSearchClear.style.display='none';
-    modelCount.textContent='共 '+Object.keys(partData).length+' 个';
+    const n = Object.keys(partData).length;
+    modelCount.textContent='共 '+n+' 个';
     renderModelList(''); mlScroll.scrollTop=0;
+    fitModelListHeight(n);
     modelList.classList.add('show'); modelMask.classList.add('show');
 }
 btnSwitch.onclick=openModelList;
@@ -739,16 +775,15 @@ window.addEventListener('resize',updateMlFade);
 tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tipTimer); };
 
 /* ============ FLIP 平滑全屏（纯CSS，不移动DOM，修复层叠上下文） ============ */
-const EASE = 'cubic-bezier(.22,1,.36,1)';
-const EASE_IN = 'cubic-bezier(.3,.9,.32,1)';
-const FS_MS = 480;
-const FS_IN_MS = 560;
-const EASE_OUT = 'cubic-bezier(.33,0,.2,1)';
-const FS_OUT_MS = 540;
-const FLY_MS = 380;
-const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
+/* 动效基调：进入用超慢出（expo-out，只减速永不回弹），离场用加速消失，
+   对齐 OPPO/vivo 系统面板的手感；杜绝 spring 过冲带来的“弹一下”卡通感 */
+const EASE = 'cubic-bezier(.32,.72,0,1)';
+const EASE_IN = 'cubic-bezier(.16,1,.3,1)';
+const FS_IN_MS = 520;
+const FLY_MS = 360;
 let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
+let pendingFs = null;   // 两种全屏之间切换时的目标模式
 
 const ICON_EXIT = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
 const ICON_ROTATE = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5.8" y="8.8" width="12.4" height="6.4" rx="1.7" opacity="0.4"/><rect x="8.8" y="5.8" width="6.4" height="12.4" rx="1.7"/><circle cx="12" cy="16.9" r="0.55" fill="currentColor" stroke="none" opacity="0.7"/></svg>';
@@ -756,8 +791,12 @@ const ICON_EYE = '<svg class="ic-eye" width="21" height="21" viewBox="0 0 24 24"
 const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 const ICON_EXPAND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 
-function enterFullscreen(type){
-    if(fsState) return;
+function enterFullscreen(type, isSwitch){
+    if(fsState){
+        /* 已经在全屏里：可点即响应，先收场再展开另一种全屏，不再拦死 */
+        if(fsState.type !== type) switchFullscreen(type);
+        return;
+    }
     const el = type === 'model' ? modelContainer : fullWrap;
     const rect = el.getBoundingClientRect();
     const srcRect = type === 'page' ? modelContainer.getBoundingClientRect() : rect;
@@ -786,6 +825,7 @@ function enterFullscreen(type){
     makeBtn('fs-exit', ICON_EXIT, requestExitFullscreen);
     if(type === 'model'){
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
+        makeBtn('fs-pagebtn', ICON_EXPAND, () => switchFullscreen('page'));
         modelContainer.classList.add('fs-model');
         fullWrap.classList.add('model-backdrop');
     }
@@ -818,24 +858,25 @@ function enterFullscreen(type){
     el.style.transform = 'translate(' + srcRect.left + 'px,' + srcRect.top + 'px) scale(' + sx + ',' + sy + ')';
 
     fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false };
-    try{ history.pushState({fs:type}, '', '#' + (type==='model'?'model-full':'page-full')); fsPushed = true; }catch(e){}
+    /* 全屏之间互切不追加历史，保证返回键一次回到普通页面 */
+    if(!isSwitch){ try{ history.pushState({fs:type}, '', '#' + (type==='model'?'model-full':'page-full')); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
     safeResize();
 
-    /* 双 rAF：先让“缩小的起点”真实绘制一帧，再开始放大，避免一闪即全屏 */
+    /* 双 rAF：先真实绘制"起点"那一帧，再开始放大，避免一闪即全屏 */
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN;
+        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN + ', opacity ' + (FS_IN_MS - 160) + 'ms ease-out';
         el.style.transform = 'translate(0px,0px) scale(1,1)';
         if(type === 'model') el.style.borderRadius = '0px';
         bg.style.opacity = '1';
     }));
-    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
+    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach((b,i)=>{ b.style.transitionDelay=(i*60)+'ms'; b.classList.add('show'); }); }, 120);
     setTimeout(()=>{ el.style.transform = 'none'; safeResize(); }, FS_IN_MS + 60);
 }
 function safeResize(){ try{ if(typeof viewer.resize === 'function') viewer.resize(); else window.dispatchEvent(new Event('fs-nudge')); }catch(e){} }
 
 function requestExitFullscreen(){
-    if(!fsState) return;
+    if(!fsState || fsState.exiting) return;
     if(fsPushed){ try{ history.back(); }catch(e){ exitFullscreen(); } }
     else { exitFullscreen(); }
 }
@@ -844,28 +885,33 @@ window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
 function exitFullscreen(){
-    if(!fsState) return;
+    if(!fsState || fsState.exiting) return;
     const state = fsState;
-    const { el, type, saved, bg, ctrl } = state;
+    const { el, type, saved, bg, ctrl, rect } = state;
     if(state.isLandscape){ resetLandscape(true); }
+    state.exiting = true;
+    const switching = pendingFs; pendingFs = null;
 
-    ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.remove('show'));
-    bg.style.opacity = '0';
+    ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
 
-    /* 飞退消散：全屏层只轻微后退、下移并淡出（中心锚点），不再缩回小矩形，杜绝挤压/弹动 */
-    el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE_FLY + ', opacity ' + (FLY_MS-60) + 'ms ease-in, border-radius ' + FLY_MS + 'ms ' + EASE_FLY;
-    el.style.transformOrigin = 'center center';
+    /* 连续缩回：全屏层沿 transform 一路收回原始版面矩形（透明度全程保留，布局在终点帧无缝切换），
+       信息卡在收回过程中先淡出，避免两列小格被压扁；杜绝"弹一下卡出来" */
+    const r0 = el.getBoundingClientRect();
+    const kx = rect.width / r0.width, ky = rect.height / r0.height;
+    fullWrap.classList.add('fs-exiting');
+    el.style.transformOrigin = '0 0';
+    el.style.willChange = 'transform';
+    el.style.transition = 'transform ' + FLY_MS + 'ms ' + EASE + ', border-radius ' + FLY_MS + 'ms ' + EASE;
     requestAnimationFrame(() => {
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(26px) scale(.9)';
+        el.style.transform = 'translate(' + rect.left + 'px,' + rect.top + 'px) scale(' + kx + ',' + ky + ')';
         if(type === 'model') el.style.borderRadius = '26px';
+        bg.style.transition = 'opacity 260ms ease-in ' + (FLY_MS - 180) + 'ms';
+        bg.style.opacity = '0';
     });
 
     setTimeout(()=>{
-        /* 此刻全屏层已不可见，一次性恢复普通布局，避免逐帧重排 */
+        /* 此刻视觉已与普通布局重合：一次性恢复真实布局，画面无跳变 */
         el.style.transition = 'none';
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(14px) scale(.985)';
         el.style.transformOrigin = saved.transformOrigin;
         el.style.position = saved.position;
         el.style.left = saved.left; el.style.top = saved.top;
@@ -876,21 +922,26 @@ function exitFullscreen(){
         fullWrap.style.zIndex = saved.wrapZ;
         fullWrap.classList.remove('fs-page','info-collapsed');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-        fullWrap.classList.remove('model-backdrop');
+        fullWrap.classList.remove('model-backdrop','fs-exiting');
         modelContainer.classList.remove('fs-model');
         document.body.classList.remove('in-fs');
         bg.remove(); ctrl.remove();
         fsState = null;
         safeResize();
         void el.offsetHeight;
-        /* 普通层柔和升起、淡入回位 */
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-            el.style.transition = 'opacity 440ms ease, transform 480ms ' + EASE_IN;
-            el.style.opacity = '1';
+        requestAnimationFrame(()=>{
+            el.style.transition = '';
             el.style.transform = '';
-            setTimeout(()=>{ el.style.transition = saved.transition; el.style.opacity=''; el.style.transform = saved.transform; }, 540);
-        }));
-    }, FLY_MS + 30);
+            if(switching){ pendingFs = null; enterFullscreen(switching, true); }
+        });
+    }, FLY_MS + 24);
+}
+/* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
+function switchFullscreen(type){
+    if(!fsState || fsState.exiting || fsState.type === type) return;
+    if(pendingFs) return;
+    pendingFs = type;
+    exitFullscreen();
 }
 
 function applyTransition(el, props){
@@ -913,7 +964,7 @@ function toggleLandscape(){
     }
 }
 function resetLandscape(immediate){
-    if(!fsState) return;
+    if(!fsState || fsState.exiting) return;
     fsState.isLandscape = false;
     const el = fsState.el;
     el.style.transformOrigin = 'center center';
@@ -952,6 +1003,43 @@ modelContainer.addEventListener('pointerdown', () => {
     clearTimeout(modelTapTimer);
     modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
 });
+/* ===== 移动模式：单指直接拖移模型（不必再双指找位），双指仍为旋转/缩放 ===== */
+let panMode = false, panDrag = null;
+function setPanMode(on){
+    panMode = on;
+    btnPan.classList.toggle('active', on);
+    try{ viewer.disableTap = on; }catch(e){}
+    if(!on) panDrag = null;
+    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
+}
+btnPan.onclick = () => setPanMode(!panMode);
+viewer.addEventListener('touchstart', e => {
+    if(!panMode || e.touches.length !== 1 || panDrag) return;
+    const t = e.touches[0];
+    panDrag = {x:t.clientX, y:t.clientY, id:t.identifier};
+}, {capture:true, passive:true});
+viewer.addEventListener('touchmove', e => {
+    if(!panMode || !panDrag) return;
+    let t = null;
+    for(let i=0;i<e.touches.length;i++){ if(e.touches[i].identifier === panDrag.id){ t = e.touches[i]; break; } }
+    if(!t){ return; }
+    /* 与 model-viewer 内部平移同一套换算：位移 = 像素差 × 半径 / 画布高 */
+    const orbit = viewer.getCameraOrbit();
+    const box = viewer.getBoundingClientRect();
+    const k = -orbit.radius / box.height;
+    const target = viewer.getCameraTarget();
+    target.x += (t.clientX - panDrag.x) * k;
+    target.y -= (t.clientY - panDrag.y) * k;
+    viewer.cameraTarget = target.toString();
+    viewer.jumpCameraToGoal();
+    panDrag.x = t.clientX; panDrag.y = t.clientY;
+    e.stopPropagation();
+}, {capture:true, passive:false});
+const endPan = e => { if(!panDrag) return; if(e.touches){ for(let i=0;i<e.touches.length;i++){ if(e.touches[i].identifier === panDrag.id){ panDrag = null; return; } } } else panDrag = null; };
+viewer.addEventListener('touchend', endPan, {capture:true, passive:true});
+viewer.addEventListener('touchcancel', endPan, {capture:true, passive:true});
+viewer.addEventListener('interact-stopped', () => { panDrag = null; });
+
 btnModelFull.onclick = () => enterFullscreen('model');
 btnFull.onclick = () => fsState ? requestExitFullscreen() : enterFullscreen('page');
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) requestExitFullscreen(); });
@@ -1098,7 +1186,7 @@ function enterMini(){
     void wrap.offsetHeight;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
         wrap.classList.add('mini');
-        wrap.style.transition='transform .46s cubic-bezier(.3,.9,.32,1),border-radius .46s ease';
+        wrap.style.transition='transform .46s cubic-bezier(.16,1,.3,1),border-radius .46s ease';
         wrap.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
         positionMiniTab();
     }));
@@ -1114,7 +1202,7 @@ function positionMiniTab(){
 function exitMini(){
     if(!miniState) return;
     const {wrap,drag,tab,saved}=miniState;
-    wrap.style.transition='transform .46s cubic-bezier(.3,.9,.32,1),border-radius .46s ease';
+    wrap.style.transition='transform .46s cubic-bezier(.16,1,.3,1),border-radius .46s ease';
     wrap.style.transform='translate(0,0) scale(1)';
     tab.classList.add('out');
     miniBackdrop.classList.remove('show'); miniHint.classList.remove('show');
