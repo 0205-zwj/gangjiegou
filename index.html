@@ -274,14 +274,14 @@
         .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
-        .fs-eye{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
+        .fs-eye{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;bottom:auto;}
         /* 横屏映射（内容顺旋90°，用户逆旋手机观看）：视觉左上=物理右上、视觉右上=物理右下、
            视觉右下=物理左下、视觉左下=物理左上；按键图标同顺旋90°在视觉里保持正读 */
         .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
         .fs-ctrl-layer.fs-ls .fs-ctrl:active{transform:scale(.85) rotate(90deg);}
         .fs-ls .fs-exit{top:16px;right:16px;left:auto;bottom:auto;}
         .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{top:auto;bottom:16px;right:16px;left:auto;}
-        .fs-ls .fs-rotate{bottom:70px;left:16px;top:auto;right:auto;}
+        .fs-ls .fs-rotate{bottom:16px;left:70px;top:auto;right:auto;}
         .fs-ls .fs-panbtn{top:auto;bottom:16px;left:16px;right:auto;}
         .fs-ls .fs-eye{top:auto;bottom:16px;right:16px;left:auto;}
         /* 横屏信息卡：视觉左下 = 物理左上，顺旋90°保持正读 */
@@ -877,10 +877,14 @@ function enterFullscreen(type, isSwitch){
     if(type === 'page'){
         makeBtn('fs-modelbtn', ICON_EXPAND, () => switchFullscreen('model'));
         const eye=$('#btnEyeInline');
+        const floatEye=makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => toggleInfoCollapse());
         function toggleInfoCollapse(){
             const collapsed=fullWrap.classList.toggle('info-collapsed');
             eye.classList.toggle('active',collapsed);
             eye.innerHTML=collapsed?ICON_EYE_OFF:ICON_EYE;
+            floatEye.classList.toggle('collapsed',collapsed);
+            floatEye.classList.toggle('active',collapsed);
+            floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
             setTimeout(safeResize,500);
         }
         eye.onclick=toggleInfoCollapse;
@@ -1015,6 +1019,9 @@ function toggleLandscape(){
     /* 只动 transform（旋转+缩放），盒子始终 100vw×100vh，画布不重排、不重设，纯 GPU 合成不卡 */
     el.style.transition = 'transform .52s ' + EASE_IN;
     el.style.transformOrigin = 'center center';
+    /* 按钮与信息卡随视角飞到横屏视觉四角（类驱动，位置带 0.5s 飞位过渡） */
+    if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', fsState.isLandscape);
+    fullWrap.classList.toggle('ls-card', fsState.isLandscape);
     if(fsState.isLandscape){
         const k = window.innerHeight / window.innerWidth;
         el.style.transform = 'rotate(90deg) scale(' + k + ')';
