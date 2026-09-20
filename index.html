@@ -953,7 +953,7 @@ function exitFullscreen(){
     const { el, type, saved, bg, ctrl, rect } = state;
     if(state.isLandscape){ resetLandscape(true); }
     state.exiting = true;
-    panMode = false; gt = null; midPan = null; syncPanBtns();
+    panMode = false; gt = null; midPan = null; try{pts.clear();panStart=null;pinch0=null;}catch(e){} syncPanBtns();
     if(state.inTimer){ clearTimeout(state.inTimer); state.inTimer = null; }
     const switching = pendingFs; pendingFs = null;
 
@@ -974,13 +974,18 @@ function exitFullscreen(){
         el.style.opacity = '0';
         setTimeout(land, 180);
     } else {
-        /* 退出普通页：全屏层与背景一起柔和淡散（像手机系统关闭应用），不收缩、不回弹、不闪 */
-        el.style.transition = 'opacity 360ms ease';
-        el.style.opacity = '0';
-        bg.style.transition = 'opacity 360ms ease';
-        bg.style.opacity = '0';
-        setTimeout(land, 380);
+        /* 退出：反向 FLIP——模型/面板慢慢缩回它原来的卡片位置，同时淡散（像手机系统关闭应用，有来处有去处） */
+        const vw=window.innerWidth, vh=window.innerHeight;
+        const sx=state.srcRect.width/vw, sy=state.srcRect.height/vh;
+        el.style.transition = "transform 520ms " + EASE_IN + ", border-radius 520ms " + EASE_IN + ", opacity 440ms ease 80ms";
+        el.style.transform = "translate(" + state.srcRect.left + "px," + state.srcRect.top + "px) scale(" + sx + "," + sy + ")";
+        el.style.borderRadius = "26px";
+        el.style.opacity = "0";
+        bg.style.transition = "opacity 440ms ease 80ms";
+        bg.style.opacity = "0";
+        setTimeout(land, 540);
     }
+
 }
 /* 把真实 DOM 一次性恢复到普通布局（在幽灵层淡入前调用，画面由全屏层暂时遮住） */
 function restoreLayout(el, state, bg, ctrl){
@@ -1095,26 +1100,37 @@ function applyPan(dx, dy){
     viewer.jumpCameraToGoal();
 }
 const onUI = e => e.target && e.target.closest && e.target.closest('.btn,.icon-btn,.fs-ctrl,.ml-search,input,button');
-/* 单指平移：捕获层拦截，不交给内置 */
-modelContainer.addEventListener('pointerdown', e => {
+/* 移动模式：单指=纯平移，双指=捏合缩放（自绘多触点，不依赖内置，避免双指变旋转） */
+const pts = new Map();
+let panStart = null, pinch0 = null;
+const ptList = () => [...pts.values()];
+modelContainer.addEventListener("pointerdown", e => {
     if(!panMode || onUI(e)) return;
-    if(e.pointerType === 'mouse'){ if(e.button !== 0) return; }
-    if(!e.isPrimary){ gt=null; return; }   /* 第二根手指：立刻放行，交给内置做双指捏合缩放 */
+    if(e.pointerType === "mouse"){ if(e.button !== 0) return; }
     e.preventDefault(); e.stopPropagation();
-    gt = {x:e.clientX, y:e.clientY, id:e.pointerId};
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pts.size===1){ panStart={x:e.clientX,y:e.clientY}; pinch0=null; }
+    else if(pts.size===2){ panStart=null; const [a,b]=ptList(); const o=viewer.getCameraOrbit(); pinch0={d:Math.hypot(a.x-b.x,a.y-b.y), r:o.radius, th:o.theta, ph:o.phi}; }
 }, {capture:true, passive:false});
-modelContainer.addEventListener('pointermove', e => {
-    if(!panMode || !gt || e.pointerId !== gt.id) return;
+modelContainer.addEventListener("pointermove", e => {
+    if(!panMode || !pts.has(e.pointerId)) return;
     if(onUI(e)) return;
     e.preventDefault(); e.stopPropagation();
-    let dx = e.clientX - gt.x, dy = e.clientY - gt.y;
-    if(fsState && fsState.isLandscape){ const t = dx; dx = dy; dy = -t; }   /* 横屏换算 */
-    applyPan(dx, dy);
-    gt.x = e.clientX; gt.y = e.clientY;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(pts.size===1 && panStart){
+        let dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+        if(fsState && fsState.isLandscape){ const t=dx; dx=dy; dy=-t; }
+        applyPan(dx,dy); panStart.x=e.clientX; panStart.y=e.clientY;
+    } else if(pts.size===2 && pinch0){
+        const [a,b]=ptList(); const d=Math.hypot(a.x-b.x,a.y-b.y);
+        const r=Math.max(0.3, pinch0.r*(pinch0.d/Math.max(1,d)));
+        viewer.cameraOrbit = pinch0.th+"deg "+pinch0.ph+"deg "+r+"m";
+        viewer.jumpCameraToGoal();
+    }
 }, {capture:true, passive:false});
-const gtEnd = e => { if(gt && e.pointerId === gt.id) gt = null; };
-modelContainer.addEventListener('pointerup', gtEnd, {capture:true});
-modelContainer.addEventListener('pointercancel', gtEnd, {capture:true});
+const ptEnd = e => { pts.delete(e.pointerId); if(pts.size<2) pinch0=null; if(pts.size===1){ const p=ptList()[0]; panStart={x:p.x,y:p.y}; } };
+modelContainer.addEventListener("pointerup", ptEnd, {capture:true});
+modelContainer.addEventListener("pointercancel", ptEnd, {capture:true});
 /* 桌面中键平移（不碰 cameraControls） */
 modelContainer.addEventListener('pointerdown', e => {
     if(e.pointerType !== 'mouse' || e.button !== 1 || onUI(e)) return;
@@ -1135,7 +1151,7 @@ modelContainer.addEventListener('pointercancel', midUp, true);
 modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 function setPanMode(on){
-    panMode = !!on; gt = null; midPan = null;
+    panMode = !!on; gt = null; midPan = null; try{pts.clear();panStart=null;pinch0=null;}catch(e){}
     syncPanBtns();
     showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
 }
