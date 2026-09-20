@@ -974,16 +974,13 @@ function exitFullscreen(){
         el.style.opacity = '0';
         setTimeout(land, 180);
     } else {
-        /* 退出：反向 FLIP——模型/面板慢慢缩回它原来的卡片位置，同时淡散（像手机系统关闭应用，有来处有去处） */
-        const vw=window.innerWidth, vh=window.innerHeight;
-        const sx=state.srcRect.width/vw, sy=state.srcRect.height/vh;
-        el.style.transition = "transform 520ms " + EASE_IN + ", border-radius 520ms " + EASE_IN + ", opacity 440ms ease 80ms";
-        el.style.transform = "translate(" + state.srcRect.left + "px," + state.srcRect.top + "px) scale(" + sx + "," + sy + ")";
-        el.style.borderRadius = "26px";
+        /* 退出：柔和淡散 + 极轻缩小（不做整卡缩回，避免挤压感），像系统关闭面板 */
+        el.style.transition = "transform 480ms " + EASE_IN + ", opacity 460ms ease";
+        el.style.transform = "scale(0.96)";
         el.style.opacity = "0";
-        bg.style.transition = "opacity 440ms ease 80ms";
+        bg.style.transition = "opacity 460ms ease";
         bg.style.opacity = "0";
-        setTimeout(land, 540);
+        setTimeout(land, 480);
     }
 
 }
@@ -1119,12 +1116,13 @@ modelContainer.addEventListener("pointermove", e => {
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     if(pts.size===1 && panStart){
         let dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
-        if(fsState && fsState.isLandscape){ const t=dx; dx=dy; dy=-t; }
+        if(fsState && fsState.isLandscape){ const t=dx; dx=-dy; dy=t; }
         applyPan(dx,dy); panStart.x=e.clientX; panStart.y=e.clientY;
     } else if(pts.size===2 && pinch0){
         const [a,b]=ptList(); const d=Math.hypot(a.x-b.x,a.y-b.y);
-        const r=Math.max(0.3, pinch0.r*(pinch0.d/Math.max(1,d)));
-        viewer.cameraOrbit = pinch0.th+"deg "+pinch0.ph+"deg "+r+"m";
+        const cur=viewer.getCameraOrbit();
+        const r=Math.max(0.3, Math.min(50, pinch0.r*(pinch0.d/Math.max(1,d))));
+        viewer.cameraOrbit = cur.theta+"deg "+cur.phi+"deg "+r+"m";
         viewer.jumpCameraToGoal();
     }
 }, {capture:true, passive:false});
