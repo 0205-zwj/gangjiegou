@@ -869,7 +869,7 @@ function enterFullscreen(type, isSwitch){
     makeBtn('fs-exit', ICON_EXIT, requestExitFullscreen);
     if(type === 'model'){
         /* 进入模型全屏一律先复位竖屏/横屏残留 */
-        fsState.isLandscape = false;
+
         fullWrap.classList.remove('ls-card');
         modelContainer.style.transform = 'none';
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
