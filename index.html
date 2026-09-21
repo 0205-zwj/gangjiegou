@@ -287,7 +287,7 @@
         /* 横屏信息卡：视觉左下 = 物理左上，顺旋90°保持正读 */
         .full-wrap.model-backdrop.ls-card .info-card{
             left:12px;top:calc(12px + env(safe-area-inset-top));right:auto;bottom:auto;
-            transform:rotate(90deg);transform-origin:center center;
+            transform:none;flex-direction:row;flex-wrap:wrap;width:auto;max-height:none;
         }
         .full-wrap.model-backdrop .info-card{transition:left .5s var(--e-settle),right .5s var(--e-settle),top .5s var(--e-settle),bottom .5s var(--e-settle),transform .5s var(--e-settle);}
         /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
@@ -367,9 +367,9 @@
         #btnEyeInline{display:none;}
         .full-wrap.fs-page #btnEyeInline{display:grid;}
         .full-wrap.fs-page .info-card{transition:opacity .45s var(--e-settle),transform .45s var(--e-settle),max-height .45s var(--e-settle);}
-            max-height:0;opacity:0;padding-top:0;padding-bottom:0;
+        .full-wrap.fs-page.info-collapsed .info-card{
             max-height:0;opacity:0;transform:translateY(-10px);padding-top:0;padding-bottom:0;
-        }
+            margin-top:0;border-width:0;pointer-events:none;}
         /* 模型一键全屏：铺满无圆角 */
         .model-container.fs-model{border-radius:0;border-width:0;}
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
