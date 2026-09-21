@@ -835,11 +835,10 @@ const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none
 const ICON_EXPAND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 const ICON_PAN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M8 7l4-4 4 4M7 8l-4 4 4 4M17 8l4 4-4 4M8 17l4 4 4-4"/></svg>';
 
+function safeResize(){ try{ if(typeof viewer.resize === "function") viewer.resize(); else window.dispatchEvent(new Event("fs-nudge")); }catch(e){} }
 function enterFullscreen(type, isSwitch){
     if(fsState){
-        /* 已经在全屏里：可点即响应，先收场再展开另一种全屏，不再拦死 */
-        if(fsState.type !== type) switchFullscreen(type);
-        return;
+        /* 已经在全屏里：可点即响应，先收场再展开另一种全屏 */
     }
     const el = type === 'model' ? modelContainer : fullWrap;
     const rect = el.getBoundingClientRect();
@@ -922,33 +921,34 @@ function enterFullscreen(type, isSwitch){
     if(!isSwitch){ try{ history.pushState({fs:type}, '', '#' + (type==='model'?'model-full':'page-full')); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
     safeResize();
-
+    if(isSwitch){ el.style.opacity = "0"; }
     /* 双 rAF：先真实绘制"起点"那一帧，再开始放大，避免一闪即全屏 */
+    /* 双 rAF：先真实绘制起点，再动 */
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        el.style.transition = 'transform ' + FS_IN_MS + 'ms ' + EASE_IN + ', border-radius ' + FS_IN_MS + 'ms ' + EASE_IN;
-        el.style.transform = 'translate(0px,0px) scale(1,1)';
-        if(type === 'model') el.style.borderRadius = '0px';
-        bg.style.opacity = '1';
+        if(isSwitch){
+            /* 互切：纯交叉淡入，不缩放不挤压 */
+            el.style.transition = "opacity 420ms " + EASE;
+            el.style.transform = "translate(0px,0px) scale(1,1)";
+            el.style.opacity = "1";
+        } else {
+            el.style.transition = "transform " + FS_IN_MS + "ms " + EASE_IN + ", opacity " + FS_IN_MS + "ms ease, border-radius " + FS_IN_MS + "ms " + EASE_IN;
+            el.style.transform = "translate(0px,0px) scale(1,1)";
+            if(type === "model") el.style.borderRadius = "0px";
+            el.style.opacity = "1";
+        }
+        bg.style.opacity = "1";
     }));
-    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
-    fsState.inTimer = setTimeout(()=>{
-        if(!fsState || fsState.exiting) return;
-        el.style.transform = 'none'; safeResize();
-    }, FS_IN_MS + 60);
 }
-function safeResize(){ try{ if(typeof viewer.resize === 'function') viewer.resize(); else window.dispatchEvent(new Event('fs-nudge')); }catch(e){} }
-
 function requestExitFullscreen(){
     if(!fsState || fsState.exiting) return;
     if(fsPushed){ try{ history.back(); }catch(e){ exitFullscreen(); } }
     else { exitFullscreen(); }
 }
-/* 手机物理/手势返回键：若正在全屏，先退出全屏回到网页主页，不关闭页面 */
+/* 手机物理/手势返回键 */
 window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
 function exitFullscreen(){
-    if(!fsState || fsState.exiting) return;
     const state = fsState;
     const { el, type, saved, bg, ctrl, rect } = state;
     if(state.isLandscape){ resetLandscape(true); }
