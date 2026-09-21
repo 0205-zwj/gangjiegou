@@ -938,9 +938,9 @@ function enterFullscreen(type, isSwitch){
         }
         bg.style.opacity = "1";
     }));
+    setTimeout(()=>{ ctrl.querySelectorAll('.fs-ctrl').forEach(b=>b.classList.add('show')); }, 140);
 }
 function requestExitFullscreen(){
-    if(!fsState || fsState.exiting) return;
     if(fsPushed){ try{ history.back(); }catch(e){ exitFullscreen(); } }
     else { exitFullscreen(); }
 }
@@ -951,7 +951,7 @@ window.addEventListener('popstate', () => {
 function exitFullscreen(){
     const state = fsState;
     const { el, type, saved, bg, ctrl, rect } = state;
-    if(state.isLandscape){ resetLandscape(true); }
+    /* 横屏复位放到 land() 里，避免退出瞬间闪跳 */
     state.exiting = true;
     panMode = false; gt = null; midPan = null; try{pts.clear();panStart=null;pinch0=null;}catch(e){} syncPanBtns();
     if(state.inTimer){ clearTimeout(state.inTimer); state.inTimer = null; }
@@ -962,7 +962,7 @@ function exitFullscreen(){
     let landed = false;
     const land = () => {
         if(landed) return; landed = true;
-        el.style.transition = 'none';
+        if(state.isLandscape){ fsState.isLandscape=false; el.style.transformOrigin="0 0"; el.style.transform="none"; }
         restoreLayout(el, state, bg, ctrl);
         safeResize();
         void el.offsetHeight;
@@ -974,16 +974,15 @@ function exitFullscreen(){
         el.style.opacity = "0";
         setTimeout(land, 330);
     } else {
-        /* 退出：纯柔和淡散（不缩放不挤压），全屏层与背景同步淡出，露出正常页 */
-        el.style.transition = "opacity 520ms ease";
+        /* 退出：柔和渐隐（系统级缓动），全屏层与背景同步淡出，露出正常页 */
+        el.style.transition = "opacity 680ms " + EASE;
         el.style.opacity = "0";
-        bg.style.transition = "opacity 520ms ease";
+        bg.style.transition = "opacity 680ms " + EASE;
         bg.style.opacity = "0";
-        setTimeout(land, 530);
+        setTimeout(land, 690);
+        setTimeout(land, 690);
     }
-
 }
-/* 把真实 DOM 一次性恢复到普通布局（在幽灵层淡入前调用，画面由全屏层暂时遮住） */
 function restoreLayout(el, state, bg, ctrl){
     const { saved } = state;
     el.style.transition = 'none';
