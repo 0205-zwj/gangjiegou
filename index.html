@@ -296,12 +296,21 @@
         .full-wrap.model-backdrop.ls-card .info-card .info-head{flex:0 0 100%;margin:0 0 1px;font-size:13px;padding:0;}
         .full-wrap.model-backdrop.ls-card .info-card .row{flex:1 1 44%;min-width:0;padding:1px 4px;margin:0;border-bottom:none;font-size:10.5px;min-height:0;line-height:1.25;}
         .full-wrap.model-backdrop.ls-card .info-card .row .k,.full-wrap.model-backdrop.ls-card .info-card .row .v{font-size:10.5px;}
-        .full-wrap.model-backdrop .info-card{transition:left .5s var(--e-settle),right .5s var(--e-settle),top .5s var(--e-settle),bottom .5s var(--e-settle),transform .5s var(--e-settle);}
+        .full-wrap.model-backdrop .info-card{transition:left .5s var(--e-settle),right .5s var(--e-settle),top .5s var(--e-settle),bottom .5s var(--e-settle),transform .54s var(--e-settle);}
         /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
         .fs-ctrl.active{background:linear-gradient(145deg,rgba(206,229,252,.97),rgba(172,206,244,.92));color:#1d5fae;border-color:#fff;box-shadow:0 0 0 2.5px rgba(123,168,240,.4),0 6px 18px rgba(90,140,210,.25),0 0 22px rgba(150,190,255,.6);}
         .icon-btn.active{color:#1d5fae;border-color:rgba(150,190,255,.9);background:linear-gradient(145deg,rgba(214,234,254,.98),rgba(184,214,248,.9));box-shadow:0 0 0 2px rgba(123,168,240,.35),0 0 16px rgba(150,190,255,.55);}
+        /* ===== 网页全屏右侧功能 dock：信息显示时偏小，眼睛隐藏信息后整体放大 ===== */
+        .fs-dock{position:absolute;right:12px;top:38%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;pointer-events:auto;transition:top .54s var(--e-settle),gap .45s var(--e-settle);}
+        .fs-ctrl-layer .fs-dock .fs-ctrl{position:relative;inset:auto;width:40px;height:40px;margin:0;font-size:18px;line-height:1;transition:opacity .42s var(--e-expo),transform .54s var(--e-settle),width .45s var(--e-settle),height .45s var(--e-settle),background .25s ease,color .25s ease;}
+        .fs-ctrl-layer .fs-dock .fs-ctrl svg{transition:width .45s var(--e-settle),height .45s var(--e-settle);}
+        .fs-ctrl-layer.fs-info-off .fs-dock{top:50%;gap:13px;}
+        .fs-ctrl-layer.fs-info-off .fs-dock .fs-ctrl{width:50px;height:50px;font-size:23px;}
+        .fs-ctrl{font-size:20px;line-height:1;}
+        /* 横竖屏：按键旋转与模型容器/信息卡共用同一时长与缓动，保持同步 */
+        .fs-ctrl-layer.fs-ls .fs-ctrl{transition:opacity .42s var(--e-expo),transform .54s var(--e-settle),background .25s ease,color .25s ease,left .54s var(--e-settle),right .54s var(--e-settle),top .54s var(--e-settle),bottom .54s var(--e-settle);}
 
         /* ===== 整页全屏：flex 布局，模型自适应占满 ===== */
         .full-wrap.fs-page{
@@ -831,6 +840,7 @@ const EASE_IN = 'cubic-bezier(.4,.04,.6,1)';    /* 柔和加速：退出淡出 *
 const FS_IN_MS = 520;
 const FLY_MS = 380;
 const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
+const ORI_MS = 540, ORI_EASE = 'cubic-bezier(.32,.72,0,1)';   /* 横竖屏旋转：模型容器/信息卡/按键共用同一时长与缓动，保持同步 */
 let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
 let pendingFs = null;   // 两种全屏之间切换时的目标模式
@@ -841,8 +851,13 @@ const ICON_EYE = '<svg class="ic-eye" width="21" height="21" viewBox="0 0 24 24"
 const ICON_EYE_OFF = '<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.2 5.4C2.9 7 2.6 9.6 2.6 12.2c2.1 4.3 5.4 6.6 9.4 6.6 1.9 0 3.6-.6 5.1-1.5"/><path d="M10.4 6.1c.5-.1 1-.2 1.6-.2 4 0 7.3 2.3 9.4 6.6-.7 1.5-1.7 2.8-2.9 3.8"/><path d="M9.9 10.2a3.1 3.1 0 0 0 4.1 4.1"/><line x1="3.4" y1="3.6" x2="20.6" y2="20.4"/></svg>';
 const ICON_EXPAND = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
 const ICON_PAN = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M3 12h18"/><path d="M8 7l4-4 4 4M7 8l-4 4 4 4M17 8l4 4-4 4M8 17l4 4 4-4"/></svg>';
+const ICON_AUTO = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 3.8v4h-4"/></svg>';
+const ICON_RESET = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="7.4"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/><path d="M12 2.8v2.8M12 18.4v2.8M2.8 12h2.8M18.4 12h2.8"/></svg>';
+const ICON_SWITCH = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h13M14 4l3 3-3 3"/><path d="M20 17H7M10 14l-3 3 3 3"/></svg>';
 
 function safeResize(){ try{ if(typeof viewer.resize === "function") viewer.resize(); else window.dispatchEvent(new Event("fs-nudge")); }catch(e){} }
+/* 全屏图标直接复用主页按钮字形，改主页即同步，无需重新认图标 */
+function homeIcon(id){ const h=document.getElementById(id); return h ? h.textContent.trim() : ''; }
 function enterFullscreen(type, isSwitch, reuse){
     if(fsState){
         /* 已经在全屏里：可点即响应，先收场再展开另一种全屏 */
@@ -870,7 +885,7 @@ function enterFullscreen(type, isSwitch, reuse){
         ctrl = document.createElement("div");
         ctrl.className = "fs-ctrl-layer"; document.body.appendChild(ctrl);
     }
-    try{ ctrl.classList.remove('fs-ls'); }catch(e){}
+    try{ ctrl.classList.remove('fs-ls','fs-info-off'); }catch(e){}
     function makeBtn(cls, html, onclick){
         const b = document.createElement('div');
         b.className = 'fs-ctrl ' + cls;
@@ -885,8 +900,8 @@ function enterFullscreen(type, isSwitch, reuse){
         fullWrap.classList.remove('ls-card');
         modelContainer.style.transform = 'none';
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
-        makeBtn('fs-pagebtn', ICON_EXPAND, () => switchFullscreen('page'));
-        const panBtn = makeBtn('fs-panbtn', ICON_PAN, () => setPanMode(!panMode));
+        makeBtn('fs-pagebtn', homeIcon('btnFull'), () => switchFullscreen('page'));
+        const panBtn = makeBtn('fs-panbtn', homeIcon('btnPan'), () => setPanMode(!panMode));
         panBtn.classList.toggle('active', panMode);
         const mEye = makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => {
             const c = fullWrap.classList.toggle('info-collapsed');
@@ -898,7 +913,7 @@ function enterFullscreen(type, isSwitch, reuse){
         setTimeout(()=>{ try{ ensureAbsRadius(); }catch(e){} }, 420);
     }
     if(type === 'page'){
-        makeBtn('fs-modelbtn', ICON_EXPAND, () => switchFullscreen('model'));
+        makeBtn('fs-modelbtn', homeIcon('btnModelFull'), () => switchFullscreen('model'));
         const eye=$('#btnEyeInline');
         const floatEye=makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => toggleInfoCollapse());
         function toggleInfoCollapse(){
@@ -908,9 +923,28 @@ function enterFullscreen(type, isSwitch, reuse){
             floatEye.classList.toggle('collapsed',collapsed);
             floatEye.classList.toggle('active',collapsed);
             floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
+            ctrl.classList.toggle('fs-info-off', collapsed);
             setTimeout(safeResize,500);
         }
         eye.onclick=toggleInfoCollapse;
+        /* 右侧功能 dock：自动旋转 / 移动 / 定位复位 / 切换构件(传送) */
+        const dock=document.createElement('div'); dock.className='fs-dock'; ctrl.appendChild(dock);
+        function dockBtn(cls,html,fn){
+            const b=document.createElement('div');
+            b.className='fs-ctrl fs-dock-btn '+cls; b.innerHTML=html; b.onclick=fn;
+            if(typeof bindGlowPress==='function') bindGlowPress(b);
+            dock.appendChild(b); return b;
+        }
+        const autoB=dockBtn('fs-tool-auto fs-autobtn', homeIcon('btnRotate'), ()=>{
+            rotate=!rotate; viewer.autoRotate=rotate;
+            try{ btnRotate.classList.toggle('active',rotate); }catch(e){}
+            document.querySelectorAll('.fs-autobtn').forEach(x=>x.classList.toggle('active',rotate));
+        });
+        autoB.classList.toggle('active', !!rotate);
+        const panB=dockBtn('fs-tool-pan fs-panbtn', homeIcon('btnPan'), ()=>setPanMode(!panMode));
+        panB.classList.toggle('active', panMode);
+        dockBtn('fs-tool-reset', homeIcon('btnReset'), ()=>{ try{ btnReset.click(); }catch(e){ camPinned=false; viewer.cameraOrbit='0deg 75deg auto'; viewer.cameraTarget='0m 0m 0m'; viewer.jumpCameraToGoal(); setTimeout(ensureAbsRadius,320); } });
+        dockBtn('fs-tool-switch', homeIcon('btnSwitch'), ()=>{ try{ openModelList(); }catch(e){ try{ btnSwitch.click(); }catch(_){} } });
         fullWrap.classList.add('fs-page');
     }
 
@@ -1072,7 +1106,7 @@ function applyOrientation(){
     if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', css);
     fullWrap.classList.toggle('ls-card', css);
     try{ syncControls(); }catch(e){}
-    el.style.transition = 'transform .52s ' + EASE_IN;
+    el.style.transition = 'transform ' + (ORI_MS/1000) + 's ' + ORI_EASE;
     el.style.transformOrigin = 'center center';
     if(css){
         el.style.left='50%'; el.style.top='50%';
@@ -1085,7 +1119,8 @@ function applyOrientation(){
     }
     try{ resetGestureState(true); }catch(e){}
     showToast(want ? '横屏模式' : '竖屏模式');
-    setTimeout(function(){ resetCameraView(); setTimeout(safeResize, 90); }, 340);
+    try{ safeResize(); }catch(e){}
+    setTimeout(function(){ resetCameraView(); setTimeout(safeResize, 80); }, 300);
 }
 function toggleLandscape(){
     if(!fsState || fsState.type !== 'model') return;
@@ -1098,7 +1133,7 @@ function resetLandscape(immediate){
     const el = fsState.el;
     el.style.transformOrigin = 'center center';
     if(immediate){ el.style.transition = 'none'; el.style.transform = 'none'; void el.offsetHeight; el.style.transition = ''; }
-    else { el.style.transition = 'transform .52s ' + EASE_IN; el.style.transform = 'none'; }
+    else { el.style.transition = 'transform ' + (ORI_MS/1000) + 's ' + ORI_EASE; el.style.transform = 'none'; }
     try{ if(fsState.ctrl) fsState.ctrl.classList.remove('fs-ls'); }catch(e){}
     fullWrap.classList.remove('ls-card');
 }
