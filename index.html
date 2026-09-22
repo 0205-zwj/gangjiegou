@@ -398,7 +398,7 @@
         @supports ((mask-composite:intersect) or (-webkit-mask-composite:source-in)){
             .full-wrap.model-backdrop .info-card{border-radius:18px 0 0 18px;border-right:none;}
         }
-        @keyframes miniCardIn{from{opacity:0;}to{opacity:1;}}
+        @keyframes miniCardIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
         .full-wrap.model-backdrop .info-head{padding:2px 4px 6px;margin:0;background:transparent;border:none;box-shadow:none;pointer-events:none;}
         .full-wrap.model-backdrop .info-head h3{font-size:13px;padding:0;border:none;margin:0;text-shadow:none;}
         .full-wrap.model-backdrop .info-head .info-tools{display:none;}
@@ -929,10 +929,10 @@ function enterFullscreen(type, isSwitch, reuse){
     if(type === "model") el.style.borderRadius = "26px";
 
     /* 进入：普通=纯透明度柔和淡入；互切=新层从左下向右上轻移淡入；双 rAF 保证首帧 */
-    const fromLL = isSwitch ? "translate3d(-12px,18px,0)" : "none";
+    const fromTransform = isSwitch ? "scale(.99) translateY(6px)" : "scale(.985) translateY(8px)";
     el.style.transition = "none";
-    el.style.opacity = "0";
-    el.style.transform = fromLL;
+    el.style.opacity = isSwitch ? ".22" : "0";
+    el.style.transform = fromTransform;
     if(!reuse){ bg.style.transition = "none"; bg.style.opacity = "0"; }
     else { bg.style.transition = "none"; bg.style.opacity = "1"; }
 
@@ -940,16 +940,17 @@ function enterFullscreen(type, isSwitch, reuse){
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
     requestAnimationFrame(() => requestAnimationFrame(() => {
-        const dur = isSwitch ? 500 : FS_IN_MS;
-        if(isSwitch){
-            el.style.transition = "opacity " + dur + "ms " + EASE + ", transform " + dur + "ms " + EASE;
-            el.style.transform = "translate3d(0,0,0)";
-        } else {
-            el.style.transition = "opacity " + dur + "ms " + EASE;
-            el.style.transform = "none";
+        /* 守卫：模型解压阻塞主线程可能导致本回调严重延迟；若期间横屏等逻辑已改写 transform，不覆盖，只补可见性 */
+        if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
+            el.style.opacity = "1";
+            if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
+            return;
         }
+        const dur = isSwitch ? 460 : FS_IN_MS;
+        el.style.transition = "opacity " + dur + "ms " + EASE + ", transform " + dur + "ms " + EASE;
+        el.style.transform = "scale(1) translateY(0)";
         el.style.opacity = "1";
-        if(!reuse){ bg.style.transition = "opacity " + dur + "ms " + EASE; bg.style.opacity = "1"; }
+        if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
         setTimeout(safeResize, 80);
     }));
     setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 200);
@@ -993,40 +994,36 @@ function exitFullscreen(){
     };
     if(switching){
         /* 互切：旧层向左上轻移淡出，新层随后从左下向右上淡入；遮罩全程不透明 */
-        const ls = state.isLandscape;
-        el.style.transition = "opacity 300ms " + EASE_IN + (ls ? "" : ", transform 320ms " + EASE_IN);
+        el.style.transition = "opacity 300ms " + EASE_IN;
         el.style.opacity = "0";
-        if(!ls){ el.style.transform = "translate3d(-14px,-16px,0)"; }
         const icS = document.getElementById("infoCard");
-        if(icS){ icS.style.transition = "opacity 300ms " + EASE_IN; icS.style.opacity = "0"; }
-        setTimeout(land, 310);
+        if(icS){ icS.style.transition = "opacity 280ms " + EASE_IN; icS.style.opacity = "0"; }
+        setTimeout(land, 300);
     } else {
         /* 退出：全屏层向左上轻移并柔和淡出，遮罩渐隐；复位后主页从左下角铺开淡入 */
-        const ls = state.isLandscape;
         const ic = document.getElementById("infoCard");
-        if(ic){ ic.style.transition = "opacity 400ms " + EASE_IN; ic.style.opacity = "0"; }
+        if(ic){ ic.style.transition = "opacity 360ms " + EASE_IN; ic.style.opacity = "0"; }
         void el.offsetHeight;
         requestAnimationFrame(() => {
-            el.style.transition = "opacity 400ms " + EASE_IN + (ls ? "" : ", transform 420ms " + EASE_IN);
+            el.style.transition = "opacity 400ms " + EASE_IN;
             el.style.opacity = "0";
-            if(!ls){ el.style.transform = "translate3d(-14px,-16px,0)"; }
-            bg.style.transition = "opacity 460ms " + EASE_IN;
+            bg.style.transition = "opacity 420ms " + EASE_IN;
             bg.style.opacity = "0";
         });
-        setTimeout(land, 440);
+        setTimeout(land, 420);
     }
 }
 /* 主页“从左下角铺开淡入”：WAAPI，结束即取消，避免 transform 残留成为 fixed 包含块 */
 function playHomeIn(){
     try{
-        fullWrap.style.opacity = '.45';   /* 起始即半可见，遮罩移除瞬间不露白底 */
+        fullWrap.style.opacity = '.35';
         const a = fullWrap.animate(
-            [{opacity:.45, transform:"translate3d(-6px,10px,0)"},{opacity:1, transform:"translate3d(0,0,0)"}],
-            {duration:380, easing:"cubic-bezier(.22,.61,.36,1)", fill:"both"}
+            [{opacity:.35, transform:"translateY(6px)"},{opacity:1, transform:"translateY(0)"}],
+            {duration:420, easing:"cubic-bezier(.22,.61,.36,1)", fill:"both"}
         );
-        const clearHome = () => { try{ a.cancel(); }catch(e){} fullWrap.style.opacity=''; };
+        const clearHome = () => { try{ a.cancel(); }catch(e){} fullWrap.style.opacity=''; fullWrap.style.transform=''; };
         a.onfinish = clearHome;
-        setTimeout(clearHome, 520);   /* 兜底：动画若被中断也保证主页不残留透明 */
+        setTimeout(clearHome, 560);
     }catch(e){}
 }
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
@@ -1040,7 +1037,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     el.style.borderRadius = saved.borderRadius;
     el.style.willChange = saved.willChange;
     el.style.opacity = '';
-    el.style.transform = saved.transform || 'none';
+    el.style.transform = saved.transform || '';
     fullWrap.style.zIndex = saved.wrapZ;
     fullWrap.classList.remove('fs-page','info-collapsed','model-backdrop','fs-exiting','ls-card');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
@@ -1050,6 +1047,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
     fsState = null;
     void el.offsetHeight;
+    if(!keepOverlay){ setTimeout(()=>{ try{ fullWrap.style.transform=''; }catch(e){} }, 80); }   /* 兜底：清掉进入动画残留 transform */
 }
 /* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
 function switchFullscreen(type){
