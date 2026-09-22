@@ -746,7 +746,7 @@ document.addEventListener('pointerup', e => { glow.classList.remove('press'); if
 document.addEventListener('pointercancel', () => glow.classList.remove('press'), {passive:true});
 document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; glow.classList.remove('press'); });
 btnRotate.onclick = () => { rotate = !rotate; viewer.autoRotate = rotate; btnRotate.classList.toggle('active', rotate); }
-btnReset.onclick = () => { viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; }
+btnReset.onclick = () => { camPinned=false; viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; viewer.jumpCameraToGoal(); setTimeout(ensureAbsRadius,320); }
 let clickCount = 0, clickTimer = null;
 viewer.addEventListener('click', (e) => {
     clickCount++; clearTimeout(clickTimer);
@@ -870,6 +870,7 @@ function enterFullscreen(type, isSwitch, reuse){
         ctrl = document.createElement("div");
         ctrl.className = "fs-ctrl-layer"; document.body.appendChild(ctrl);
     }
+    try{ ctrl.classList.remove('fs-ls'); }catch(e){}
     function makeBtn(cls, html, onclick){
         const b = document.createElement('div');
         b.className = 'fs-ctrl ' + cls;
@@ -894,6 +895,7 @@ function enterFullscreen(type, isSwitch, reuse){
         });
         modelContainer.classList.add('fs-model');
         fullWrap.classList.add('model-backdrop');
+        setTimeout(()=>{ try{ ensureAbsRadius(); }catch(e){} }, 420);
     }
     if(type === 'page'){
         makeBtn('fs-modelbtn', ICON_EXPAND, () => switchFullscreen('model'));
@@ -913,6 +915,8 @@ function enterFullscreen(type, isSwitch, reuse){
     }
 
     document.body.classList.add('in-fs');
+    try{ viewer.setAttribute('interaction-prompt','none'); viewer.interactionPrompt='none'; }catch(e){}
+    fullWrap.classList.remove('ls-card');
     fullWrap.classList.remove('fs-exiting');
 
     /* 最终布局一次性到位：fixed 铺满 */
@@ -932,7 +936,7 @@ function enterFullscreen(type, isSwitch, reuse){
     if(!reuse){ bg.style.transition = "none"; bg.style.opacity = "0"; }
     else { bg.style.transition = "none"; bg.style.opacity = "1"; }
 
-    fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false };
+    fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -1015,11 +1019,14 @@ function exitFullscreen(){
 /* 主页“从左下角铺开淡入”：WAAPI，结束即取消，避免 transform 残留成为 fixed 包含块 */
 function playHomeIn(){
     try{
+        fullWrap.style.opacity = '.45';   /* 起始即半可见，遮罩移除瞬间不露白底 */
         const a = fullWrap.animate(
-            [{opacity:0, transform:"translate3d(-12px,18px,0)"},{opacity:1, transform:"translate3d(0,0,0)"}],
-            {duration:500, easing:"cubic-bezier(.22,.61,.36,1)", fill:"both"}
+            [{opacity:.45, transform:"translate3d(-6px,10px,0)"},{opacity:1, transform:"translate3d(0,0,0)"}],
+            {duration:380, easing:"cubic-bezier(.22,.61,.36,1)", fill:"both"}
         );
-        a.onfinish = () => { try{ a.cancel(); }catch(e){} };
+        const clearHome = () => { try{ a.cancel(); }catch(e){} fullWrap.style.opacity=''; };
+        a.onfinish = clearHome;
+        setTimeout(clearHome, 520);   /* 兜底：动画若被中断也保证主页不残留透明 */
     }catch(e){}
 }
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
@@ -1040,6 +1047,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';}
     modelContainer.classList.remove('fs-model');
     if(!keepOverlay){ document.body.classList.remove("in-fs"); bg.remove(); ctrl.remove(); }
+    try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
     fsState = null;
     void el.offsetHeight;
 }
@@ -1054,44 +1062,38 @@ function switchFullscreen(type){
 function applyTransition(el, props){
     el.style.transition = props.map(p => p + ' .45s ' + EASE).join(',');
 }
-function toggleLandscape(){
-    if(!fsState || fsState.type !== "model") return;
-    fsState.isLandscape = !fsState.isLandscape;
-    try{ resetGestureState(true); }catch(e){}
+function applyOrientation(){
+    if(!fsState || fsState.type !== 'model') return;
+    const want = !!fsState.wantLandscape;
+    const css = want && !isRealLandscape();   /* 视口没真横过来才用 CSS 强制旋转；物理真横屏直接自然布局 */
+    fsState.isLandscape = want;
+    fsState.cssRotated = css;
     const el = fsState.el;
-    el.style.transition = "transform .52s " + EASE_IN;
-    el.style.transformOrigin = "center center";
-    if(fsState.ctrl) fsState.ctrl.classList.toggle("fs-ls", fsState.isLandscape);
-    fullWrap.classList.toggle("ls-card", fsState.isLandscape);
-    if(fsState.isLandscape){
-        const k = window.innerHeight / window.innerWidth;
-        el.style.transform = "rotate(90deg) scale(" + k + ")";
-        try{ viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; }catch(e){}
-        showToast("横屏模式");
-    } else {
-        el.style.transform = "none";
-        try{ viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; }catch(e){}
-        showToast("竖屏模式");
-    }
+    if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', css);
+    fullWrap.classList.toggle('ls-card', css);
+    el.style.transition = 'transform .52s ' + EASE_IN;
+    el.style.transformOrigin = 'center center';
+    el.style.transform = css ? ('rotate(90deg) scale(' + (window.innerHeight/window.innerWidth) + ')') : 'none';
+    try{ resetGestureState(true); }catch(e){}
+    resetCameraView();
+    showToast(want ? '横屏模式' : '竖屏模式');
     setTimeout(safeResize, 560);
+}
+function toggleLandscape(){
+    if(!fsState || fsState.type !== 'model') return;
+    fsState.wantLandscape = !fsState.wantLandscape;
+    applyOrientation();
 }
 function resetLandscape(immediate){
     if(!fsState || fsState.exiting) return;
-    fsState.isLandscape = false;
-    try{ resetGestureState(true); }catch(e){}
+    fsState.wantLandscape = false; fsState.isLandscape = false; fsState.cssRotated = false;
     const el = fsState.el;
     el.style.transformOrigin = 'center center';
-    if(immediate){
-        el.style.transition = 'none';
-        el.style.transform = 'none';
-        void el.offsetHeight;
-        el.style.transition = '';
-    }else{
-        el.style.transition = 'transform .52s ' + EASE_IN;
-        el.style.transform = 'none';
-    }
+    if(immediate){ el.style.transition = 'none'; el.style.transform = 'none'; void el.offsetHeight; el.style.transition = ''; }
+    else { el.style.transition = 'transform .52s ' + EASE_IN; el.style.transform = 'none'; }
+    try{ if(fsState.ctrl) fsState.ctrl.classList.remove('fs-ls'); }catch(e){}
+    fullWrap.classList.remove('ls-card');
 }
-
 /* 点按信息小格：触点涟漪扩散 + 该格外圈泛起光晕（仅整页全屏呈现） */
 document.querySelectorAll('.info-card .row').forEach(row => {
     let litTimer = null;
@@ -1116,140 +1118,201 @@ modelContainer.addEventListener('pointerdown', () => {
     clearTimeout(modelTapTimer);
     modelTapTimer = setTimeout(() => modelContainer.classList.remove('fs-tap'), 520);
 });
-/* ===== 手势层（不碰 cameraControls，杜绝卡住）=====
-   移动模式开启：捕获层拦截单指 pointer 自绘平移，内置旋转不参与；关闭：一律放行，内置原样可用。
-   桌面：左键=内置旋转，中键=平移；横屏按 CSS 旋转换算手指轴。 */
+/* ===== 手势层（自绘，避免与内置相机控制抢手势而卡住）=====
+   关键：model-viewer 初始 camera-orbit 半径是百分比/auto，平移 target 时它会重算半径，
+   导致按半径换算的平移增益剧烈跳动（越拖越飘/反向/走不回）。手势开始即把半径钉成绝对米制，
+   之后旋转/平移/缩放全部基于稳定半径，线性跟手。
+   - 旋转模式(panMode=false)：完全放行，用原生单指旋转 + 原生双指。
+   - 移动模式(panMode=true)：自绘——单指=1:1 抓取平移，双指=原地捏合缩放（不转向、不跳位）。
+   - 真横屏（视口本身宽>高：手机物理横过来/桌面）与竖屏同一套控制器，坐标天然正确。
+   - 强制横屏（竖屏视口下点横屏，CSS rotate90）才用 ls* 控制器做逆坐标换算。 */
 let panMode = false, gt = null, midPan = null;
-const PAN_K = 1.0;
-function applyPan(dx, dy){
+let camPinned = false, framedR = null;
+const DEG = Math.PI/180;
+function isRealLandscape(){ return window.innerWidth > window.innerHeight; }
+/* 把当前轨道半径钉成绝对米制（保留角度），平移/缩放期间半径恒定 */
+function pinCameraAbsolute(){
+    try{
+        const o = viewer.getCameraOrbit(); const r = Math.abs(o.radius);
+        if(!(isFinite(r) && r > 0.1)) return false;
+        framedR = r;
+        try{ viewer.setAttribute('min-camera-orbit','auto auto '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto auto '+(r*2.6).toFixed(2)+'m'); }catch(e){}
+        viewer.cameraOrbit = (o.theta/DEG).toFixed(4)+'deg '+(o.phi/DEG).toFixed(4)+'deg '+r.toFixed(3)+'m';
+        return true;
+    }catch(e){ return false; }
+}
+function ensureAbsRadius(){ if(camPinned) return true; camPinned = pinCameraAbsolute(); if(camPinned){ try{ viewer.jumpCameraToGoal(); }catch(e){} } return camPinned; }
+/* 复位视角并在取景稳定后钉半径（进入/横竖屏切换调用），轮询应对相机异步 */
+function resetCameraView(){
+    camPinned = false;
+    try{ viewer.cameraTarget='0m 0m 0m'; viewer.cameraOrbit='0deg 75deg auto'; viewer.jumpCameraToGoal(); }catch(e){}
+    let tries = 0, lastR = -1, stable = 0;
+    const t = setInterval(()=>{
+        tries++;
+        let r = NaN; try{ r = Math.abs(viewer.getCameraOrbit().radius); }catch(e){}
+        if(isFinite(r) && r > 0.1){
+            if(lastR > 0 && Math.abs(r-lastR) < 0.5) stable++; else stable = 0;
+            lastR = r;
+            if(stable >= 1 || tries > 7){
+                framedR = r;
+        try{ viewer.setAttribute('min-camera-orbit','auto auto '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto auto '+(r*2.6).toFixed(2)+'m'); }catch(e){} camPinned = true; clearInterval(t);
+                try{ viewer.cameraOrbit='0deg 75deg '+r.toFixed(3)+'m'; viewer.cameraTarget='0m 0m 0m'; viewer.jumpCameraToGoal(); }catch(e){}
+            }
+        } else if(tries > 16){ clearInterval(t); }
+    }, 100);
+}
+/* 屏幕像素 -> 世界位移系数：按相机到目标点距离与垂直视场角，做到 1:1 抓取、不随平移漂移 */
+function panScale(){
     const o = viewer.getCameraOrbit(), box = viewer.getBoundingClientRect();
-    const s = Math.abs(o.radius) / Math.min(box.width, box.height) * PAN_K;
+    const r = Math.abs(o.radius);
+    let fov = 30; try{ fov = viewer.getFieldOfView() || 30; }catch(e){}
+    const h = Math.max(1, box.height);
+    return 2 * r * Math.tan(0.5 * fov * DEG) / h;
+}
+function applyPan(dx, dy){
+    if(!ensureAbsRadius()) return;
+    const o = viewer.getCameraOrbit(), s = panScale();
     const th = o.theta, ph = o.phi;
     const rx = Math.cos(th), rz = -Math.sin(th);
-    const ux = -Math.cos(ph) * Math.sin(th), uy = Math.sin(ph), uz = -Math.cos(ph) * Math.cos(th);
+    const ux = -Math.cos(ph)*Math.sin(th), uy = Math.sin(ph), uz = -Math.cos(ph)*Math.cos(th);
     const tg = viewer.getCameraTarget();
-    tg.x += (-dx * rx + dy * ux) * s;
-    tg.y += (dy * uy) * s;
-    tg.z += (-dx * rz + dy * uz) * s;
+    tg.x += (-dx*rx + dy*ux) * s;
+    tg.y += (dy*uy) * s;
+    tg.z += (-dx*rz + dy*uz) * s;
     viewer.cameraTarget = tg.toString();
     viewer.jumpCameraToGoal();
 }
 const onUI = e => e.target && e.target.closest && e.target.closest('.btn,.icon-btn,.fs-ctrl,.ml-search,input,button');
-/* 移动模式：单指=纯平移，双指=捏合缩放（自绘多触点，不依赖内置，避免双指变旋转） */
+function radOf(o){ const v=(typeof o.radius==='number')?o.radius:parseFloat(o.radius); const a=Math.abs(v); return (isFinite(a)&&a>0.1)?a:(framedR||2); }
+function clampRad(r){ const base=framedR||r; return Math.min(2.5*base, Math.max(0.13*base, r)); }
+/* 写轨道（角度+绝对半径），带有限性保护，双指只改半径、不带动角度 */
+function writeOrbit(theta, phi, r){
+    if(!isFinite(theta)) theta = 0;
+    if(!isFinite(phi)) phi = 75*DEG;
+    phi = Math.min(Math.PI-0.08, Math.max(0.08, phi));
+    if(!(isFinite(r) && r > 0.1)) r = framedR || radOf(viewer.getCameraOrbit());
+    viewer.cameraOrbit = (theta/DEG).toFixed(3)+'deg '+(phi/DEG).toFixed(3)+'deg '+r.toFixed(3)+'m';
+    viewer.jumpCameraToGoal();
+}
+
+/* ---------- 竖屏 / 真横屏 通用控制器（坐标与视口同向，无需换算）---------- */
 const pts = new Map();
-let panStart = null, pinch0 = null;
-const ptList = () => [...pts.values()];
-/* 移动模式：单指平移；双指不拦截，交给 model-viewer 原生捏合（原地缩放不跳位） */
-modelContainer.addEventListener("pointerdown", e => {
-    if(fsState && fsState.isLandscape) return;   /* 横屏交给统一手势控制器 */
+let pg = null;   /* {kind:'pan'|'pinch', last, d0, r0} */
+function pgDown(e){
+    if(fsState && fsState.cssRotated) return;   /* 强制横屏交给 ls 控制器 */
+    if(!panMode) return;                          /* 旋转模式：原生处理单指旋转/双指 */
     if(onUI(e)) return;
-    if(e.pointerType === "mouse" && e.button !== 0) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
+    e.preventDefault(); e.stopPropagation();     /* 接管，阻止原生单指旋转 */
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pts.size===1){ panStart={x:e.clientX,y:e.clientY}; }
-}, {capture:true, passive:false});
-modelContainer.addEventListener("pointermove", e => {
-    if(fsState && fsState.isLandscape) return;
+    if(pts.size === 1){ pg = {kind:'pan', last:{x:e.clientX, y:e.clientY}}; ensureAbsRadius(); }
+    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+}
+function pgMove(e){
+    if(fsState && fsState.cssRotated) return;
     if(!panMode || !pts.has(e.pointerId)) return;
     if(onUI(e)) return;
-    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pts.size!==1){ return; }   /* 双指：放行给原生捏合，不拦截 */
     e.preventDefault(); e.stopPropagation();
-    const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if(!pg) return;
+    const a = [...pts.values()];
+    if(pg.kind === 'pinch' && pts.size >= 2){
+        const d = Math.max(1, Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y));
+        const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(pg.r0*pg.d0/d));
+        return;
+    }
+    if(pts.size !== 1) return;
+    applyPan(e.clientX-pg.last.x, e.clientY-pg.last.y);
+    pg.last = {x:e.clientX, y:e.clientY};
+}
+function pgUp(e){
+    if(pts.has(e.pointerId)) pts.delete(e.pointerId);
+    if(pts.size === 1){ const p=[...pts.values()][0]; pg = {kind:'pan', last:{...p}}; }
+    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+    else { pg = null; }
+}
+modelContainer.addEventListener('pointerdown', pgDown, {capture:true, passive:false});
+modelContainer.addEventListener('pointermove', pgMove, {capture:true, passive:false});
+modelContainer.addEventListener('pointerup', pgUp, {capture:true});
+modelContainer.addEventListener('pointercancel', pgUp, {capture:true});
 
-    applyPan(dx,dy); panStart.x=e.clientX; panStart.y=e.clientY;
-}, {capture:true, passive:false});
-const ptEnd = e => { pts.delete(e.pointerId); if(pts.size===1){ const p=ptList()[0]; panStart={x:p.x,y:p.y}; } };
-modelContainer.addEventListener("pointerup", ptEnd, {capture:true});
-modelContainer.addEventListener("pointercancel", ptEnd, {capture:true});
-
-modelContainer.addEventListener("pointercancel", ptEnd, {capture:true});
-/* ===================== 横屏统一手势控制器 =====================
-   CSS 把容器 rotate(90deg) scale(k)，model-viewer 内置手势仍按物理坐标，
-   轴向错位 90° 且增益放大 k 倍（“飘逸不跟手”）。横屏时完全自绘：
-   单指=旋转模式调轨道角 / 移动模式平移；双指=原地捏合缩放（不转向、不跳位）。 */
+/* ---------- 强制横屏（竖屏视口下 CSS rotate90 scale）控制器：逆坐标换算 ---------- */
 const lsPts = new Map();
 let lsGesture = null;
-/* 方向符号集中在此：若真机某个轴向相反，只改这两个常量即可（1 或 -1） */
-const LS_THETA_SIGN = 1, LS_PHI_SIGN = 1;
+/* 真机某轴向若相反，只改这两个常量(1/-1) */
+const LS_THETA_SIGN = -1, LS_PHI_SIGN = -1;
 function lsK(){ return window.innerHeight / Math.max(1, window.innerWidth); }
-/* 物理像素位移 -> 模型本地（未旋转）位移：rotate(90)scale(k) 的逆变换 */
-function lsLocal(dx, dy){ const k = lsK(); return { x: dy/k, y: -dx/k }; }
-function lsRad(o){ const rv = (typeof o.radius === "number") ? o.radius : parseFloat(o.radius); return Math.abs(isFinite(rv)?rv:0) || 1; }
-modelContainer.addEventListener("pointerdown", e => {
-    if(!(fsState && fsState.isLandscape)){ lsPts.clear(); lsGesture=null; return; }
+/* 物理像素位移 -> 模型本地(未旋转)位移：rotate(90)scale(k) 的逆变换 */
+function lsLocal(dx, dy){ const k = lsK(); return {x:dy/k, y:-dx/k}; }
+function lsDown(e){
+    if(!(fsState && fsState.cssRotated)){ lsPts.clear(); lsGesture = null; return; }
     if(onUI(e)) return;
-    if(e.pointerType === "mouse" && e.button !== 0) return;
+    if(e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();
+    ensureAbsRadius();
     lsPts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     const arr = [...lsPts.values()], o = viewer.getCameraOrbit();
-    if(lsPts.size === 1){ lsGesture = {kind: panMode ? "pan" : "orbit", last:{x:e.clientX,y:e.clientY}, o}; }
-    else if(lsPts.size === 2){
-        const d = Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y);
-        lsGesture = {kind:"pinch", d0:Math.max(1,d), o, r0:lsRad(o)};
-    }
-}, {capture:true, passive:false});
-modelContainer.addEventListener("pointermove", e => {
-    if(!(fsState && fsState.isLandscape) || !lsPts.has(e.pointerId)) return;
+    if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{x:e.clientX,y:e.clientY}, o}; }
+    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o, r0:framedR||radOf(o)}; }
+}
+function lsMove(e){
+    if(!(fsState && fsState.cssRotated) || !lsPts.has(e.pointerId)) return;
     if(onUI(e)) return;
     e.preventDefault(); e.stopPropagation();
     lsPts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     if(!lsGesture) return;
     const arr = [...lsPts.values()];
-    if(lsGesture.kind === "pinch" && lsPts.size >= 2){
+    if(lsGesture.kind === 'pinch' && lsPts.size >= 2){
         const d = Math.max(1, Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y));
-        const o = viewer.getCameraOrbit(), theta = isFinite(o.theta)?o.theta:(lsGesture.o.theta||0), phi = isFinite(o.phi)?o.phi:(lsGesture.o.phi||1.309), base = (isFinite(lsGesture.r0)&&lsGesture.r0>0)?lsGesture.r0:2.2, r = Math.min(40, Math.max(0.2, base*lsGesture.d0/d));
-        viewer.cameraOrbit = (theta*180/Math.PI)+"deg "+(phi*180/Math.PI)+"deg "+r.toFixed(3)+"m";
-        viewer.jumpCameraToGoal();
+        const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(lsGesture.r0*lsGesture.d0/d));
         return;
     }
     if(lsPts.size !== 1) return;
     const L = lsLocal(e.clientX-lsGesture.last.x, e.clientY-lsGesture.last.y);
     const o = viewer.getCameraOrbit();
-    if(lsGesture.kind === "orbit"){
+    if(lsGesture.kind === 'orbit'){
         const g = 0.0062;
-        const th0 = isFinite(o.theta)?o.theta:0, ph0 = isFinite(o.phi)?o.phi:1.309; let theta = th0 + LS_THETA_SIGN*L.x*g;
-        let phi = ph0 + LS_PHI_SIGN*L.y*g;
-        phi = Math.min(Math.PI-0.08, Math.max(0.08, phi));
-        const rr2 = Math.min(40, Math.max(0.2, lsRad(o))); viewer.cameraOrbit = (theta*180/Math.PI)+"deg "+(phi*180/Math.PI)+"deg "+rr2.toFixed(3)+"m";
-        viewer.jumpCameraToGoal();
-    } else if(lsGesture.kind === "pan"){
+        writeOrbit(o.theta + LS_THETA_SIGN*L.x*g, o.phi + LS_PHI_SIGN*L.y*g, framedR||radOf(o));
+    }else if(lsGesture.kind === 'pan'){
         applyPan(L.x, L.y);
     }
     lsGesture.last = {x:e.clientX, y:e.clientY};
-}, {capture:true, passive:false});
+}
 function lsUp(e){
     if(lsPts.has(e.pointerId)) lsPts.delete(e.pointerId);
     const arr = [...lsPts.values()];
-    if(!(fsState && fsState.isLandscape)){ lsGesture=null; return; }
-    if(lsPts.size === 1){ lsGesture = {kind: panMode ? "pan":"orbit", last:{...arr[0]}, o:viewer.getCameraOrbit()}; }
-    else if(lsPts.size === 0){ lsGesture = null; }
+    if(!(fsState && fsState.cssRotated)){ lsGesture = null; return; }
+    if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{...arr[0]}, o:viewer.getCameraOrbit()}; }
+    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o:viewer.getCameraOrbit(), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+    else { lsGesture = null; }
 }
-modelContainer.addEventListener("pointerup", lsUp, {capture:true});
-modelContainer.addEventListener("pointercancel", lsUp, {capture:true});
+modelContainer.addEventListener('pointerdown', lsDown, {capture:true, passive:false});
+modelContainer.addEventListener('pointermove', lsMove, {capture:true, passive:false});
+modelContainer.addEventListener('pointerup', lsUp, {capture:true});
+modelContainer.addEventListener('pointercancel', lsUp, {capture:true});
 
 /* 桌面中键平移（不碰 cameraControls） */
 modelContainer.addEventListener('pointerdown', e => {
     if(e.pointerType !== 'mouse' || e.button !== 1 || onUI(e)) return;
-    e.preventDefault(); e.stopPropagation();
-    midPan = {x:e.clientX, y:e.clientY};
+    e.preventDefault(); e.stopPropagation(); midPan = {x:e.clientX, y:e.clientY};
 }, true);
 modelContainer.addEventListener('pointermove', e => {
     if(!midPan) return;
     e.stopPropagation();
-    let dx = e.clientX - midPan.x, dy = e.clientY - midPan.y;
-    if(fsState && fsState.isLandscape){ const t = dx; dx = dy; dy = -t; }
-    applyPan(dx, dy);
-    midPan.x = e.clientX; midPan.y = e.clientY;
+    let dx = e.clientX-midPan.x, dy = e.clientY-midPan.y;
+    if(fsState && fsState.cssRotated){ const t=dx; dx=dy; dy=-t; }
+    applyPan(dx, dy); midPan.x=e.clientX; midPan.y=e.clientY;
 }, true);
-const midUp = () => { if(midPan){ midPan = null; } };
+const midUp = () => { midPan = null; };
 modelContainer.addEventListener('pointerup', midUp, true);
 modelContainer.addEventListener('pointercancel', midUp, true);
 modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
+
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 /* 统一清空手势瞬时状态（触点/锚点/中键），避免锁屏、切后台、反复进出全屏、横竖屏切换后残留旧触点导致坐标错乱 */
 function resetGestureState(keepMode){
     if(!keepMode) panMode = false;
-    gt = null; midPan = null; panStart = null; pinch0 = null; lsGesture = null;
+    gt = null; midPan = null; pg = null; lsGesture = null;
     try{ pts.clear(); }catch(e){}
     try{ lsPts.clear(); }catch(e){}
     try{ syncPanBtns(); }catch(e){}
@@ -1257,11 +1320,12 @@ function resetGestureState(keepMode){
 function setPanMode(on){
     panMode = !!on;
     try{ resetGestureState(true); }catch(e){}
+    if(panMode) ensureAbsRadius();
     syncPanBtns();
-    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指拖移缩放');
+    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
-/* 切后台/锁屏/页面隐藏时触摸常常收不到 pointerup，回前台丢弃残留触点，防止下一次单指被误判成多指而坐标错乱（保留当前模式） */
+/* 切后台/锁屏/页面隐藏时触摸常常收不到 pointerup，回前台丢弃残留触点（保留当前模式） */
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ try{ resetGestureState(true); }catch(e){} } });
 window.addEventListener('pagehide', ()=>{ try{ resetGestureState(true); }catch(e){} });
 window.addEventListener('blur', ()=>{ try{ resetGestureState(true); }catch(e){} });
@@ -1270,7 +1334,13 @@ window.addEventListener('blur', ()=>{ try{ resetGestureState(true); }catch(e){} 
 btnModelFull.onclick = () => { if(fsState && !document.body.classList.contains('in-fs')){ fsState=null; } enterFullscreen('model'); };
 btnFull.onclick = () => { if(fsState && !document.body.classList.contains('in-fs')){ fsState=null; } fsState ? requestExitFullscreen() : enterFullscreen('page'); };
 document.addEventListener('keydown', e => { if(e.key === 'Escape' && fsState) requestExitFullscreen(); });
-window.addEventListener('resize', () => { if(fsState) safeResize(); });
+let __orzT=null;
+window.addEventListener('resize', () => {
+    if(!fsState) return;
+    safeResize();
+    if(fsState.type==='model' && fsState.wantLandscape){ clearTimeout(__orzT); __orzT=setTimeout(applyOrientation, 170); }
+});
+window.addEventListener('orientationchange', () => { setTimeout(()=>{ if(fsState && fsState.type==='model' && fsState.wantLandscape) applyOrientation(); }, 220); });
 if(location.hash && /full/.test(location.hash)){ try{ history.replaceState(null,'',location.pathname+location.search); }catch(e){} }
 /* ===================== 一键复制构件信息 ===================== */
 function copyText(t){
