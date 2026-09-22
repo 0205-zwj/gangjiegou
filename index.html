@@ -250,6 +250,10 @@
                 linear-gradient(160deg,#fefeff 0%,#f6fafc 52%,#f9f8fc 100%);
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
+        /* ===== 进出场快照幽灵层：克隆当前画面做交叉淡化，模型用静态截图替换 ===== */
+        .fs-ghost,.fs-ghost *{animation:none!important;}
+        .fs-ghost{box-sizing:border-box;}
+        .fs-ghost img{display:block;background:transparent;}
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -875,6 +879,7 @@ function enterFullscreen(type, isSwitch, reuse){
         willChange: el.style.willChange, wrapZ: fullWrap.style.zIndex
     };
 
+    const homeGhost = (!isSwitch && !reuse) ? captureGhost(fullWrap) : null;
     fullWrap.style.zIndex = '9001';
 
     let bg, ctrl;
@@ -979,6 +984,7 @@ function enterFullscreen(type, isSwitch, reuse){
         if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
             el.style.opacity = "1";
             if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
+            fadeGhostOut(homeGhost, {dur:400, to:'scale(1.016) translateY(-3px)'});
             return;
         }
         const dur = isSwitch ? 460 : FS_IN_MS;
@@ -986,6 +992,7 @@ function enterFullscreen(type, isSwitch, reuse){
         el.style.transform = "scale(1) translateY(0)";
         el.style.opacity = "1";
         if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
+        fadeGhostOut(homeGhost, {dur:400, to:'scale(1.016) translateY(-3px)'});
         setTimeout(safeResize, 80);
     }));
     setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 200);
@@ -999,6 +1006,38 @@ function requestExitFullscreen(){
 window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
+/* 克隆当前画面为静态快照（模型用 toDataURL 截图替换，绝不新建第二个 WebGL 上下文），
+   让真实结构可立即复位/重建，快照在最上层交叉淡出，从根上消除单元素搬移造成的白闪/跳变 */
+function captureGhost(src){
+    try{
+        let shot=''; try{ shot = viewer.toDataURL('image/webp',0.82) || ''; }catch(e){}
+        const g = src.cloneNode(true);
+        g.removeAttribute('id'); g.classList.add('fs-ghost');
+        g.querySelectorAll('model-viewer').forEach(mv=>{
+            const img=document.createElement('img');
+            if(shot) img.src=shot;
+            img.style.cssText='width:100%;height:100%;object-fit:contain;display:block;border:0;';
+            mv.replaceWith(img);
+        });
+        g.querySelectorAll('.toolbar,#loading,.tip-banner,.progress,.fs-dock,.fs-ctrl-layer').forEach(n=>n.remove());
+        const r=src.getBoundingClientRect();
+        g.style.cssText += ';position:fixed;left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px;height:'+r.height+'px;margin:0;z-index:9003;pointer-events:none;overflow:hidden;';
+        document.body.appendChild(g);
+        return g;
+    }catch(e){ return null; }
+}
+function fadeGhostOut(g, opts){
+    if(!g) return;
+    opts = opts || {};
+    const dur = opts.dur || 420;
+    g.style.transition='none'; g.style.opacity='1'; g.style.transformOrigin='center center'; g.style.transform=opts.from||'none';
+    void g.offsetHeight;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        g.style.transition='opacity '+dur+'ms '+EASE_IN+',transform '+dur+'ms '+EASE_IN;
+        g.style.opacity='0'; g.style.transform=opts.to||'scale(1.012)';
+    }));
+    setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+120);
+}
 function exitFullscreen(){
     const state = fsState;
     const { el, type, saved, bg, ctrl, rect } = state;
@@ -1010,42 +1049,28 @@ function exitFullscreen(){
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
 
-    let landed = false;
-    const land = () => {
-        if(landed) return; landed = true;
-        if(state.isLandscape){ fsState.isLandscape=false; el.style.transformOrigin="0 0"; el.style.left="0"; el.style.top="0"; el.style.width="100vw"; el.style.height="100vh"; el.style.transform="none"; }
-        if(switching){
-            /* 互切：保留遮罩和按钮容器，不露出普通页，杜绝闪白 */
-            restoreLayout(el, state, bg, ctrl, true);
-            safeResize();
-            void el.offsetHeight;
-            enterFullscreen(switching, true, {bg, ctrl});
-        } else {
-            restoreLayout(el, state, bg, ctrl);
-            safeResize();
-            void el.offsetHeight;
-            playHomeIn();
-        }
-    };
     if(switching){
-        /* 互切：旧层向左上轻移淡出，新层随后从左下向右上淡入；遮罩全程不透明 */
-        el.style.transition = "opacity 300ms " + EASE_IN;
-        el.style.opacity = "0";
-        const icS = document.getElementById("infoCard");
-        if(icS){ icS.style.transition = "opacity 280ms " + EASE_IN; icS.style.opacity = "0"; }
-        setTimeout(land, 300);
-    } else {
-        /* 退出：全屏层向左上轻移并柔和淡出，遮罩渐隐；复位后主页从左下角铺开淡入 */
-        const ic = document.getElementById("infoCard");
-        if(ic){ ic.style.transition = "opacity 360ms " + EASE_IN; ic.style.opacity = "0"; }
+        /* 互切：冻结旧全屏快照，真实结构立即复位并重建新全屏，新画面在快照下淡入、快照同时淡出（交叉淡化，无白闪） */
+        const ghost = captureGhost(el);
+        restoreLayout(el, state, bg, ctrl, true);
+        safeResize();
         void el.offsetHeight;
-        requestAnimationFrame(() => {
-            el.style.transition = "opacity 400ms " + EASE_IN;
-            el.style.opacity = "0";
-            bg.style.transition = "opacity 420ms " + EASE_IN;
-            bg.style.opacity = "0";
-        });
-        setTimeout(land, 420);
+        enterFullscreen(switching, true, {bg, ctrl});
+        fadeGhostOut(ghost, {dur:440, to:'scale(.99) translateY(4px)'});
+    } else {
+        /* 退出：冻结全屏快照，真实结构立即回到主页；主页轻微上浮淡入，快照同步柔和淡出并轻微下沉，像系统回退 */
+        const ghost = captureGhost(el);
+        restoreLayout(el, state, bg, ctrl);
+        safeResize();
+        void el.offsetHeight;
+        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(10px)';
+        void fullWrap.offsetHeight;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            fullWrap.style.transition='opacity .5s '+EASE+',transform .5s '+EASE;
+            fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
+        }));
+        fadeGhostOut(ghost, {dur:520, to:'scale(.985) translateY(8px)'});
+        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 700);
     }
 }
 /* 主页“从左下角铺开淡入”：WAAPI，结束即取消，避免 transform 残留成为 fixed 包含块 */
@@ -1083,7 +1108,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     fsState = null;
     try{ syncControls(); }catch(e){}
     void el.offsetHeight;
-    if(!keepOverlay){ setTimeout(()=>{ try{ fullWrap.style.transform=''; }catch(e){} }, 80); }   /* 兜底：清掉进入动画残留 transform */
+    /* 退场交叉淡化结束后由 exitFullscreen 统一清理 fullWrap 内联样式，避免提前清掉导致跳变 */
 }
 /* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
 function switchFullscreen(type){
@@ -1359,6 +1384,16 @@ const midUp = () => { midPan = null; };
 modelContainer.addEventListener('pointerup', midUp, true);
 modelContainer.addEventListener('pointercancel', midUp, true);
 modelContainer.addEventListener('mousedown', e => { if(e.button === 1) e.preventDefault(); });
+modelContainer.addEventListener('wheel', e => {
+    if(viewer.hasAttribute('camera-controls')) return;   /* 旋转模式：原生滚轮缩放 */
+    if(onUI(e)) return;
+    e.preventDefault(); e.stopPropagation();
+    if(!ensureAbsRadius()) return;
+    const o = viewer.getCameraOrbit();
+    const mag = Math.min(1.2, Math.abs(e.deltaY) * 0.0016 || 0.001);
+    const f = Math.exp((e.deltaY > 0 ? 1 : -1) * mag);  /* 上滚放大、下滚缩小，与原生一致 */
+    writeOrbit(o.theta, o.phi, clampRad(radOf(o) * f));
+}, {capture:true, passive:false});
 
 function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
 /* 统一清空手势瞬时状态（触点/锚点/中键），避免锁屏、切后台、反复进出全屏、横竖屏切换后残留旧触点导致坐标错乱 */
