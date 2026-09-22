@@ -916,6 +916,7 @@ function enterFullscreen(type, isSwitch, reuse){
 
     document.body.classList.add('in-fs');
     try{ viewer.setAttribute('interaction-prompt','none'); viewer.interactionPrompt='none'; }catch(e){}
+    try{ syncControls(); }catch(e){}
     fullWrap.classList.remove('ls-card');
     fullWrap.classList.remove('fs-exiting');
 
@@ -1046,6 +1047,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     if(!keepOverlay){ document.body.classList.remove("in-fs"); bg.remove(); ctrl.remove(); }
     try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
     fsState = null;
+    try{ syncControls(); }catch(e){}
     void el.offsetHeight;
     if(!keepOverlay){ setTimeout(()=>{ try{ fullWrap.style.transform=''; }catch(e){} }, 80); }   /* 兜底：清掉进入动画残留 transform */
 }
@@ -1069,6 +1071,7 @@ function applyOrientation(){
     const el = fsState.el;
     if(fsState.ctrl) fsState.ctrl.classList.toggle('fs-ls', css);
     fullWrap.classList.toggle('ls-card', css);
+    try{ syncControls(); }catch(e){}
     el.style.transition = 'transform .52s ' + EASE_IN;
     el.style.transformOrigin = 'center center';
     if(css){
@@ -1149,7 +1152,7 @@ function pinCameraAbsolute(){
 function ensureAbsRadius(){ if(camPinned) return true; camPinned = pinCameraAbsolute(); if(camPinned){ try{ viewer.jumpCameraToGoal(); }catch(e){} } return camPinned; }
 /* 复位视角并在取景稳定后钉半径（进入/横竖屏切换调用），轮询应对相机异步 */
 function resetCameraView(){
-    camPinned = false;
+    camPinned = false; panT = null;
     try{ viewer.cameraTarget='0m 0m 0m'; viewer.cameraOrbit='0deg 75deg auto'; viewer.jumpCameraToGoal(); }catch(e){}
     let tries = 0, lastR = -1, stable = 0;
     const t = setInterval(()=>{
@@ -1174,17 +1177,20 @@ function panScale(){
     const h = Math.max(1, viewer.clientHeight || box.height);
     return 2 * r * Math.tan(0.5 * fov * DEG) / h;
 }
+let panT = null;   /* 本端权威平移目标：model-viewer 属性异步生效，同帧多指针事件回读会是旧值，
+                      故在 JS 内同步累加，复位/切模式时置空重新播种，保证双指平移不丢量 */
+function syncPanT(){ if(panT) return panT; const t=viewer.getCameraTarget(); panT={x:t.x,y:t.y,z:t.z}; return panT; }
 function applyPan(dx, dy){
     if(!ensureAbsRadius()) return;
     const o = viewer.getCameraOrbit(), s = panScale();
     const th = o.theta, ph = o.phi;
     const rx = Math.cos(th), rz = -Math.sin(th);
     const ux = -Math.cos(ph)*Math.sin(th), uy = Math.sin(ph), uz = -Math.cos(ph)*Math.cos(th);
-    const tg = viewer.getCameraTarget();
+    const tg = syncPanT();
     tg.x += (-dx*rx + dy*ux) * s;
     tg.y += (dy*uy) * s;
     tg.z += (-dx*rz + dy*uz) * s;
-    viewer.cameraTarget = tg.toString();
+    viewer.cameraTarget = tg.x.toFixed(3)+'m '+tg.y.toFixed(3)+'m '+tg.z.toFixed(3)+'m';
     viewer.jumpCameraToGoal();
 }
 const onUI = e => e.target && e.target.closest && e.target.closest('.btn,.icon-btn,.fs-ctrl,.ml-search,input,button');
@@ -1211,7 +1217,7 @@ function pgDown(e){
     e.preventDefault(); e.stopPropagation();     /* 接管，阻止原生单指旋转 */
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     if(pts.size === 1){ pg = {kind:'pan', last:{x:e.clientX, y:e.clientY}}; ensureAbsRadius(); }
-    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:radOf(viewer.getCameraOrbit()), m0:{x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2}}; }
 }
 function pgMove(e){
     if(fsState && fsState.cssRotated) return;
@@ -1222,6 +1228,9 @@ function pgMove(e){
     if(!pg) return;
     const a = [...pts.values()];
     if(pg.kind === 'pinch' && pts.size >= 2){
+        const m = {x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2};
+        if(pg.m0) applyPan(m.x-pg.m0.x, m.y-pg.m0.y);
+        pg.m0 = m;
         const d = Math.max(1, Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y));
         const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(pg.r0*pg.d0/d));
         return;
@@ -1233,7 +1242,7 @@ function pgMove(e){
 function pgUp(e){
     if(pts.has(e.pointerId)) pts.delete(e.pointerId);
     if(pts.size === 1){ const p=[...pts.values()][0]; pg = {kind:'pan', last:{...p}}; }
-    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+    else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:radOf(viewer.getCameraOrbit()), m0:{x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2}}; }
     else { pg = null; }
 }
 modelContainer.addEventListener('pointerdown', pgDown, {capture:true, passive:false});
@@ -1258,7 +1267,7 @@ function lsDown(e){
     lsPts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     const arr = [...lsPts.values()], o = viewer.getCameraOrbit();
     if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{x:e.clientX,y:e.clientY}, o}; }
-    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o, r0:framedR||radOf(o)}; }
+    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o, r0:radOf(o), m0:{x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2}}; }
 }
 function lsMove(e){
     if(!(fsState && fsState.cssRotated) || !lsPts.has(e.pointerId)) return;
@@ -1268,6 +1277,9 @@ function lsMove(e){
     if(!lsGesture) return;
     const arr = [...lsPts.values()];
     if(lsGesture.kind === 'pinch' && lsPts.size >= 2){
+        const m = {x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2};
+        if(lsGesture.m0){ const Lm=lsLocal(m.x-lsGesture.m0.x, m.y-lsGesture.m0.y); applyPan(Lm.x,Lm.y); }
+        lsGesture.m0 = m;
         const d = Math.max(1, Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y));
         const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(lsGesture.r0*lsGesture.d0/d));
         return;
@@ -1277,7 +1289,7 @@ function lsMove(e){
     const o = viewer.getCameraOrbit();
     if(lsGesture.kind === 'orbit'){
         const g = 0.0062;
-        writeOrbit(o.theta + LS_THETA_SIGN*L.x*g, o.phi + LS_PHI_SIGN*L.y*g, framedR||radOf(o));
+        writeOrbit(o.theta + LS_THETA_SIGN*L.x*g, o.phi + LS_PHI_SIGN*L.y*g, radOf(o));
     }else if(lsGesture.kind === 'pan'){
         applyPan(L.x, L.y);
     }
@@ -1288,7 +1300,7 @@ function lsUp(e){
     const arr = [...lsPts.values()];
     if(!(fsState && fsState.cssRotated)){ lsGesture = null; return; }
     if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{...arr[0]}, o:viewer.getCameraOrbit()}; }
-    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o:viewer.getCameraOrbit(), r0:framedR||radOf(viewer.getCameraOrbit())}; }
+    else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o:viewer.getCameraOrbit(), r0:radOf(viewer.getCameraOrbit()), m0:{x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2}}; }
     else { lsGesture = null; }
 }
 modelContainer.addEventListener('pointerdown', lsDown, {capture:true, passive:false});
@@ -1322,12 +1334,26 @@ function resetGestureState(keepMode){
     try{ lsPts.clear(); }catch(e){}
     try{ syncPanBtns(); }catch(e){}
 }
+/* 统一原生/自绘控制器，保证手机触摸与电脑鼠标行为完全一致、绝不叠加：
+   强制横屏(CSS旋转)：原生关闭，平移/旋转/捏合全由 ls 自绘（坐标需逆变换）；
+   正常朝向：旋转模式交原生单指旋转；移动模式关闭原生，由 pg 自绘平移/捏合。 */
+function syncControls(){
+    const ls = !!(fsState && fsState.cssRotated);
+    const nativeOn = ls ? false : !panMode;
+    try{
+        if(nativeOn) viewer.setAttribute('camera-controls',''); else viewer.removeAttribute('camera-controls');
+        modelContainer.style.touchAction = 'none';
+        viewer.style.touchAction = 'none';
+    }catch(e){}
+}
 function setPanMode(on){
     panMode = !!on;
+    panT = null;
     try{ resetGestureState(true); }catch(e){}
     if(panMode) ensureAbsRadius();
+    syncControls();
     syncPanBtns();
-    showToast(on ? '移动模式：单指拖移 · 双指缩放' : '旋转模式：单指旋转 · 双指缩放');
+    showToast(on ? '移动模式：单指拖移 · 双指缩放（双指拖动可平移）' : '旋转模式：单指旋转 · 双指缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
 /* 切后台/锁屏/页面隐藏时触摸常常收不到 pointerup，回前台丢弃残留触点（保留当前模式） */
