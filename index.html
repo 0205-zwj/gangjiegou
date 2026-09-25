@@ -841,7 +841,7 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
    对齐 OPPO/vivo 系统面板的手感；杜绝 spring 过冲带来的“弹一下”卡通感 */
 const EASE = 'cubic-bezier(.22,.61,.36,1)';        /* 柔和减速：进入淡入，对标 iOS */
 const EASE_IN = 'cubic-bezier(.4,.04,.6,1)';    /* 柔和加速：退出淡出 */
-const FS_IN_MS = 520;
+const FS_IN_MS = 380;
 const FLY_MS = 380;
 const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
 const ORI_MS = 540, ORI_EASE = 'cubic-bezier(.32,.72,0,1)';   /* 横竖屏旋转：模型容器/信息卡/按键共用同一时长与缓动，保持同步 */
@@ -969,7 +969,7 @@ function enterFullscreen(type, isSwitch, reuse){
     if(type === "model") el.style.borderRadius = "26px";
 
     /* 进入：普通=纯透明度柔和淡入；互切=新层从左下向右上轻移淡入；双 rAF 保证首帧 */
-    const fromTransform = isSwitch ? "translateY(8px)" : "translateY(10px)";   /* 纯淡入+轻微上浮，不做缩放，杜绝压缩感 */
+    const fromTransform = isSwitch ? "translateY(5px)" : "translateY(6px)";   /* 纯淡入+极轻微上浮，不缩放 */
     el.style.transition = "none";
     el.style.opacity = isSwitch ? ".22" : "0";
     el.style.transform = fromTransform;
@@ -983,16 +983,16 @@ function enterFullscreen(type, isSwitch, reuse){
         /* 守卫：模型解压阻塞主线程可能导致本回调严重延迟；若期间横屏等逻辑已改写 transform，不覆盖，只补可见性 */
         if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
             el.style.opacity = "1";
-            if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
-            fadeGhostOut(homeGhost, {dur:420, to:'translateY(-6px)'});
+            if(!reuse){ bg.style.transition = "opacity 320ms " + EASE; bg.style.opacity = "1"; }
+            fadeGhostOut(homeGhost, {dur:(isSwitch?260:240), to:'translateY(-3px)'});
             return;
         }
-        const dur = isSwitch ? 460 : FS_IN_MS;
+        const dur = isSwitch ? 300 : FS_IN_MS;
         el.style.transition = "opacity " + dur + "ms " + EASE + ", transform " + dur + "ms " + EASE;
         el.style.transform = "translateY(0)";
         el.style.opacity = "1";
-        if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
-        fadeGhostOut(homeGhost, {dur:420, to:'translateY(-6px)'});
+        if(!reuse){ bg.style.transition = "opacity 320ms " + EASE; bg.style.opacity = "1"; }
+        fadeGhostOut(homeGhost, {dur:(isSwitch?260:240), to:'translateY(-3px)'});
         setTimeout(safeResize, 80);
     }));
     setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 200);
@@ -1033,7 +1033,7 @@ function fadeGhostOut(g, opts){
     g.style.transition='none'; g.style.opacity='1'; g.style.transformOrigin='center center'; g.style.transform=opts.from||'none';
     void g.offsetHeight;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        g.style.transition='opacity '+dur+'ms '+EASE_IN+',transform '+dur+'ms '+EASE_IN;
+        const ge = opts.ease || EASE; g.style.transition='opacity '+dur+'ms '+ge+',transform '+dur+'ms '+ge;
         g.style.opacity='0'; g.style.transform=opts.to||'translateY(-4px)';
     }));
     setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+120);
@@ -1056,21 +1056,21 @@ function exitFullscreen(){
         safeResize();
         void el.offsetHeight;
         enterFullscreen(switching, true, {bg, ctrl});
-        fadeGhostOut(ghost, {dur:460, to:'translateY(6px)'});
+        fadeGhostOut(ghost, {dur:280, to:'translateY(3px)'});
     } else {
         /* 退出：冻结全屏快照，真实结构立即回到主页；主页轻微上浮淡入，快照同步柔和淡出并轻微下沉，像系统回退 */
         const ghost = captureGhost(el);
         restoreLayout(el, state, bg, ctrl);
         safeResize();
         void el.offsetHeight;
-        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(10px)';
+        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(6px)';
         void fullWrap.offsetHeight;
         requestAnimationFrame(()=>requestAnimationFrame(()=>{
-            fullWrap.style.transition='opacity .5s '+EASE+',transform .5s '+EASE;
+            fullWrap.style.transition='opacity .38s '+EASE+',transform .38s '+EASE;
             fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
         }));
-        fadeGhostOut(ghost, {dur:540, to:'translateY(10px)'});
-        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 700);
+        fadeGhostOut(ghost, {dur:260, to:'translateY(4px)'});
+        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 540);
     }
 }
 /* 主页“从左下角铺开淡入”：WAAPI，结束即取消，避免 transform 残留成为 fixed 包含块 */
