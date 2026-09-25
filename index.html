@@ -251,7 +251,7 @@
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
         /* ===== 进出场快照幽灵层：克隆当前画面做交叉淡化，模型用静态截图替换 ===== */
-        .fs-ghost,.fs-ghost *{animation:none!important;}
+        .fs-ghost,.fs-ghost *{animation:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
         .fs-ghost{box-sizing:border-box;}
         .fs-ghost img{display:block;background:transparent;}
         /* ===== 全屏控制按钮层 ===== */
@@ -969,7 +969,7 @@ function enterFullscreen(type, isSwitch, reuse){
     if(type === "model") el.style.borderRadius = "26px";
 
     /* 进入：普通=纯透明度柔和淡入；互切=新层从左下向右上轻移淡入；双 rAF 保证首帧 */
-    const fromTransform = isSwitch ? "scale(.99) translateY(6px)" : "scale(.985) translateY(8px)";
+    const fromTransform = isSwitch ? "translateY(8px)" : "translateY(10px)";   /* 纯淡入+轻微上浮，不做缩放，杜绝压缩感 */
     el.style.transition = "none";
     el.style.opacity = isSwitch ? ".22" : "0";
     el.style.transform = fromTransform;
@@ -984,15 +984,15 @@ function enterFullscreen(type, isSwitch, reuse){
         if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
             el.style.opacity = "1";
             if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
-            fadeGhostOut(homeGhost, {dur:400, to:'scale(1.016) translateY(-3px)'});
+            fadeGhostOut(homeGhost, {dur:420, to:'translateY(-6px)'});
             return;
         }
         const dur = isSwitch ? 460 : FS_IN_MS;
         el.style.transition = "opacity " + dur + "ms " + EASE + ", transform " + dur + "ms " + EASE;
-        el.style.transform = "scale(1) translateY(0)";
+        el.style.transform = "translateY(0)";
         el.style.opacity = "1";
         if(!reuse){ bg.style.transition = "opacity 460ms " + EASE; bg.style.opacity = "1"; }
-        fadeGhostOut(homeGhost, {dur:400, to:'scale(1.016) translateY(-3px)'});
+        fadeGhostOut(homeGhost, {dur:420, to:'translateY(-6px)'});
         setTimeout(safeResize, 80);
     }));
     setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 200);
@@ -1034,7 +1034,7 @@ function fadeGhostOut(g, opts){
     void g.offsetHeight;
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
         g.style.transition='opacity '+dur+'ms '+EASE_IN+',transform '+dur+'ms '+EASE_IN;
-        g.style.opacity='0'; g.style.transform=opts.to||'scale(1.012)';
+        g.style.opacity='0'; g.style.transform=opts.to||'translateY(-4px)';
     }));
     setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+120);
 }
@@ -1056,7 +1056,7 @@ function exitFullscreen(){
         safeResize();
         void el.offsetHeight;
         enterFullscreen(switching, true, {bg, ctrl});
-        fadeGhostOut(ghost, {dur:440, to:'scale(.99) translateY(4px)'});
+        fadeGhostOut(ghost, {dur:460, to:'translateY(6px)'});
     } else {
         /* 退出：冻结全屏快照，真实结构立即回到主页；主页轻微上浮淡入，快照同步柔和淡出并轻微下沉，像系统回退 */
         const ghost = captureGhost(el);
@@ -1069,7 +1069,7 @@ function exitFullscreen(){
             fullWrap.style.transition='opacity .5s '+EASE+',transform .5s '+EASE;
             fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
         }));
-        fadeGhostOut(ghost, {dur:520, to:'scale(.985) translateY(8px)'});
+        fadeGhostOut(ghost, {dur:540, to:'translateY(10px)'});
         setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 700);
     }
 }
