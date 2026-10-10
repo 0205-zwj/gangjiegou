@@ -644,7 +644,7 @@
 <script src="data.js"></script>
 <script>
 const $ = s => document.querySelector(s);
-const id = new URLSearchParams(location.search).get('id');
+let id = new URLSearchParams(location.search).get('id');
 const viewer = $('#viewer'), loading = $('#loading'), bar = $('#bar'), percent = $('#percent'),
 error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnModelFull = $('#btnModelFull'),
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
@@ -662,6 +662,31 @@ function loadOverrides(){
     }catch(e){}
 }
 loadOverrides();
+/* ===== 构件免刷新热切换（SPA）：不整页重载，直接换模型与字段；并空闲预载其余模型 ===== */
+let needReframe = false;
+function showLoadingOverlay(){
+    try{
+        error.style.display='none';
+        bar.style.width='0%'; percent.innerText='0%';
+        const sub=$('#loadingSub'); if(sub) sub.innerText='正在下载模型数据…';
+        loading.style.opacity='1'; loading.style.display='flex';
+        const pg=document.querySelector('.progress'); if(pg) pg.classList.remove('done');
+    }catch(e){}
+}
+function applyPart(pid){
+    if(!window.partData || !partData[pid] || pid===id) return false;
+    id = pid;
+    const d = partData[pid];
+    fields.forEach(f => {const el = $(`#${f}`); if(el) el.innerText = d[f]||'';});
+    retryCount = 0; needReframe = true;
+    showLoadingOverlay();
+    viewer.src = d.glbUrl;
+    /* replaceState 不新增历史记录：扫码进入后手机返回键仍直接退出到微信/扫码页，不会卡在构件之间 */
+    try{ history.replaceState(null,'', location.pathname+'?id='+encodeURIComponent(pid)); }catch(e){}
+    return true;
+}
+/* 省流策略：不预载其它构件，GLB 仅在用户点开该构件时按需下载；首屏只下载扫码进入的那一个模型。
+   引擎库(model-viewer/Draco)与网页本身在首次访问后由浏览器缓存，热切换不会重复下载它们。 */
 if(id && window.partData && partData[id]){
     const d = partData[id];
     fields.forEach(f => {const el = $(`#${f}`); if(el && d[f]) el.innerText = d[f];});
@@ -696,6 +721,15 @@ if(id && window.partData && partData[id]){
             document.querySelector('.progress').classList.add('done');
             tipBanner.classList.add('show');
             tipTimer = setTimeout(()=>tipBanner.classList.remove('show'), 5000);
+            /* 热切换到新构件后：关掉平移/自由旋转，并用 resetCameraView 轮询等新模型取景稳定、
+               按新模型自身尺寸重新标定取景半径（不能复用上一个构件的半径，否则模型会偏小/偏大） */
+            if(needReframe){
+                needReframe = false;
+                try{ if(typeof setPanMode==='function') setPanMode(false); }catch(e){}
+                try{ if(typeof setFreeMode==='function') setFreeMode(false); }catch(e){}
+                try{ resetCameraView(); }
+                catch(e){ try{ viewer.cameraOrbit='0deg 75deg auto'; viewer.cameraTarget='0m 0m 0m'; viewer.jumpCameraToGoal(); }catch(_){} }
+            }
         }, 300);
     });
     viewer.addEventListener('error', () => {
@@ -759,7 +793,7 @@ function renderModelList(kw){
             +'<div class="mid">构件编号：'+(d.partId||pid)+'</div>'
             +'<div class="mname">'+(d.projectName||'')+' · '+(d.partType||'')+'</div>'
             +(d.workNo?'<div class="mno">加工号 '+d.workNo+'</div>':'');
-        item.onclick=()=>{ closeModelList(); setTimeout(()=>{ location.href=location.pathname+'?id='+pid; },260); };
+        item.onclick=()=>{ const same=String(pid)===String(id); closeModelList(); if(!same) setTimeout(()=>{ applyPart(pid); }, 220); };
         item.addEventListener('pointerdown',()=>{ item.classList.remove('fadeout'); item.classList.add('pressing'); });
         ['pointerup','pointercancel','pointerleave'].forEach(ev=>item.addEventListener(ev,()=>{ if(item.classList.contains('pressing')){ item.classList.remove('pressing'); item.classList.add('fadeout'); setTimeout(()=>item.classList.remove('fadeout'),500); } }));
         bindGlowPress(item);
