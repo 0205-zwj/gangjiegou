@@ -386,7 +386,7 @@
         .full-wrap.fs-page .info-card .row{justify-content:flex-start;}
         #btnEyeInline{display:none;}
         .full-wrap.fs-page #btnEyeInline{display:grid;}
-        .full-wrap.fs-page .info-card{transition:opacity .46s cubic-bezier(.22,.61,.36,1),max-height .46s cubic-bezier(.22,.61,.36,1),padding .46s cubic-bezier(.22,.61,.36,1),margin .46s cubic-bezier(.22,.61,.36,1),border-width .46s ease;}
+        .full-wrap.fs-page .info-card{transition:opacity .24s cubic-bezier(.25,.7,.35,1),max-height .22s cubic-bezier(.25,.7,.35,1),padding .22s cubic-bezier(.25,.7,.35,1),margin .22s cubic-bezier(.25,.7,.35,1),border-width .18s ease;}
         .full-wrap.fs-page.info-collapsed .info-card{
             max-height:0;opacity:0;padding-top:0;padding-bottom:0;
             margin-top:0;border-width:0;pointer-events:none;}
@@ -859,7 +859,9 @@ function enterFullscreen(type, isSwitch, reuse){
         makeBtn('fs-modelbtn', homeIcon('btnModelFull'), () => switchFullscreen('model'));
         const eye=$('#btnEyeInline');
         const floatEye=makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => toggleInfoCollapse());
+        let eyeRun=0;
         function toggleInfoCollapse(){
+            const run=++eyeRun;
             const collapsed=fullWrap.classList.toggle('info-collapsed');
             eye.classList.toggle('active',collapsed);
             eye.innerHTML=collapsed?ICON_EYE_OFF:ICON_EYE;
@@ -867,12 +869,15 @@ function enterFullscreen(type, isSwitch, reuse){
             floatEye.classList.toggle('active',collapsed);
             floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
             ctrl.classList.toggle('fs-info-off', collapsed);
-            /* 无死区折叠：起止 max-height 取卡片真实高度，避免 60vh→0 前段空转、末段猛收；
-               这样信息卡收合与模型框 flex 放大从第一帧起就完全同步 */
+            /* 无死区折叠：起止 max-height 取卡片真实高度，信息卡收合与模型框 flex 放大从第一帧起同步。
+               run 令牌：快速连点时旧动画的 rAF/定时器全部作废；硬兜底：低端机掉帧也保证到达终态、不残留标题。 */
             const card=infoCard;
+            const afterFrame=(fn)=>{ let done=false; const go=()=>{ if(done)return; done=true; fn(); }; requestAnimationFrame(()=>requestAnimationFrame(go)); setTimeout(go,70); };
             if(collapsed){
+                card.style.transition='none';
                 card.style.maxHeight=card.scrollHeight+'px';
-                requestAnimationFrame(()=>requestAnimationFrame(()=>{ card.style.maxHeight='0px'; }));
+                afterFrame(()=>{ if(run!==eyeRun) return; card.style.transition=''; card.style.maxHeight='0px'; });
+                setTimeout(()=>{ if(run===eyeRun && fullWrap.classList.contains('info-collapsed')){ card.style.transition='none'; card.style.maxHeight='0px'; } },280);
             }else{
                 /* 高度为 0 时网格 1fr 行会被压扁、scrollHeight 偏小；先无约束量到真实高度再回到 0，同帧完成不闪烁 */
                 card.style.transition='none';
@@ -881,10 +886,10 @@ function enterFullscreen(type, isSwitch, reuse){
                 card.style.maxHeight='0px';
                 void card.offsetHeight;
                 card.style.transition='';
-                requestAnimationFrame(()=>requestAnimationFrame(()=>{ card.style.maxHeight=nat+'px'; }));
-                setTimeout(()=>{ if(!fullWrap.classList.contains('info-collapsed')) card.style.maxHeight=''; }, 500);
+                afterFrame(()=>{ if(run!==eyeRun) return; card.style.maxHeight=nat+'px'; });
+                setTimeout(()=>{ if(run===eyeRun && !fullWrap.classList.contains('info-collapsed')) card.style.maxHeight=''; },300);
             }
-            setTimeout(safeResize,480);
+            setTimeout(()=>{ if(run===eyeRun) safeResize(); },260);
         }
         eye.onclick=toggleInfoCollapse;
         /* 右侧功能 dock：自动旋转 / 移动 / 定位复位 / 切换构件(传送) */
