@@ -23,6 +23,15 @@
             --gs:440px;--ga:1;--gc1:rgba(182,208,240,.15);--gc2:rgba(214,230,248,.09);
         }
         * {margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+        /* 触屏功能键：去除连点后残留的蓝色聚焦框/文本选中高亮（蓝方框盖图标），内部 SVG 不拦截点击、不可选中 */
+        .btn,.icon-btn,.fs-ctrl,.mbtn,.abtn,.model-item{
+            -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;
+        }
+        .btn:focus,.btn:focus-visible,.icon-btn:focus,.icon-btn:focus-visible,.fs-ctrl:focus,.fs-ctrl:focus-visible,
+        .mbtn:focus,.mbtn:focus-visible,.abtn:focus,.abtn:focus-visible,.model-item:focus{outline:none!important;}
+        .btn::-moz-focus-inner,.icon-btn::-moz-focus-inner,.fs-ctrl::-moz-focus-inner{border:0;padding:0;}
+        .btn svg,.icon-btn svg,.fs-ctrl svg,.mbtn svg,.abtn svg,.btn svg *,.icon-btn svg *,.fs-ctrl svg *{pointer-events:none;}
+        .fs-ctrl svg text,.btn svg text{user-select:none;-webkit-user-select:none;}
         html,body{height:100%;overscroll-behavior:none;}
         body {
             background:linear-gradient(160deg,#fcfdfe 0%,#f5f9fc 52%,#f8f7fb 100%);
@@ -79,8 +88,6 @@
             field-of-view:30deg;
             min-field-of-view:5deg;
             max-field-of-view:80deg;
-            polar-min:-90deg;
-            polar-max:270deg;
         }
         model-viewer::part(ar-button),model-viewer::part(default-ar-button){display:none!important;}
         .toolbar{
@@ -96,10 +103,10 @@
             color:#2563a8;border:1px solid rgba(255,255,255,.94);
             font-size:18px;cursor:pointer;
             box-shadow:0 4px 14px rgba(50,100,180,.12),inset 0 1px 1px rgba(255,255,255,.92),0 0 0 1px rgba(150,190,255,.16),0 0 14px rgba(150,190,255,.24);
-            transition:transform .22s cubic-bezier(.22,1,.36,1),box-shadow .3s ease,background .25s ease;
+            transition:transform .28s cubic-bezier(.32,.72,0,1),box-shadow .3s ease,background .25s ease;
             display:flex;align-items:center;justify-content:center;
         }
-        .btn:active{transform:scale(.88);transition-duration:.1s;}
+        .btn:active{transform:scale(.9);transition:transform .11s ease-out;}
         .btn:hover{border-color:#fff;box-shadow:0 6px 20px rgba(50,100,180,.2),inset 0 1px 1px #fff,0 0 0 1px rgba(150,190,255,.34),0 0 24px rgba(150,190,255,.55);}
         .btn.active{background:linear-gradient(145deg,rgba(214,234,254,.98),rgba(184,214,248,.92));color:#1d5fae;border-color:rgba(255,255,255,1);box-shadow:0 0 0 2.5px rgba(123,168,240,.42),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 22px rgba(150,190,255,.6);animation:activeBreath 2.8s ease-in-out infinite;}
         @keyframes activeBreath{0%,100%{box-shadow:0 0 0 2.5px rgba(123,168,240,.42),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 20px rgba(150,190,255,.5);}50%{box-shadow:0 0 0 2.5px rgba(123,168,240,.30),0 6px 18px rgba(90,140,210,.24),inset 0 1px 2px #fff,0 0 28px rgba(150,190,255,.72);}}
@@ -255,9 +262,16 @@
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
         /* ===== 进出场快照幽灵层：克隆当前画面做交叉淡化，模型用静态截图替换 ===== */
-        .fs-ghost,.fs-ghost *{animation:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-        .fs-ghost{box-sizing:border-box;}
+        .fs-ghost *:not(.fs-shot){animation:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        .fs-ghost{box-sizing:border-box;will-change:opacity,filter,transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
         .fs-ghost img{display:block;background:transparent;}
+        /* 纯 CSS 自动淡出：快照一旦插入即从首个合成帧柔化消散，不依赖 JS 帧（模型复位阻塞主线程/切后台也能跑），杜绝残影 */
+        .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards!important;}
+        .fs-ghost.fs-go.down{animation-name:fsGhostFadeDn!important;}
+        .fs-ghost img.fs-shot{animation:fsGhostShot .22s cubic-bezier(.33,0,.3,1) forwards!important;}
+        @keyframes fsGhostFade{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}34%{opacity:.55;filter:blur(3px);}100%{opacity:0;filter:blur(8px);transform:translateY(-3px) scale(.982);}}
+        @keyframes fsGhostFadeDn{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}34%{opacity:.55;filter:blur(3px);}100%{opacity:0;filter:blur(8px);transform:translateY(4px) scale(.982);}}
+        @keyframes fsGhostShot{0%{opacity:1;filter:blur(0);transform:scale(1);}100%{opacity:0;filter:blur(16px);transform:scale(.982);}}
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -283,6 +297,8 @@
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-panbtn{bottom:calc(20px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
         .fs-eye{top:calc(16px + env(safe-area-inset-top));right:70px;left:auto;bottom:auto;}
+        /* 构件全屏：360自由旋转按钮放在“隐藏构件信息(眼睛)”左侧，避免与左上角返回键重合 */
+        .fs-ctrl-layer > .fs-freebtn{top:calc(16px + env(safe-area-inset-top));right:124px;left:auto;bottom:auto;}
         /* 横屏映射（内容顺旋90°，用户逆旋手机观看）：视觉左上=物理右上、视觉右上=物理右下、
            视觉右下=物理左下、视觉左下=物理左上；按键图标同顺旋90°在视觉里保持正读 */
         .fs-ctrl-layer.fs-ls .fs-ctrl.show{transform:rotate(90deg);}
@@ -292,6 +308,7 @@
         .fs-ls .fs-rotate{bottom:16px;left:70px;top:auto;right:auto;}
         .fs-ls .fs-panbtn{top:auto;bottom:16px;left:16px;right:auto;}
         .fs-ls .fs-eye{top:auto;bottom:16px;right:16px;left:auto;}
+        .fs-ctrl-layer.fs-ls > .fs-freebtn{top:auto;bottom:16px;right:70px;left:auto;}
         /* 横屏信息卡：顺旋90°贴视觉左下角（物理左上角），两列字段收成一小块，正读 */
         .full-wrap.model-backdrop.ls-card .info-card{
             top:0;left:0;right:auto;bottom:auto;
@@ -563,10 +580,11 @@
 <div class="full-wrap" id="fullWrap">
     <div class="model-container" id="modelContainer">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" loading="eager" shadow-intensity="0.3" camera-controls interaction-prompt="auto" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
+        <model-viewer id="viewer" alt="构件3D模型" loading="eager" shadow-intensity="0.3" camera-controls interaction-prompt="auto" min-camera-orbit="auto 0deg auto" max-camera-orbit="auto 180deg auto" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
         <div class="toolbar" id="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnPan" title="移动模式（单指拖移）">✋</button>
+            <button class="btn" id="btnFree" title="360°自由旋转（上下可翻转）"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9.6"/><path d="M12.9 2.3 L10.3 2.3 L11.2 4.2 Z" fill="currentColor" stroke="none"/><path d="M21.7 11.1 L21.7 13.7 L19.8 12.6 Z" fill="currentColor" stroke="none"/><path d="M11.1 21.7 L13.7 21.7 L12.8 19.8 Z" fill="currentColor" stroke="none"/><path d="M2.3 12.9 L2.3 10.3 L4.2 11.2 Z" fill="currentColor" stroke="none"/><text x="12" y="15.9" text-anchor="middle" font-family="system-ui,Arial" font-weight="800" font-size="8.8" fill="currentColor" stroke="none" letter-spacing="-.5">360</text></svg></button>
             <button class="btn" id="btnReset" title="重置视角">🎯</button>
             <button class="btn" id="btnFull" title="整页全屏">⛶</button>
             <button class="btn" id="btnModelFull" title="模型占满全屏">🖥️</button>
@@ -632,6 +650,7 @@ error = $('#error'), fullWrap = $('#fullWrap'), btnFull = $('#btnFull'), btnMode
 btnRotate = $('#btnRotate'), btnReset = $('#btnReset'), infoCard = $('#infoCard'), tipBanner = $('#tipBanner'),
 glow = $('#glow'), btnSwitch = $('#btnSwitch'), toast = $('#toast'), modelContainer = $('#modelContainer'),
 btnPan = $('#btnPan');
+const btnFree = $('#btnFree');
 let rotate = false, tipTimer = null, retryCount = 0;
 const fields = ['partId','workNo','projectName','section','partType','material','spec','quantity'];
 /* 管理员在本机保存的修改：渲染前合并到数据（仅保存在本设备浏览器，导出 data.js 才能同步到线上） */
@@ -700,8 +719,8 @@ document.addEventListener('pointerdown', e => { glow.classList.add('press'); mov
 document.addEventListener('pointerup', e => { glow.classList.remove('press'); if(e.pointerType === 'touch') glow.style.opacity = '0'; }, {passive:true});
 document.addEventListener('pointercancel', () => glow.classList.remove('press'), {passive:true});
 document.addEventListener('mouseleave', () => { glow.style.opacity = '0'; glow.classList.remove('press'); });
-btnRotate.onclick = () => { rotate = !rotate; viewer.autoRotate = rotate; btnRotate.classList.toggle('active', rotate); }
-btnReset.onclick = () => { camPinned=false; viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; viewer.jumpCameraToGoal(); setTimeout(ensureAbsRadius,320); }
+btnRotate.onclick = () => { if(!rotate && freeMode){ try{ setFreeMode(false); }catch(e){} } rotate = !rotate; viewer.autoRotate = rotate; btnRotate.classList.toggle('active', rotate); }
+btnReset.onclick = () => { camPinned=false; viewer.cameraOrbit = "0deg 75deg auto"; viewer.cameraTarget = "0m 0m 0m"; viewer.jumpCameraToGoal(); try{ resetFree(); }catch(e){} setTimeout(ensureAbsRadius,320); }
 let clickCount = 0, clickTimer = null;
 viewer.addEventListener('click', (e) => {
     clickCount++; clearTimeout(clickTimer);
@@ -781,10 +800,12 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 /* ============ FLIP 平滑全屏（纯CSS，不移动DOM，修复层叠上下文） ============ */
 /* 动效基调：进入用超慢出（expo-out，只减速永不回弹），离场用加速消失，
    对齐 OPPO/vivo 系统面板的手感；杜绝 spring 过冲带来的“弹一下”卡通感 */
-const EASE = 'cubic-bezier(.22,.61,.36,1)';        /* 柔和减速：进入淡入，对标 iOS */
-const EASE_IN = 'cubic-bezier(.4,.04,.6,1)';    /* 柔和加速：退出淡出 */
-const FS_IN_MS = 380;
-const FLY_MS = 380;
+const EASE = 'cubic-bezier(.32,.72,0,1)';        /* iOS 式进场减速：柔和到位、带极轻 settling，不过冲 */
+const EASE_IN = 'cubic-bezier(.4,0,.6,1)';    /* 退场加速：旧画面先保持、末段才消散，交叉淡化全程不露空、不白闪 */
+const FS_IN_MS = 440;
+const XF_MS = 420, XF_SW_MS = 380;             /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
+const XFADE = 'cubic-bezier(.33,0,.22,1)';     /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
+const FLY_MS = 420;
 const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
 const ORI_MS = 540, ORI_EASE = 'cubic-bezier(.32,.72,0,1)';   /* 横竖屏旋转：模型容器/信息卡/按键共用同一时长与缓动，保持同步 */
 let fsState = null;
@@ -804,11 +825,14 @@ const ICON_SWITCH = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none"
 function safeResize(){ try{ if(typeof viewer.resize === "function") viewer.resize(); else window.dispatchEvent(new Event("fs-nudge")); }catch(e){} }
 /* 全屏图标直接复用主页按钮字形，改主页即同步，无需重新认图标 */
 function homeIcon(id){ const h=document.getElementById(id); return h ? h.textContent.trim() : ''; }
+function homeHTML(id){ const h=document.getElementById(id); return h ? h.innerHTML.trim() : ''; }
 function enterFullscreen(type, isSwitch, reuse){
     if(fsState){
         /* 已经在全屏里：可点即响应，先收场再展开另一种全屏 */
     }
     try{ resetGestureState(false); }catch(e){}
+    /* 全新进入（非互切/复用）前，清掉上一次异常可能残留的快照层，杜绝白屏快照永久覆盖 */
+    if(!isSwitch && !reuse){ document.querySelectorAll('.fs-ghost').forEach(n=>{ try{n.remove();}catch(e){} }); }
     const el = type === 'model' ? modelContainer : fullWrap;
     const rect = el.getBoundingClientRect();
     const srcRect = type === 'page' ? modelContainer.getBoundingClientRect() : rect;
@@ -822,11 +846,14 @@ function enterFullscreen(type, isSwitch, reuse){
     };
 
     const homeGhost = (!isSwitch && !reuse) ? captureGhost(fullWrap) : null;
+    /* 主页快照立即开始纯 CSS 柔化淡出（不依赖收尾 rAF），与进场同档时长，避免被模型解码阻塞而卡住残影 */
+    if(homeGhost) fadeGhostOut(homeGhost, {dur:XF_MS});
     fullWrap.style.zIndex = '9001';
 
     let bg, ctrl;
     if(reuse){ bg = reuse.bg; ctrl = reuse.ctrl; ctrl.innerHTML = ""; }
     else {
+        document.querySelectorAll('.fs-bg,.fs-ctrl-layer').forEach(n=>{ try{n.remove();}catch(e){} });
         bg = document.createElement("div");
         bg.className = "fs-bg"; document.body.appendChild(bg);
         ctrl = document.createElement("div");
@@ -850,6 +877,8 @@ function enterFullscreen(type, isSwitch, reuse){
         makeBtn('fs-pagebtn', homeIcon('btnFull'), () => switchFullscreen('page'));
         const panBtn = makeBtn('fs-panbtn', homeIcon('btnPan'), () => setPanMode(!panMode));
         panBtn.classList.toggle('active', panMode);
+        const freeBtnM = makeBtn('fs-freebtn', homeHTML('btnFree'), () => setFreeMode(!freeMode));
+        freeBtnM.classList.toggle('active', freeMode);
         const mEye = makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => {
             const c = fullWrap.classList.toggle('info-collapsed');
             mEye.classList.toggle('active', c);
@@ -863,6 +892,9 @@ function enterFullscreen(type, isSwitch, reuse){
         makeBtn('fs-modelbtn', homeIcon('btnModelFull'), () => switchFullscreen('model'));
         const eye=$('#btnEyeInline');
         const floatEye=makeBtn('fs-eye', ICON_EYE+'<i class="eye-badge"></i>', () => toggleInfoCollapse());
+        /* 360 自由旋转键放到右上角眼睛图标旁（与构件全屏一致），不放进右侧 dock */
+        const freeBtnP=makeBtn('fs-freebtn', homeHTML('btnFree'), ()=>setFreeMode(!freeMode));
+        freeBtnP.classList.toggle('active', freeMode);
         let eyeRun=0;
         function toggleInfoCollapse(){
             const run=++eyeRun;
@@ -905,6 +937,7 @@ function enterFullscreen(type, isSwitch, reuse){
             dock.appendChild(b); return b;
         }
         const autoB=dockBtn('fs-tool-auto fs-autobtn', homeIcon('btnRotate'), ()=>{
+            if(!rotate && freeMode){ try{ setFreeMode(false); }catch(e){} }
             rotate=!rotate; viewer.autoRotate=rotate;
             try{ btnRotate.classList.toggle('active',rotate); }catch(e){}
             document.querySelectorAll('.fs-autobtn').forEach(x=>x.classList.toggle('active',rotate));
@@ -943,23 +976,27 @@ function enterFullscreen(type, isSwitch, reuse){
     fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
-    requestAnimationFrame(() => requestAnimationFrame(() => {
-        /* 守卫：模型解压阻塞主线程可能导致本回调严重延迟；若期间横屏等逻辑已改写 transform，不覆盖，只补可见性 */
+    /* 收尾幂等：双 rAF 走正常动画，另加硬兜底定时器。进入瞬间 model-viewer 缩放/解码可能吞掉个别帧，
+       若只靠 rAF 会让模型容器永久停在 opacity:0、快照层不消失（白屏卡死）；硬兜底保证必定收尾。 */
+    let __enterDone=false;
+    function finishEnter(){
+        if(__enterDone) return; __enterDone=true;
+        const xd = isSwitch ? XF_SW_MS : XF_MS;
+        /* 进层与出层用同一时长、同一曲线、同一帧启动，透明度互补，速度均匀；出层里的模型先柔化消散，杜绝双模型残影 */
         if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
             el.style.opacity = "1";
-            if(!reuse){ bg.style.transition = "opacity 320ms " + EASE; bg.style.opacity = "1"; }
-            fadeGhostOut(homeGhost, {dur:(isSwitch?260:240), to:'translateY(-3px)'});
+            if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
             return;
         }
-        const dur = isSwitch ? 300 : FS_IN_MS;
-        el.style.transition = "opacity " + dur + "ms " + EASE + ", transform " + dur + "ms " + EASE;
+        el.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
         el.style.transform = "translateY(0)";
         el.style.opacity = "1";
-        if(!reuse){ bg.style.transition = "opacity 320ms " + EASE; bg.style.opacity = "1"; }
-        fadeGhostOut(homeGhost, {dur:(isSwitch?260:240), to:'translateY(-3px)'});
-        setTimeout(safeResize, 80);
-    }));
-    setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 200);
+        if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
+        setTimeout(safeResize, 110);
+    }
+    requestAnimationFrame(() => requestAnimationFrame(finishEnter));
+    setTimeout(finishEnter, 150);
+    setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 230);
 }
 function requestExitFullscreen(){
     if(!fsState || fsState.exiting) return;
@@ -979,6 +1016,7 @@ function captureGhost(src){
         g.removeAttribute('id'); g.classList.add('fs-ghost');
         g.querySelectorAll('model-viewer').forEach(mv=>{
             const img=document.createElement('img');
+            img.className='fs-shot';
             if(shot) img.src=shot;
             img.style.cssText='width:100%;height:100%;object-fit:contain;display:block;border:0;';
             mv.replaceWith(img);
@@ -993,14 +1031,12 @@ function captureGhost(src){
 function fadeGhostOut(g, opts){
     if(!g) return;
     opts = opts || {};
-    const dur = opts.dur || 420;
-    g.style.transition='none'; g.style.opacity='1'; g.style.transformOrigin='center center'; g.style.transform=opts.from||'none';
-    void g.offsetHeight;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        const ge = opts.ease || EASE; g.style.transition='opacity '+dur+'ms '+ge+',transform '+dur+'ms '+ge;
-        g.style.opacity='0'; g.style.transform=opts.to||'translateY(-4px)';
-    }));
-    setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+120);
+    const dur = opts.dur || XF_MS;
+    /* 纯 CSS 动画：立即打上标记并设时长/方向，元素插入后的首个合成帧即自动播放，
+       不再依赖 requestAnimationFrame（主线程被模型复位阻塞、或切后台被限流时也照常消散），JS 只负责到时移除 */
+    g.style.setProperty('--gd', dur+'ms');
+    g.classList.add('fs-go', opts.down ? 'down' : 'up');
+    setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+160);
 }
 function exitFullscreen(){
     const state = fsState;
@@ -1016,25 +1052,28 @@ function exitFullscreen(){
     if(switching){
         /* 互切：冻结旧全屏快照，真实结构立即复位并重建新全屏，新画面在快照下淡入、快照同时淡出（交叉淡化，无白闪） */
         const ghost = captureGhost(el);
+        fadeGhostOut(ghost, {dur:XF_SW_MS});
         restoreLayout(el, state, bg, ctrl, true);
         safeResize();
         void el.offsetHeight;
         enterFullscreen(switching, true, {bg, ctrl});
-        fadeGhostOut(ghost, {dur:280, to:'translateY(3px)'});
     } else {
-        /* 退出：冻结全屏快照，真实结构立即回到主页；主页轻微上浮淡入，快照同步柔和淡出并轻微下沉，像系统回退 */
+        /* 退出：冻结全屏快照并立即纯 CSS 淡出；真实结构回到主页，主页与快照同档交叉淡化，速度均匀无残影 */
         const ghost = captureGhost(el);
+        fadeGhostOut(ghost, {dur:XF_MS, down:true});
         restoreLayout(el, state, bg, ctrl);
         safeResize();
         void el.offsetHeight;
-        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(6px)';
+        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(8px)';
         void fullWrap.offsetHeight;
-        requestAnimationFrame(()=>requestAnimationFrame(()=>{
-            fullWrap.style.transition='opacity .38s '+EASE+',transform .38s '+EASE;
+        let __exDone=false;
+        function finishExit(){ if(__exDone)return; __exDone=true;
+            fullWrap.style.transition='opacity '+XF_MS+'ms '+XFADE+',transform '+XF_MS+'ms '+XFADE;
             fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
-        }));
-        fadeGhostOut(ghost, {dur:260, to:'translateY(4px)'});
-        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 540);
+        }
+        requestAnimationFrame(()=>requestAnimationFrame(finishExit));
+        setTimeout(finishExit,150);
+        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, XF_MS+160);
     }
 }
 
@@ -1055,7 +1094,13 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
     modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';ic.style.maxHeight='';ic.style.padding='';}
     modelContainer.classList.remove('fs-model');
-    if(!keepOverlay){ document.body.classList.remove("in-fs"); bg.remove(); ctrl.remove(); }
+    if(!keepOverlay){
+        document.body.classList.remove("in-fs");
+        /* 退出：遮罩与按键层柔和淡出后再移除，避免瞬间抽掉背景造成白跳 */
+        try{ ctrl.style.transition='opacity .34s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
+        try{ bg.style.transition='opacity '+XF_MS+'ms '+XFADE; bg.style.opacity='0'; }catch(e){}
+        setTimeout(()=>{ try{bg.remove();}catch(e){} try{ctrl.remove();}catch(e){} }, XF_MS+140);
+    }
     try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
     fsState = null;
     try{ syncControls(); }catch(e){}
@@ -1154,7 +1199,7 @@ function pinCameraAbsolute(){
         const o = viewer.getCameraOrbit(); const r = Math.abs(o.radius);
         if(!(isFinite(r) && r > 0.1)) return false;
         framedR = r;
-        try{ viewer.setAttribute('min-camera-orbit','auto auto '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto auto '+(r*2.6).toFixed(2)+'m'); }catch(e){}
+        try{ viewer.setAttribute('min-camera-orbit','auto 0deg '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto 180deg '+(r*2.6).toFixed(2)+'m'); }catch(e){}
         viewer.cameraOrbit = (o.theta/DEG).toFixed(4)+'deg '+(o.phi/DEG).toFixed(4)+'deg '+r.toFixed(3)+'m';
         return true;
     }catch(e){ return false; }
@@ -1163,7 +1208,7 @@ function ensureAbsRadius(){ if(camPinned) return true; camPinned = pinCameraAbso
 /* 复位视角并在取景稳定后钉半径（进入/横竖屏切换调用），轮询应对相机异步 */
 function resetCameraView(){
     camPinned = false; panT = null;
-    try{ viewer.cameraTarget='0m 0m 0m'; viewer.cameraOrbit='0deg 75deg auto'; viewer.jumpCameraToGoal(); }catch(e){}
+    try{ viewer.cameraTarget='0m 0m 0m'; viewer.cameraOrbit='0deg 75deg auto'; viewer.jumpCameraToGoal(); freePitch=0; freeYaw=0; viewer.orientation='0deg 0deg 0deg'; }catch(e){}
     let tries = 0, lastR = -1, stable = 0;
     const t = setInterval(()=>{
         tries++;
@@ -1173,8 +1218,8 @@ function resetCameraView(){
             lastR = r;
             if(stable >= 1 || tries > 7){
                 framedR = r;
-        try{ viewer.setAttribute('min-camera-orbit','auto auto '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto auto '+(r*2.6).toFixed(2)+'m'); }catch(e){} camPinned = true; clearInterval(t);
-                try{ viewer.cameraOrbit='0deg 75deg '+r.toFixed(3)+'m'; viewer.cameraTarget='0m 0m 0m'; viewer.jumpCameraToGoal(); }catch(e){}
+        try{ viewer.setAttribute('min-camera-orbit','auto 0deg '+(r*0.12).toFixed(2)+'m'); viewer.setAttribute('max-camera-orbit','auto 180deg '+(r*2.6).toFixed(2)+'m'); }catch(e){} camPinned = true; clearInterval(t);
+                try{ viewer.cameraOrbit='0deg 75deg '+r.toFixed(3)+'m'; viewer.cameraTarget='0m 0m 0m'; viewer.jumpCameraToGoal(); freePitch=0; freeYaw=0; viewer.orientation='0deg 0deg 0deg'; }catch(e){}
             }
         } else if(tries > 16){ clearInterval(t); }
     }, 100);
@@ -1210,28 +1255,46 @@ function clampRad(r){ const base=framedR||r; return Math.min(2.5*base, Math.max(
 function writeOrbit(theta, phi, r){
     if(!isFinite(theta)) theta = 0;
     if(!isFinite(phi)) phi = 75*DEG;
-    phi = Math.min(Math.PI-0.08, Math.max(0.08, phi));
+    phi = Math.min(Math.PI, Math.max(0, phi));
     if(!(isFinite(r) && r > 0.1)) r = framedR || radOf(viewer.getCameraOrbit());
     viewer.cameraOrbit = (theta/DEG).toFixed(3)+'deg '+(phi/DEG).toFixed(3)+'deg '+r.toFixed(3)+'m';
     viewer.jumpCameraToGoal();
 }
+/* 360°自由旋转：直接连续旋转"模型本体"(orientation)，没有相机 0~180 极角锁、也没有过极点翻面。
+   实测 model-viewer orientation 三角度对应固定世界轴 R=Ry(第3角)·Rx(第2角)·Rz(第1角)：
+   第3角=绕竖直轴水平转向、第2角=绕屏幕水平轴前后翻滚，均为固定世界轴，任意朝向下都贴合手指、无限连续。 */
+let freeMode = false;
+const FREE_GX = 0.0115, FREE_GY = 0.0115;  /* 垂直/水平灵敏度（弧度/像素），与原生轨道实测增益一致 */
+let freePitch = 0, freeYaw = 0;              /* 连续累积、无上下限，可平滑越过 180/360，不翻面 */
+function writeFreeOrientation(){
+    viewer.orientation='0deg '+(freePitch/DEG).toFixed(3)+'deg '+(freeYaw/DEG).toFixed(3)+'deg';
+    try{ viewer.jumpCameraToGoal(); }catch(err){}
+}
+/* 喂入"模型本地视口坐标系"位移：dx 向右+、dy 向下+ */
+function applyFreeTrack(dx,dy){
+    freePitch += -FREE_GX*dy;   /* 上下拖动：绕世界X连续翻滚（上拖看顶部、可越过底/顶无限转） */
+    freeYaw   +=  FREE_GY*dx;   /* 左右拖动：绕世界Y转向，方向与原生相机轨道(θ)互为反向、视觉一致 */
+    writeFreeOrientation();
+}
+function resetFree(){ freePitch = 0; freeYaw = 0; try{ viewer.orientation='0deg 0deg 0deg'; viewer.jumpCameraToGoal(); }catch(e){} }
+function stopAutoSpin(){ try{ if(rotate){ rotate=false; viewer.autoRotate=false; if(btnRotate) btnRotate.classList.remove('active'); document.querySelectorAll('.fs-autobtn').forEach(x=>x.classList.remove('active')); } }catch(e){} }
 
 /* ---------- 竖屏 / 真横屏 通用控制器（坐标与视口同向，无需换算）---------- */
 const pts = new Map();
 let pg = null;   /* {kind:'pan'|'pinch', last, d0, r0} */
 function pgDown(e){
     if(fsState && fsState.cssRotated) return;   /* 强制横屏交给 ls 控制器 */
-    if(!panMode) return;                          /* 旋转模式：原生处理单指旋转/双指 */
+    if(!panMode && !freeMode) return;            /* 默认旋转交原生；移动/360自由由自绘 */
     if(onUI(e)) return;
     if(e.pointerType === 'mouse' && e.button !== 0) return;
     e.preventDefault(); e.stopPropagation();     /* 接管，阻止原生单指旋转 */
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
-    if(pts.size === 1){ pg = {kind:'pan', last:{x:e.clientX, y:e.clientY}}; ensureAbsRadius(); }
+    if(pts.size === 1){ ensureAbsRadius(); if(!panMode) stopAutoSpin(); pg = panMode ? {kind:'pan', last:{x:e.clientX, y:e.clientY}} : {kind:'orbit', last:{x:e.clientX, y:e.clientY}}; }
     else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:radOf(viewer.getCameraOrbit()), m0:{x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2}}; }
 }
 function pgMove(e){
     if(fsState && fsState.cssRotated) return;
-    if(!panMode || !pts.has(e.pointerId)) return;
+    if((!panMode && !freeMode) || !pts.has(e.pointerId)) return;
     if(onUI(e)) return;
     e.preventDefault(); e.stopPropagation();
     pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
@@ -1239,19 +1302,21 @@ function pgMove(e){
     const a = [...pts.values()];
     if(pg.kind === 'pinch' && pts.size >= 2){
         const m = {x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2};
-        if(pg.m0) applyPan(m.x-pg.m0.x, m.y-pg.m0.y);
+        if(panMode && pg.m0) applyPan(m.x-pg.m0.x, m.y-pg.m0.y);
         pg.m0 = m;
         const d = Math.max(1, Math.hypot(a[0].x-a[1].x, a[0].y-a[1].y));
         const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(pg.r0*pg.d0/d));
         return;
     }
     if(pts.size !== 1) return;
-    applyPan(e.clientX-pg.last.x, e.clientY-pg.last.y);
+    const mdx = e.clientX-pg.last.x, mdy = e.clientY-pg.last.y;
+    if(pg.kind === 'orbit'){ applyFreeTrack(mdx, mdy); }
+    else { applyPan(mdx, mdy); }
     pg.last = {x:e.clientX, y:e.clientY};
 }
 function pgUp(e){
     if(pts.has(e.pointerId)) pts.delete(e.pointerId);
-    if(pts.size === 1){ const p=[...pts.values()][0]; pg = {kind:'pan', last:{...p}}; }
+    if(pts.size === 1){ const p=[...pts.values()][0]; pg = panMode ? {kind:'pan', last:{...p}} : {kind:'orbit', last:{...p}}; }
     else if(pts.size === 2){ const a=[...pts.values()]; pg = {kind:'pinch', d0:Math.max(1,Math.hypot(a[0].x-a[1].x,a[0].y-a[1].y)), r0:radOf(viewer.getCameraOrbit()), m0:{x:(a[0].x+a[1].x)/2, y:(a[0].y+a[1].y)/2}}; }
     else { pg = null; }
 }
@@ -1276,7 +1341,7 @@ function lsDown(e){
     ensureAbsRadius();
     lsPts.set(e.pointerId, {x:e.clientX, y:e.clientY});
     const arr = [...lsPts.values()], o = viewer.getCameraOrbit();
-    if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{x:e.clientX,y:e.clientY}, o}; }
+    if(lsPts.size === 1){ if(!panMode) stopAutoSpin(); lsGesture = panMode ? {kind:'pan',last:{x:e.clientX,y:e.clientY}} : {kind:'orbit',last:{x:e.clientX,y:e.clientY}}; }
     else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o, r0:radOf(o), m0:{x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2}}; }
 }
 function lsMove(e){
@@ -1288,7 +1353,7 @@ function lsMove(e){
     const arr = [...lsPts.values()];
     if(lsGesture.kind === 'pinch' && lsPts.size >= 2){
         const m = {x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2};
-        if(lsGesture.m0){ const Lm=lsLocal(m.x-lsGesture.m0.x, m.y-lsGesture.m0.y); applyPan(Lm.x,Lm.y); }
+        if(panMode && lsGesture.m0){ const Lm=lsLocal(m.x-lsGesture.m0.x, m.y-lsGesture.m0.y); applyPan(Lm.x,Lm.y); }
         lsGesture.m0 = m;
         const d = Math.max(1, Math.hypot(arr[0].x-arr[1].x, arr[0].y-arr[1].y));
         const o = viewer.getCameraOrbit(); writeOrbit(o.theta, o.phi, clampRad(lsGesture.r0*lsGesture.d0/d));
@@ -1296,10 +1361,14 @@ function lsMove(e){
     }
     if(lsPts.size !== 1) return;
     const L = lsLocal(e.clientX-lsGesture.last.x, e.clientY-lsGesture.last.y);
-    const o = viewer.getCameraOrbit();
     if(lsGesture.kind === 'orbit'){
-        const g = 0.0062;
-        writeOrbit(o.theta + LS_THETA_SIGN*L.x*g, o.phi + LS_PHI_SIGN*L.y*g, radOf(o));
+        if(freeMode){
+            /* lsLocal 已把物理位移换算成模型本地坐标；模型自转 yaw 与相机θ反向，故直接喂本地坐标即可同向 */
+            applyFreeTrack(L.x, L.y);
+        }else{
+            const o = viewer.getCameraOrbit(), g = 0.0062;
+            writeOrbit(o.theta + LS_THETA_SIGN*L.x*g, o.phi + LS_PHI_SIGN*L.y*g, radOf(o));
+        }
     }else if(lsGesture.kind === 'pan'){
         applyPan(L.x, L.y);
     }
@@ -1309,7 +1378,7 @@ function lsUp(e){
     if(lsPts.has(e.pointerId)) lsPts.delete(e.pointerId);
     const arr = [...lsPts.values()];
     if(!(fsState && fsState.cssRotated)){ lsGesture = null; return; }
-    if(lsPts.size === 1){ lsGesture = {kind:panMode?'pan':'orbit', last:{...arr[0]}, o:viewer.getCameraOrbit()}; }
+    if(lsPts.size === 1){ lsGesture = panMode ? {kind:'pan',last:{...arr[0]}} : {kind:'orbit',last:{...arr[0]}}; }
     else if(lsPts.size === 2){ const d=Math.hypot(arr[0].x-arr[1].x,arr[0].y-arr[1].y); lsGesture = {kind:'pinch', d0:Math.max(1,d), o:viewer.getCameraOrbit(), r0:radOf(viewer.getCameraOrbit()), m0:{x:(arr[0].x+arr[1].x)/2, y:(arr[0].y+arr[1].y)/2}}; }
     else { lsGesture = null; }
 }
@@ -1345,37 +1414,51 @@ modelContainer.addEventListener('wheel', e => {
     writeOrbit(o.theta, o.phi, clampRad(radOf(o) * f));
 }, {capture:true, passive:false});
 
-function syncPanBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); }
+function syncModeBtns(){ document.querySelectorAll('#btnPan,.fs-panbtn').forEach(b => b.classList.toggle('active', panMode)); document.querySelectorAll('#btnFree,.fs-freebtn').forEach(b => b.classList.toggle('active', freeMode)); }
 /* 统一清空手势瞬时状态（触点/锚点/中键），避免锁屏、切后台、反复进出全屏、横竖屏切换后残留旧触点导致坐标错乱 */
 function resetGestureState(keepMode){
     if(!keepMode) panMode = false;
     gt = null; midPan = null; pg = null; lsGesture = null;
     try{ pts.clear(); }catch(e){}
     try{ lsPts.clear(); }catch(e){}
-    try{ syncPanBtns(); }catch(e){}
+    try{ syncModeBtns(); }catch(e){}
 }
 /* 统一原生/自绘控制器，保证手机触摸与电脑鼠标行为完全一致、绝不叠加：
    强制横屏(CSS旋转)：原生关闭，平移/旋转/捏合全由 ls 自绘（坐标需逆变换）；
    正常朝向：旋转模式交原生单指旋转；移动模式关闭原生，由 pg 自绘平移/捏合。 */
 function syncControls(){
     const ls = !!(fsState && fsState.cssRotated);
-    const nativeOn = ls ? false : !panMode;
+    const nativeOn = ls ? false : (!panMode && !freeMode);
     try{
         if(nativeOn) viewer.setAttribute('camera-controls',''); else viewer.removeAttribute('camera-controls');
         modelContainer.style.touchAction = 'none';
         viewer.style.touchAction = 'none';
     }catch(e){}
+    try{ syncModeBtns(); }catch(e){}
 }
 function setPanMode(on){
     panMode = !!on;
+    if(panMode) freeMode = false;
+    if(!freeMode){ try{ resetFree(); }catch(e){} }
     panT = null;
     try{ resetGestureState(true); }catch(e){}
-    if(panMode) ensureAbsRadius();
+    if(panMode || freeMode) ensureAbsRadius();
     syncControls();
-    syncPanBtns();
-    showToast(on ? '移动模式：单指拖移 · 双指缩放（双指拖动可平移）' : '旋转模式：单指旋转 · 双指缩放');
+    showToast(panMode ? '移动模式：单指拖移 · 双指缩放（双指拖动可平移）' : '旋转模式：单指旋转 · 双指缩放');
+}
+function setFreeMode(on){
+    freeMode = !!on;
+    if(freeMode) panMode = false;
+    panT = null;
+    try{ resetGestureState(true); }catch(e){}
+    if(panMode || freeMode) ensureAbsRadius();
+    if(freeMode){ stopAutoSpin(); }
+    resetFree();
+    syncControls();
+    showToast(freeMode ? '360°自由旋转：上下左右均可连续翻转 · 双指缩放' : '旋转模式：单指旋转 · 双指缩放');
 }
 btnPan.onclick = () => setPanMode(!panMode);
+btnFree.onclick = () => setFreeMode(!freeMode);
 /* 切后台/锁屏/页面隐藏时触摸常常收不到 pointerup，回前台丢弃残留触点（保留当前模式） */
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ try{ resetGestureState(true); }catch(e){} } });
 window.addEventListener('pagehide', ()=>{ try{ resetGestureState(true); }catch(e){} });
@@ -1522,6 +1605,8 @@ function bindGlowPress(el){
         sp.style.left=x+'px'; sp.style.top=y+'px'; sp.style.width=d+'px'; sp.style.height=d+'px';
         el.appendChild(sp); setTimeout(()=>sp.remove(),640);
     });
+    /* 点按后立即失焦，清除手机 WebView 残留在按钮上的蓝色聚焦框（输入框除外） */
+    el.addEventListener('click',function(){ const t=el.tagName; if(t!=='INPUT'&&t!=='TEXTAREA'&&t!=='SELECT'){ try{ el.blur(); }catch(e){} } });
 }
 document.querySelectorAll('.toolbar .btn,.icon-btn,.mbtn,.abtn').forEach(bindGlowPress);
 </script>
