@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>中铁装配 钢结构构件信息</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%232563a8%22/><path d=%22M50 24 L76 38 L76 64 L50 78 L24 64 L24 38 Z%22 fill=%22none%22 stroke=%22white%22 stroke-width=%225%22 stroke-linejoin=%22round%22/><path d=%22M50 24 L50 51 M24 38 L50 51 L76 38 M50 51 L50 78%22 fill=%22none%22 stroke=%22white%22 stroke-width=%225%22 stroke-linejoin=%22round%22/></svg>">
-    <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
-    <link rel="preconnect" href="https://gcore.jsdelivr.net" crossorigin>
-    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <script type="module" defer src="https://cdn.bootcdn.net/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    <link rel="modulepreload" href="lib/model-viewer.min.js">
+    <link rel="preload" as="script" href="lib/draco/draco_wasm_wrapper.js">
+    <link rel="preload" as="fetch" href="lib/draco/draco_decoder.wasm" crossorigin>
+    <script>
+      /* 尽早（模型库尚未下载完时）并行预取当前构件 GLB，缩短首屏等待 */
+      (function(){try{var q=new URLSearchParams(location.search).get('id');if(q&&/^[A-Za-z0-9_-]+$/.test(q)){var l=document.createElement('link');l.rel='preload';l.as='fetch';l.crossOrigin='anonymous';l.href='models/'+q+'.glb';document.head.appendChild(l);}}catch(e){}})();
+    </script>
+    <script type="module" defer src="lib/model-viewer.min.js"></script>
     <style>
         /* 动效曲线：一律只减速、不回弹，贴近 ColorOS / OriginOS 的面板手感；
            同时把光斑的尺寸/颜色/强度收敛成变量，鼠标与手指走不同取值 */
@@ -559,7 +563,7 @@
 <div class="full-wrap" id="fullWrap">
     <div class="model-container" id="modelContainer">
         <div class="progress"><div class="bar" id="bar"></div></div>
-        <model-viewer id="viewer" alt="构件3D模型" shadow-intensity="0.3" camera-controls interaction-prompt="auto" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
+        <model-viewer id="viewer" alt="构件3D模型" loading="eager" shadow-intensity="0.3" camera-controls interaction-prompt="auto" polar-min="-90deg" polar-max="270deg" min-field-of-view="5deg" max-field-of-view="80deg" exposure="1" tone-mapping="neutral"></model-viewer>
         <div class="toolbar" id="toolbar">
             <button class="btn" id="btnRotate" title="自动旋转">🔄</button>
             <button class="btn" id="btnPan" title="移动模式（单指拖移）">✋</button>
@@ -618,7 +622,7 @@
         <div class="ml-fade ml-fade-bottom"></div>
     </div>
 </div>
-<p class="footer">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰</p>
+<p class="footer">中铁装配 · 钢结构构件一物一码系统<br>制作人：赵文杰&nbsp;&nbsp;·&nbsp;&nbsp;负责人：常建佳</p>
 <script src="data.js"></script>
 <script>
 const $ = s => document.querySelector(s);
