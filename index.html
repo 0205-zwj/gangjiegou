@@ -386,7 +386,7 @@
         .full-wrap.fs-page .info-card .row{justify-content:flex-start;}
         #btnEyeInline{display:none;}
         .full-wrap.fs-page #btnEyeInline{display:grid;}
-        .full-wrap.fs-page .info-card{transition:opacity .5s cubic-bezier(.4,.04,.6,1),max-height .5s cubic-bezier(.4,.04,.6,1),padding .5s cubic-bezier(.4,.04,.6,1),margin .5s cubic-bezier(.4,.04,.6,1),border-width .5s ease;}
+        .full-wrap.fs-page .info-card{transition:opacity .46s cubic-bezier(.22,.61,.36,1),max-height .46s cubic-bezier(.22,.61,.36,1),padding .46s cubic-bezier(.22,.61,.36,1),margin .46s cubic-bezier(.22,.61,.36,1),border-width .46s ease;}
         .full-wrap.fs-page.info-collapsed .info-card{
             max-height:0;opacity:0;padding-top:0;padding-bottom:0;
             margin-top:0;border-width:0;pointer-events:none;}
@@ -492,39 +492,12 @@
         .admin-bar{flex-wrap:nowrap;gap:6px;padding:8px;}
         .admin-bar .abtn{height:38px;padding:0 12px;font-size:13px;}
 
-        /* ===== 一键小窗（澎湃 OS 风格） ===== */
-        .mini-backdrop{position:fixed;inset:0;z-index:9040;background:radial-gradient(circle at 50% 30%,rgba(120,160,230,.16),rgba(40,70,130,.26));
-            opacity:0;pointer-events:none;transition:opacity .4s ease;}
-        .mini-backdrop.show{opacity:1;}
-        .full-wrap.mini{position:fixed;z-index:9050;overflow:hidden;border-radius:26px;touch-action:none;
-            box-shadow:0 30px 90px rgba(25,60,120,.42),0 0 0 5px rgba(255,255,255,.55),0 0 60px rgba(120,160,235,.25);
-            transition:transform .42s cubic-bezier(.16,1,.3,1),border-radius .42s ease;}
-        .full-wrap.mini.dragging{transition:none;}
-        .full-wrap.mini .toolbar,.full-wrap.mini .tip-banner{opacity:0!important;pointer-events:none;}
-        .full-wrap.mini .model-container{border-radius:0;border-width:0;}
-        .mini-drag{position:absolute;inset:0;z-index:6;touch-action:none;cursor:grab;}
-        /* 贴边竖条胶囊（微信视频式）：固定屏幕右缘，可上下拖、点按恢复 */
-        .mini-edge-tab{position:fixed;right:7px;top:50%;z-index:9055;width:26px;height:98px;touch-action:none;cursor:pointer;
-            display:grid;place-items:center;color:#4a7fd6;border-radius:15px;
-            background:linear-gradient(160deg,rgba(255,255,255,.94),rgba(214,232,252,.84));
-            border:1px solid rgba(255,255,255,.88);
-            box-shadow:0 8px 24px rgba(50,100,180,.32),inset 0 1px 2px #fff,0 0 18px rgba(150,190,255,.55);
-            transform:translateY(-50%);transition:top .32s cubic-bezier(.22,1,.36,1),opacity .3s ease,transform .3s ease;
-            animation:tabIn .5s cubic-bezier(.32,.72,0,1) .1s backwards;}
-        @keyframes tabIn{from{opacity:0;transform:translateX(40px) translateY(-50%);}to{opacity:1;transform:translateX(0) translateY(-50%);}}
-        .mini-edge-tab:active{transform:translateY(-50%) scale(.9);}
-        .mini-edge-tab.out{opacity:0;transform:translateX(46px) translateY(-50%);}
         /* 保存模型图片弹窗 */
         .shot-card{width:min(88vw,380px);max-width:380px;}
         .shot-imgwrap{margin:6px 0 14px;border-radius:14px;overflow:hidden;background:#fff;
             border:1px solid rgba(150,190,255,.3);box-shadow:0 8px 26px rgba(50,100,180,.18),0 0 18px rgba(150,190,255,.2);}
         .shot-imgwrap img{display:block;width:100%;height:auto;background:linear-gradient(160deg,#f2f7ff,#e7f0fb);
             animation:softIn .55s cubic-bezier(.22,1,.36,1) .12s backwards;}
-        .mini-hint{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:9045;
-            background:rgba(30,60,110,.78);color:#fff;font-size:13px;padding:9px 18px;border-radius:30px;
-            opacity:0;pointer-events:none;transition:opacity .4s ease;white-space:nowrap;}
-        .mini-hint.show{opacity:1;}
-        body.in-mini .header,body.in-mini .footer{opacity:0;pointer-events:none;}
         /* 功能圆键点按：柔光玻璃光晕从触点漾开 */
         .glow-press{position:relative;overflow:hidden;isolation:isolate;}
         .fs-ctrl.glow-press{position:absolute;}
@@ -533,34 +506,17 @@
             background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(170,200,245,.55) 42%,rgba(170,200,245,0) 72%);
             transform:translate(-50%,-50%) scale(0);animation:gpWave .6s cubic-bezier(.22,1,.36,1) forwards;}
         @keyframes gpWave{0%{opacity:.9;transform:translate(-50%,-50%) scale(0);}100%{opacity:0;transform:translate(-50%,-50%) scale(1);}}
-        /* 微信浮窗引导 */
-        .fg-mock{margin-top:14px;border-radius:14px;overflow:hidden;border:1px solid rgba(120,160,225,.3);background:#fff;box-shadow:0 8px 22px rgba(60,110,190,.12);}
-        .fg-bar{display:flex;align-items:center;height:46px;background:#ededed;padding:0 12px;}
-        .fg-bar .fg-x{font-size:18px;color:#333;width:34px;}
-        .fg-bar .fg-title{flex:1;text-align:center;font-size:13px;color:#222;font-weight:600;line-height:1.2;}
-        .fg-bar .fg-dots{position:relative;width:34px;text-align:right;font-weight:700;font-size:20px;letter-spacing:1px;color:#222;}
-        .fg-ring{position:absolute;right:-2px;top:50%;transform:translateY(-50%);width:34px;height:34px;border:2px solid #4a7fd6;border-radius:50%;animation:fgPulse 1.5s ease-out infinite;}
-        @keyframes fgPulse{0%{opacity:.9;transform:translateY(-50%) scale(.7);}70%{opacity:0;transform:translateY(-50%) scale(1.25);}100%{opacity:0;transform:translateY(-50%) scale(1.25);}}
-        .fg-steps{padding:14px 14px 12px;display:flex;flex-direction:column;gap:10px;background:#fff;}
-        .fg-step{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:#3d4a5e;line-height:1.5;}
-        .fg-step .n{flex:none;width:19px;height:19px;border-radius:50%;background:linear-gradient(135deg,#5b93e6,#4a7fd6);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px;}
-        .fg-note{margin-top:10px;font-size:11.5px;line-height:1.55;color:#7a93b8;}
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
         .modal-mask.show .modal-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .06s backwards;}
         .modal-mask.show .modal-sub{animation:softIn .5s cubic-bezier(.22,1,.36,1) .11s backwards;}
         .modal-mask.show .modal-input{animation:softIn .5s cubic-bezier(.22,1,.36,1) .16s backwards;}
-        .modal-mask.show .fg-mock{animation:softIn .55s cubic-bezier(.22,1,.36,1) .18s backwards;}
-        .modal-mask.show .fg-note{animation:softIn .5s cubic-bezier(.22,1,.36,1) .27s backwards;}
         .modal-mask.show .modal-btns{animation:softIn .5s cubic-bezier(.22,1,.36,1) .3s backwards;}
         .toast{transition:opacity .32s ease,transform .46s cubic-bezier(.32,.72,0,1);}
         .model-list.show .drag-handle{animation:softIn .5s cubic-bezier(.22,1,.36,1) .03s backwards;}
         .model-list.show .ml-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .07s backwards;}
         .admin-bar.show{animation:barIn .5s cubic-bezier(.32,.72,0,1) both;}
         @keyframes barIn{from{opacity:0;transform:translate(-50%,26px);}to{opacity:1;transform:translate(-50%,0);}}
-        /* 小窗右下角自由缩放手柄 */
-        .mini-resize{position:absolute;right:6px;bottom:6px;width:30px;height:30px;z-index:8;cursor:nwse-resize;touch-action:none;display:grid;place-items:center;color:rgba(74,127,214,.85);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(220,234,250,.35));box-shadow:0 3px 10px rgba(60,110,190,.22);}
-        .mini-resize::before{content:'';position:absolute;right:8px;bottom:8px;width:11px;height:11px;border-right:2.4px solid currentColor;border-bottom:2.4px solid currentColor;border-bottom-right-radius:3px;}
     </style>
 </head>
 <body>
@@ -584,25 +540,7 @@
     <button class="abtn ghost" id="adminClear">还原</button>
     <button class="abtn ghost" id="adminDone">完成</button>
 </div>
-<div class="mini-backdrop" id="miniBackdrop"></div>
-<div class="mini-hint" id="miniHint">小窗：拖动移动 · 双指或右下角缩放 · 点按恢复</div><div class="modal-mask" id="floatGuide">
-    <div class="modal-card">
-        <div class="modal-title">小窗 · 边聊边看</div>
-        <div class="modal-sub">微信里的网页需要用微信自带的「浮窗」收到屏幕侧边，就能回消息、点浮窗回来：</div>
-        <div class="fg-mock">
-            <div class="fg-bar"><span class="fg-x">✕</span><span class="fg-title">中铁装配 钢结构构件信息</span><span class="fg-dots">•••<i class="fg-ring"></i></span></div>
-            <div class="fg-steps">
-                <div class="fg-step"><span class="n">1</span><span>点页面右上角的「<b>···</b>」</span></div>
-                <div class="fg-step"><span class="n">2</span><span>在弹出的菜单里选择「<b>浮窗</b>」</span></div>
-                <div class="fg-step"><span class="n">3</span><span>页面收到屏幕侧边后即可回微信聊天；点侧边浮窗就回到本页</span></div>
-            </div>
-        </div>
-        <div class="fg-note">注：像肯德基那种可自由拖动的系统小窗是「微信小程序」专属能力，普通网页受微信和手机系统限制无法一键实现；需要的话可以把本系统改造成小程序。</div>
-        <div class="modal-btns" style="margin-top:14px;"><button class="mbtn primary" id="floatGuideOk">我知道了</button></div>
-    </div>
-</div>
-
-    <!-- 保存模型图片预览 -->
+<!-- 保存模型图片预览 -->
     <div class="modal-mask" id="shotMask">
       <div class="modal-card shot-card">
         <div class="modal-title">构件模型图</div>
@@ -929,7 +867,24 @@ function enterFullscreen(type, isSwitch, reuse){
             floatEye.classList.toggle('active',collapsed);
             floatEye.innerHTML=(collapsed?ICON_EYE_OFF:ICON_EYE)+'<i class="eye-badge"></i>';
             ctrl.classList.toggle('fs-info-off', collapsed);
-            setTimeout(safeResize,500);
+            /* 无死区折叠：起止 max-height 取卡片真实高度，避免 60vh→0 前段空转、末段猛收；
+               这样信息卡收合与模型框 flex 放大从第一帧起就完全同步 */
+            const card=infoCard;
+            if(collapsed){
+                card.style.maxHeight=card.scrollHeight+'px';
+                requestAnimationFrame(()=>requestAnimationFrame(()=>{ card.style.maxHeight='0px'; }));
+            }else{
+                /* 高度为 0 时网格 1fr 行会被压扁、scrollHeight 偏小；先无约束量到真实高度再回到 0，同帧完成不闪烁 */
+                card.style.transition='none';
+                card.style.maxHeight='none';
+                const nat=card.scrollHeight;
+                card.style.maxHeight='0px';
+                void card.offsetHeight;
+                card.style.transition='';
+                requestAnimationFrame(()=>requestAnimationFrame(()=>{ card.style.maxHeight=nat+'px'; }));
+                setTimeout(()=>{ if(!fullWrap.classList.contains('info-collapsed')) card.style.maxHeight=''; }, 500);
+            }
+            setTimeout(safeResize,480);
         }
         eye.onclick=toggleInfoCollapse;
         /* 右侧功能 dock：自动旋转 / 移动 / 定位复位 / 切换构件(传送) */
@@ -1073,19 +1028,7 @@ function exitFullscreen(){
         setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, 540);
     }
 }
-/* 主页“从左下角铺开淡入”：WAAPI，结束即取消，避免 transform 残留成为 fixed 包含块 */
-function playHomeIn(){
-    try{
-        fullWrap.style.opacity = '.35';
-        const a = fullWrap.animate(
-            [{opacity:.35, transform:"translateY(6px)"},{opacity:1, transform:"translateY(0)"}],
-            {duration:420, easing:"cubic-bezier(.22,.61,.36,1)", fill:"both"}
-        );
-        const clearHome = () => { try{ a.cancel(); }catch(e){} fullWrap.style.opacity=''; fullWrap.style.transform=''; };
-        a.onfinish = clearHome;
-        setTimeout(clearHome, 560);
-    }catch(e){}
-}
+
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
     const { saved } = state;
     el.style.transition = 'none';
@@ -1101,7 +1044,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     fullWrap.style.zIndex = saved.wrapZ;
     fullWrap.classList.remove('fs-page','info-collapsed','model-backdrop','fs-exiting','ls-card');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-    modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';}
+    modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';ic.style.maxHeight='';ic.style.padding='';}
     modelContainer.classList.remove('fs-model');
     if(!keepOverlay){ document.body.classList.remove("in-fs"); bg.remove(); ctrl.remove(); }
     try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
@@ -1118,9 +1061,7 @@ function switchFullscreen(type){
     exitFullscreen();
 }
 
-function applyTransition(el, props){
-    el.style.transition = props.map(p => p + ' .45s ' + EASE).join(',');
-}
+
 function applyOrientation(){
     if(!fsState || fsState.type !== 'model') return;
     const want = !!fsState.wantLandscape;
@@ -1532,6 +1473,7 @@ $('#adminClear').onclick = () => {
     location.reload();
 };
 $('#adminExport').onclick = () => {
+    if(adminOn && id && partData[id]){ Object.assign(partData[id], collectEdits()); }  /* 没先点保存也导出当前屏幕内容 */
     let txt = '// 构件数据总对象，网页读取所有构件信息\r\n';
     txt += '// 由管理员在页面“导出 data.js”生成：用本文件替换仓库中的 data.js，再用 GitHub Desktop 提交推送即可同步线上\r\n';
     txt += 'window.partData = ' + JSON.stringify(window.partData, null, 4) + ';\r\n';
@@ -1543,9 +1485,6 @@ $('#adminExport').onclick = () => {
     showToast('已导出 data.js，请替换仓库文件并提交', 2600);
 };
 
-/* ===================== 一键小窗（澎湃 OS 风格缩放/拖动） ===================== */
-const miniBackdrop=$('#miniBackdrop'), miniHint=$('#miniHint');
-let miniState=null;
 const shotMask=document.getElementById('shotMask'), shotImg=document.getElementById('shotImg');
 async function captureShot(){
     const v=document.getElementById('viewer');
@@ -1562,91 +1501,6 @@ document.getElementById('btnMini').onclick=captureShot;
 document.getElementById('shotClose').onclick=()=>shotMask.classList.remove('show');
 shotMask.addEventListener('click',e=>{ if(e.target===shotMask) shotMask.classList.remove('show'); });
 document.getElementById('shotSave').onclick=()=>{ const a=document.createElement('a'); a.href=shotImg.src; a.download='gangjiegou-model.png'; document.body.appendChild(a); a.click(); a.remove(); };
-function enterMini(){
-    const wrap=fullWrap, rect=wrap.getBoundingClientRect();
-    const s=46/rect.width, w=rect.width*s, h=rect.height*s;     // 收成右侧一条竖胶囊
-    const tx=window.innerWidth-(w-18)-rect.left;                 // 大部分藏到屏幕右缘外
-    let ty=(window.innerHeight-h)/2-rect.top;
-    ty=Math.max(8,Math.min(window.innerHeight-h-8,ty));
-    const drag=document.createElement('div'); drag.className='mini-drag';
-    wrap.appendChild(drag);
-    const tab=document.createElement('div'); tab.className='mini-edge-tab';
-    tab.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="14 6 8 12 14 18"/></svg>';
-    document.body.appendChild(tab);
-    miniBackdrop.classList.add('show'); document.body.classList.add('in-mini');
-    miniState={rect,s,tx,ty,w,h,drag,tab,wrap,
-        saved:{position:wrap.style.position,left:wrap.style.left,top:wrap.style.top,width:wrap.style.width,height:wrap.style.height,
-               z:wrap.style.zIndex,transition:wrap.style.transition,transform:wrap.style.transform,origin:wrap.style.transformOrigin,radius:wrap.style.borderRadius}};
-    wrap.style.transition='none';
-    wrap.style.position='fixed'; wrap.style.left=rect.left+'px'; wrap.style.top=rect.top+'px';
-    wrap.style.width=rect.width+'px'; wrap.style.height=rect.height+'px'; wrap.style.zIndex='9050';
-    wrap.style.transformOrigin='0 0'; wrap.style.transform='translate(0,0) scale(1)';
-    void wrap.offsetHeight;
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-        wrap.classList.add('mini');
-        wrap.style.transition='transform .46s cubic-bezier(.16,1,.3,1),border-radius .46s ease';
-        wrap.style.transform='translate('+tx+'px,'+ty+'px) scale('+s+')';
-        positionMiniTab();
-    }));
-    miniHint.innerText='已收到屏幕侧边 · 点竖条恢复';
-    miniHint.classList.add('show'); clearTimeout(miniHint._t);
-    miniHint._t=setTimeout(()=>miniHint.classList.remove('show'),2200);
-    setupEdgeDrag();
-}
-function positionMiniTab(){
-    const st=miniState; if(!st) return;
-    st.tab.style.top=(st.rect.top+st.ty+st.h/2)+'px';
-}
-function exitMini(){
-    if(!miniState) return;
-    const {wrap,drag,tab,saved}=miniState;
-    wrap.style.transition='transform .46s cubic-bezier(.16,1,.3,1),border-radius .46s ease';
-    wrap.style.transform='translate(0,0) scale(1)';
-    tab.classList.add('out');
-    miniBackdrop.classList.remove('show'); miniHint.classList.remove('show');
-    document.body.classList.remove('in-mini');
-    setTimeout(()=>{
-        wrap.classList.remove('mini');
-        wrap.style.position=saved.position;wrap.style.left=saved.left;wrap.style.top=saved.top;
-        wrap.style.width=saved.width;wrap.style.height=saved.height;wrap.style.zIndex=saved.z;
-        wrap.style.transition=saved.transition;wrap.style.transform=saved.transform;
-        wrap.style.transformOrigin=saved.origin;wrap.style.borderRadius=saved.radius;
-        drag.remove(); tab.remove(); miniState=null; safeResize();
-    },460);
-}
-function setupEdgeDrag(){
-    let sy=0,oy=0,moved=false;
-    const clampY=y=>Math.max(8,Math.min(window.innerHeight-miniState.h-8,y));
-    const move=e=>{
-        const st=miniState; if(!st) return;
-        const dy=e.clientY-sy;
-        if(Math.abs(dy)>6) moved=true;
-        st.ty=clampY(oy+dy);
-        st.wrap.style.transition='none';
-        st.wrap.style.transform='translate('+st.tx+'px,'+st.ty+'px) scale('+st.s+')';
-        positionMiniTab();
-    };
-    const up=()=>{
-        const st=miniState; if(!st) return;
-        window.removeEventListener('pointermove',move); window.removeEventListener('pointerup',up); window.removeEventListener('pointercancel',up);
-        if(!moved){ exitMini(); return; }   // 点按=恢复
-        st.wrap.style.transition='transform .32s cubic-bezier(.22,1,.36,1)';
-        st.wrap.style.transform='translate('+st.tx+'px,'+st.ty+'px) scale('+st.s+')';
-        st.tab.style.transition='top .32s cubic-bezier(.22,1,.36,1)'; positionMiniTab();
-    };
-    const down=e=>{
-        if(!miniState) return;
-        sy=e.clientY; oy=miniState.ty; moved=false;
-        miniState.tab.style.transition='none';
-        window.addEventListener('pointermove',move);
-        window.addEventListener('pointerup',up);
-        window.addEventListener('pointercancel',up);
-        e.preventDefault();
-    };
-    miniState.tab.addEventListener('pointerdown',down);
-    miniState.drag.addEventListener('pointerdown',down);
-}
-
 /* 功能按钮点按柔光光晕（静态按钮 + 动态生成按钮均可用） */
 function bindGlowPress(el){
     if(!el || el.__glowBound) return; el.__glowBound=true;
@@ -1660,9 +1514,6 @@ function bindGlowPress(el){
         el.appendChild(sp); setTimeout(()=>sp.remove(),640);
     });
 }
-const floatGuide=$('#floatGuide');
-$('#floatGuideOk').onclick=()=>floatGuide.classList.remove('show');
-floatGuide.addEventListener('click',e=>{ if(e.target===floatGuide) floatGuide.classList.remove('show'); });
 document.querySelectorAll('.toolbar .btn,.icon-btn,.mbtn,.abtn').forEach(bindGlowPress);
 </script>
 </body>
