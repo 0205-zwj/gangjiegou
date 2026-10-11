@@ -143,7 +143,7 @@
             color:var(--accent);border:1px solid var(--glass-rim);
             font-size:18px;cursor:pointer;
             box-shadow:var(--glass-spec),0 5px 14px rgba(40,72,120,.10),0 1.5px 3px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.4),0 0 16px -6px rgba(150,190,244,.6);
-            transition:transform .32s var(--e-expo),box-shadow .3s ease,background .25s ease;
+            transition:transform .18s var(--e-expo),box-shadow .18s ease,background .08s ease,color .08s ease,border-color .08s ease;
             display:flex;align-items:center;justify-content:center;
         }
         .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.98);
@@ -151,8 +151,9 @@
         .btn:active{transform:scale(.94);transition:transform .12s ease-out;
             background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.98),rgba(255,255,255,.5) 45%,rgba(236,243,250,.5) 100%);
             box-shadow:var(--glass-spec),0 6px 16px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 4px rgba(255,255,255,.8),0 0 52px -4px rgba(180,208,250,.7);}
-        .btn.active{background:linear-gradient(180deg,rgba(96,164,236,.94),rgba(52,116,206,.84));color:#fff;border-color:rgba(255,255,255,.9);box-shadow:0 4px 16px rgba(48,110,200,.42),0 0 26px 4px rgba(130,186,248,.6),inset 0 1px 3px rgba(255,255,255,.5);}
-        .btn.active svg{stroke:#fff;}
+        /* 开关类激活态：通透深玻璃蓝——更饱和、更通透，像染了色的薄冰 */
+        .btn.active{background:linear-gradient(180deg,rgba(80,145,235,.5),rgba(45,110,205,.42));color:#1448a8;border-color:rgba(90,150,240,.7);box-shadow:0 4px 14px rgba(40,100,200,.32),0 0 20px 3px rgba(110,165,245,.42),inset 0 1px 2px rgba(255,255,255,.65);}
+        .btn.active svg{stroke:#1448a8;}
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%) translateY(-8px);
             top:20px;z-index:21;color:#2563a8;font-size:12px;
@@ -367,10 +368,10 @@
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
         /* 功能键"已开启"激活态：通透亮天蓝 + 白色图标 + 冷白辉光（清新不灰暗，与默认玻璃白底一眼可辨） */
-        .fs-ctrl.active{color:#fff;border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(96,164,236,.94),rgba(52,116,206,.84));box-shadow:0 4px 16px rgba(48,110,200,.42),0 0 26px 4px rgba(130,186,248,.6),inset 0 1px 3px rgba(255,255,255,.5);}
-        .fs-ctrl.active svg,.fs-ctrl.active .gp-label,.fs-ctrl.active .tool-label{stroke:#fff;color:#fff;}
-        .icon-btn.active{color:#fff;border-color:rgba(255,255,255,.9);background:linear-gradient(180deg,rgba(96,164,236,.94),rgba(52,116,206,.84));box-shadow:0 4px 16px rgba(48,110,200,.42),0 0 26px 4px rgba(130,186,248,.6),inset 0 1px 3px rgba(255,255,255,.5);}
-        .icon-btn.active svg{stroke:#fff;}
+        .fs-ctrl.active{color:#1448a8;border-color:rgba(90,150,240,.7);background:linear-gradient(180deg,rgba(80,145,235,.5),rgba(45,110,205,.42));box-shadow:0 4px 14px rgba(40,100,200,.32),0 0 20px 3px rgba(110,165,245,.42),inset 0 1px 2px rgba(255,255,255,.65);}
+        .fs-ctrl.active svg,.fs-ctrl.active .gp-label,.fs-ctrl.active .tool-label{stroke:#1448a8;color:#1448a8;}
+        .icon-btn.active{color:#1448a8;border-color:rgba(90,150,240,.7);background:linear-gradient(180deg,rgba(80,145,235,.5),rgba(45,110,205,.42));box-shadow:0 4px 14px rgba(40,100,200,.32),0 0 20px 3px rgba(110,165,245,.42),inset 0 1px 2px rgba(255,255,255,.65);}
+        .icon-btn.active svg{stroke:#1448a8;}
         /* ===== 网页全屏右侧功能 dock：信息显示时偏小，眼睛隐藏信息后整体放大 ===== */
         .fs-dock{position:absolute;right:12px;top:38%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;pointer-events:auto;transition:top .54s var(--e-settle),gap .45s var(--e-settle);}
         .fs-ctrl-layer .fs-dock .fs-ctrl{position:relative;inset:auto;width:40px;height:40px;margin:0;font-size:18px;line-height:1;transition:opacity .42s var(--e-expo),transform .54s var(--e-settle),width .45s var(--e-settle),height .45s var(--e-settle),background .25s ease,color .25s ease;}
@@ -494,7 +495,7 @@
         .full-wrap.model-backdrop .model-container{background:transparent;}
         .full-wrap.model-backdrop.info-collapsed .info-card{opacity:0 !important;pointer-events:none;}
         body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(16px) saturate(186%) brightness(1.06)!important;-webkit-backdrop-filter:blur(16px) saturate(186%) brightness(1.06)!important;}
-        body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;}
+        body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;transition:none;}
         /* 全屏背景不透明，毛玻璃模糊逐帧重算很贵，整段关闭以保证动画流畅；
            但填充渐变/描边/高光与主页玻璃保持同一套（仅去掉模糊），确保三种状态色调统一 */
         body.in-fs .model-container,
@@ -511,7 +512,7 @@
         .icon-btn{width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.66);
             background:radial-gradient(130% 130% at 50% 16%,rgba(255,255,255,.82),rgba(255,255,255,.3) 40%,rgba(236,243,250,.34) 100%);color:var(--accent);display:grid;place-items:center;cursor:pointer;
             box-shadow:var(--glass-spec),0 4px 12px rgba(60,110,190,.1),0 0 14px -6px rgba(150,190,255,.6);
-            transition:box-shadow .28s ease,border-color .28s ease,background .28s ease,transform .18s var(--e-expo);}
+            transition:box-shadow .18s ease,border-color .08s ease,background .08s ease,color .08s ease,transform .15s var(--e-expo);}
         .icon-btn:hover{transform:translateY(-1px) scale(1.05);border-color:rgba(255,255,255,.98);background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.95),rgba(255,255,255,.42) 42%,rgba(236,243,250,.4) 100%);
             box-shadow:var(--glass-spec),0 6px 16px rgba(60,110,190,.14),0 0 18px -4px rgba(150,190,255,.8);}
         .icon-btn:active{transform:scale(.92);}
@@ -580,21 +581,33 @@
         @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}45%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.15);filter:blur(10px);}}
         /* 点按按压感（iOS 按钮式，轻量高性能）：背景变为通透亮天蓝 + 轻按压缩小 + 图标文字变白 + 单层柔和外光晕，
            浅背景下"点没点"一眼可辨；阴影层少、避免低端机重绘卡顿 */
-        .gp-press{background:linear-gradient(160deg,rgba(88,152,230,.92),rgba(44,108,198,.8))!important;
-            border-color:rgba(255,255,255,.85)!important;
-            transform:scale(.95)!important;
-            color:#fff!important;
-            box-shadow:0 0 22px 4px rgba(140,190,250,.5)!important;
-            transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease!important;}
-        .gp-press svg{stroke:#fff!important;fill:none!important;}
-        .gp-press .gp-label,.gp-press .tool-label{color:#fff!important;}
-        /* 点击外圈光晕脉冲：更亮更扩散的冷白辉光从按钮边缘漾开，抬起后余晖渐隐 */
-        .gp-burst{animation:gpBurst .62s cubic-bezier(.16,1,.3,1) forwards;}
+        /* 点按瞬态（导航/跳转类按钮）：不填充蓝色，只给轻微按压反馈——极浅的通透白底 + 轻压缩 + 近白柔光，
+           抬起即还原（跟手）；真正"开关"类由 .active 持续态表达 */
+        .gp-press{background:rgba(255,255,255,.55)!important;
+            border-color:rgba(255,255,255,.9)!important;
+            transform:scale(.96)!important;
+            box-shadow:0 0 16px 3px rgba(255,255,255,.6)!important;
+            /* 跟手：背景瞬时切换，仅保留极轻压缩回弹 */
+            transition:transform .1s cubic-bezier(.22,1,.36,1),background .04s ease,border-color .04s ease,box-shadow .15s ease!important;}
+        .gp-press svg{stroke:#2a6fd6!important;}
+        .gp-press .gp-label,.gp-press .tool-label{color:#2a6fd6!important;}
+        /* 点击外圈柔光脉冲：柔和近白辉光从按钮边缘漾开（不发蓝），大小收敛、过渡轻柔 */
+        .gp-burst{animation:gpBurst .55s cubic-bezier(.16,1,.3,1) forwards;}
         @keyframes gpBurst{
-            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.85),0 0 0 10px rgba(160,200,255,.4),0 0 26px 4px rgba(130,180,250,.5);}
-            45%{box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,1),0 0 0 20px rgba(160,200,255,.22),0 0 46px 12px rgba(130,180,250,.62);}
-            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.7),0 0 0 0 rgba(160,200,255,0),0 0 22px -2px rgba(140,190,250,.55);}
+            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.7),0 0 0 6px rgba(255,255,255,.35),0 0 14px 2px rgba(255,255,255,.5);}
+            45%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.9),0 0 0 12px rgba(255,255,255,.18),0 0 26px 6px rgba(255,255,255,.55);}
+            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.5),0 0 0 0 rgba(255,255,255,0),0 0 10px 0 rgba(255,255,255,.3);}
         }
+        /* ===== 进出场快照幽灵层：克隆当前画面做交叉淡化，模型用静态截图替换 ===== */
+        .fs-ghost *:not(.fs-shot){animation:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        .fs-ghost{box-sizing:border-box;will-change:opacity,filter,transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+        .fs-ghost img{display:block;background:transparent;}
+        .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards!important;}
+        .fs-ghost.fs-go.down{animation-name:fsGhostFadeDn!important;}
+        .fs-ghost img.fs-shot{animation:fsGhostShot .22s cubic-bezier(.33,0,.3,1) forwards!important;}
+        @keyframes fsGhostFade{0%{opacity:1;filter:blur(1px);transform:translateY(0) scale(1);}40%{opacity:.5;filter:blur(4px);}100%{opacity:0;filter:blur(9px);transform:translateY(-4px) scale(.98);}}
+        @keyframes fsGhostFadeDn{0%{opacity:1;filter:blur(1px);transform:translateY(0) scale(1);}40%{opacity:.5;filter:blur(4px);}100%{opacity:0;filter:blur(9px);transform:translateY(5px) scale(.98);}}
+        @keyframes fsGhostShot{0%{opacity:1;filter:blur(0);transform:scale(1);}100%{opacity:0;filter:blur(16px);transform:scale(.982);}}
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
         .modal-mask.show .modal-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .06s backwards;}
@@ -909,7 +922,7 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 const EASE = 'cubic-bezier(.33,0,.22,1)';        /* iOS 式柔和缓动：中段速度均匀、两端渐柔，无过冲无弹跳 */
 const EASE_IN = 'cubic-bezier(.33,0,.22,1)';    /* 退场与进场同一曲线，交叉淡化全程不露空、不白闪 */
 const FS_IN_MS = 500;
-const XF_MS = 500, XF_SW_MS = 460;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
+const XF_MS = 480, XF_SW_MS = 440;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
 const XFADE = 'cubic-bezier(.33,0,.22,1)';      /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
 const FLY_MS = 480;
 const EASE_FLY = 'cubic-bezier(.33,0,.22,1)';
@@ -1226,37 +1239,59 @@ function exitFullscreen(){
         return;
     }
 
-    /* ===== 退出（iOS 收起式）：全屏画面整体轻微缩小 + 柔和淡出（模型与构件信息联动一起淡缩，
-       缩小仅约 12%，无大幅挤压感），淡出完成 → 主页布局恢复 + 主页淡入浮现（轻微上浮）。
-       全程单画面、无快照、无空档、无闪白；动画结束后 cancel，不残留 transform ===== */
-    const d = XF_MS;
-    const fadeMs = 300;
-    let outAnim = null, ctrlAnim = null, inAnim = null;
-    try{ outAnim = fullWrap.animate(
-        [{opacity:1, transform:'scale(1) translateY(0)'},{opacity:0, transform:'scale(.88) translateY(10px)'}],
-        {duration:fadeMs, easing:XFADE, fill:'forwards'}
-    ); }catch(e){ fullWrap.style.opacity='0'; }
-    try{ ctrlAnim = ctrl.animate([{opacity:1},{opacity:0}],{duration:200,easing:XFADE,fill:'forwards'}); }catch(e){ ctrl.style.opacity='0'; }
-    /* 淡出完成（间隔极短，无空档）：恢复主页布局 + 主页淡入浮现 */
-    setTimeout(()=>{
-        try{ if(outAnim) outAnim.cancel(); if(ctrlAnim) ctrlAnim.cancel(); }catch(e){}
-        restoreLayout(el, state, bg, ctrl, false);
-        fullWrap.style.transition='none';
-        fullWrap.style.opacity='0';
-        fullWrap.style.transform='';
-        void el.offsetHeight;
-        try{ inAnim = fullWrap.animate(
-            [{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'translateY(0)'}],
-            {duration:d, easing:XFADE, fill:'forwards'}
-        ); }catch(e){ fullWrap.style.opacity='1'; }
-        /* 动画结束再触发尺寸同步：由 ResizeObserver 自适应（避免主页模型区被撑成异常高度） */
-        setTimeout(()=>{ try{ safeResize(); }catch(e){} }, d + 90);
-        /* 动画完成后：cancel 动画（不留 transform/opacity 残留，保护信息卡 fixed 定位基准） */
-        setTimeout(()=>{
-            try{ if(inAnim) inAnim.cancel(); }catch(e){}
-            try{ el.style.transition=''; el.style.transform=''; fullWrap.style.transition=''; fullWrap.style.transform=''; fullWrap.style.opacity=''; }catch(e){}
-        }, d + 70);
-    }, fadeMs + 10);
+/* 克隆当前画面为静态快照（模型用 toDataURL 截图替换，绝不新建第二个 WebGL 上下文），
+   让真实结构可立即复位/重建，快照在最上层交叉淡出，从根上消除单元素搬移造成的白闪/跳变 */
+function captureGhost(src){
+    try{
+        let shot=''; try{ shot = viewer.toDataURL('image/webp',0.82) || ''; }catch(e){}
+        const g = src.cloneNode(true);
+        g.removeAttribute('id'); g.classList.add('fs-ghost');
+        g.querySelectorAll('model-viewer').forEach(mv=>{
+            const img=document.createElement('img');
+            img.className='fs-shot';
+            if(shot) img.src=shot;
+            img.style.cssText='width:100%;height:100%;object-fit:contain;display:block;border:0;';
+            mv.replaceWith(img);
+        });
+        g.querySelectorAll('.toolbar,#loading,.tip-banner,.progress,.fs-dock,.fs-ctrl-layer').forEach(n=>n.remove());
+        const r=src.getBoundingClientRect();
+        g.style.cssText += ';position:fixed;left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px;height:'+r.height+'px;margin:0;z-index:9003;pointer-events:none;overflow:hidden;';
+        document.body.appendChild(g);
+        return g;
+    }catch(e){ return null; }
+}
+function fadeGhostOut(g, opts){
+    if(!g) return;
+    opts = opts || {};
+    const dur = opts.dur || XF_MS;
+    g.style.setProperty('--gd', dur+'ms');
+    g.classList.add('fs-go', opts.down ? 'down' : 'up');
+    setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+160);
+}
+
+/* ===== 退出（快照幽灵层交叉淡化）：冻结全屏快照模糊淡出，真实结构立即回主页淡入，
+   两层同档交叉——快照在上面模糊消散、主页在下面柔和浮现，无白闪无跳变 ===== */
+let ctrlAnim = null, inAnim = null;
+try{ ctrlAnim = ctrl.animate([{opacity:1},{opacity:0}],{duration:140,easing:XFADE,fill:'forwards'}); }catch(e){ ctrl.style.opacity='0'; }
+/* 冻结全屏快照，立即纯 CSS 模糊淡出 */
+const ghost = captureGhost(el);
+fadeGhostOut(ghost, {dur:XF_MS, down:true});
+/* 真实结构立即回主页布局 */
+restoreLayout(el, state, bg, ctrl, false);
+safeResize();
+void el.offsetHeight;
+/* 主页从 opacity 0 + 轻微上浮柔和淡入（与快照同档时长） */
+fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(8px)';
+void fullWrap.offsetHeight;
+try{ inAnim = fullWrap.animate(
+    [{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'translateY(0)'}],
+    {duration:XF_MS, easing:XFADE, fill:'forwards'}
+); }catch(e){ fullWrap.style.opacity='1'; fullWrap.style.transform=''; }
+setTimeout(()=>{ try{ safeResize(); }catch(e){} }, XF_MS+90);
+setTimeout(()=>{
+    try{ if(inAnim) inAnim.cancel(); }catch(e){}
+    try{ el.style.transition=''; el.style.transform=''; fullWrap.style.transition=''; fullWrap.style.transform=''; fullWrap.style.opacity=''; fullWrap.style.filter=''; }catch(e){}
+}, XF_MS+70);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
@@ -1783,12 +1818,13 @@ function bindGlowPress(el){
         const sp=document.createElement('span'); sp.className='gp-ripple';
         sp.style.left=x+'px'; sp.style.top=y+'px'; sp.style.width=d+'px'; sp.style.height=d+'px';
         el.appendChild(sp); setTimeout(()=>sp.remove(),680);
-        /* 点按背景高亮（按压感）+ 外圈暖金辉光脉冲，抬起后余晖渐隐 */
-        el.classList.remove('gp-press','gp-burst'); void el.offsetWidth;
+        /* 导航/跳转类：按下即亮光晕、抬起立刻还原（跟手，不保持）；
+           开关类按钮由各自的 .active 持续态表达，这里不抢它的激活色 */
         el.classList.add('gp-press','gp-burst');
-        /* 按压背景色保持约 1.1s（一眼可辨"已点击"，不拖沓不卡顿）；开启类按钮的 active 蓝会持续保持 */
-        setTimeout(()=>el.classList.remove('gp-press'),1100);
-        setTimeout(()=>el.classList.remove('gp-burst'),650);
+        const release=()=>{ el.classList.remove('gp-press'); };
+        el.addEventListener('pointerup',release,{once:true});
+        el.addEventListener('pointerleave',release,{once:true});
+        setTimeout(()=>el.classList.remove('gp-burst'),600);
     });
     /* 点按后立即失焦，清除手机 WebView 残留在按钮上的蓝色聚焦框（输入框除外） */
     el.addEventListener('click',function(){ const t=el.tagName; if(t!=='INPUT'&&t!=='TEXTAREA'&&t!=='SELECT'){ try{ el.blur(); }catch(e){} } });
