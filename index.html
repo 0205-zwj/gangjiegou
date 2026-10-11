@@ -140,8 +140,6 @@
         .btn{
             width:44px;height:44px;border-radius:50%;
             background:var(--glass-fill-ctrl);
-            backdrop-filter:var(--glass-blur-ctrl);
-            -webkit-backdrop-filter:var(--glass-blur-ctrl);
             color:var(--accent);border:1px solid var(--glass-rim);
             font-size:18px;cursor:pointer;
             box-shadow:var(--glass-spec),0 5px 14px rgba(40,72,120,.10),0 1.5px 3px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.4),0 0 16px -6px rgba(150,190,244,.6);
@@ -151,12 +149,11 @@
         .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.96);
             box-shadow:var(--glass-spec),0 9px 22px rgba(40,72,120,.14),0 2px 4px rgba(40,72,120,.06),0 0 0 1.4px rgba(255,255,255,.55),0 0 22px -2px rgba(150,190,244,.78);}
         .btn:active{transform:scale(.92);transition:transform .12s ease-out;}
-        .btn.active{background:linear-gradient(157deg,rgba(226,239,255,.98),rgba(186,216,250,.92));color:#1d5fae;border-color:rgba(255,255,255,1);box-shadow:var(--glass-spec),0 0 0 2.2px rgba(123,168,240,.4),0 6px 18px rgba(90,140,210,.22),0 0 22px -2px rgba(150,190,255,.7);animation:activeBreath 3s ease-in-out infinite;}
-        @keyframes activeBreath{0%,100%{box-shadow:var(--glass-spec),0 0 0 2.2px rgba(123,168,240,.38),0 6px 18px rgba(90,140,210,.22),0 0 18px -2px rgba(150,190,255,.6);}50%{box-shadow:var(--glass-spec),0 0 0 2.2px rgba(123,168,240,.28),0 6px 18px rgba(90,140,210,.22),0 0 30px -2px rgba(150,190,255,.85);}}
+        .btn.active{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(235,244,252,.7));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.7),0 0 22px -2px rgba(160,196,246,.7);}
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%) translateY(-8px);
             top:20px;z-index:21;color:#2563a8;font-size:12px;
-            background:var(--glass-fill-strong);backdrop-filter:var(--glass-blur-ctrl);-webkit-backdrop-filter:var(--glass-blur-ctrl);
+            background:var(--glass-fill-strong);
             padding:8px 18px;border-radius:26px;white-space:nowrap;border:1px solid rgba(255,255,255,.8);
             box-shadow:var(--glass-spec),0 10px 28px rgba(50,100,180,.16);
             opacity:0;pointer-events:none;
@@ -184,6 +181,9 @@
             box-shadow:var(--glass-spec),0 -18px 60px -12px rgba(50,100,180,.28),0 -2px 0 rgba(255,255,255,.6) inset,0 0 50px -18px rgba(150,190,246,.6);
         }
         .model-list.show{transform:translateY(0);}
+        /* 顶部一道镜面弧光：玻璃边缘被光照亮的招牌高光 */
+        .model-list::before{content:'';position:absolute;top:0;left:14%;right:14%;height:1px;z-index:3;pointer-events:none;
+            background:linear-gradient(90deg,transparent,rgba(255,255,255,.98),transparent);}
         .model-list .drag-handle{width:38px;height:4px;border-radius:2px;background:rgba(100,140,200,.28);margin:0 auto 10px;flex:0 0 auto;}
         .ml-title{color:#1e3a5f;font-size:15px;font-weight:600;text-align:center;margin:0 0 10px;flex:0 0 auto;}
         .ml-count{font-size:11px;font-weight:500;color:#6f93c8;background:rgba(123,168,240,.16);padding:2px 9px;border-radius:20px;margin-left:6px;vertical-align:1px;}
@@ -217,16 +217,16 @@
             opacity:0;transform:translateY(14px);
             transition:opacity .38s ease,transform .26s var(--e-expo),box-shadow .26s ease,border-color .26s ease,background .26s ease;}
         .model-list.show .model-item{opacity:1;transform:translateY(0);}
-        /* 按压：描边整体亮起一圈近白柔光环 + 冷色光扩散 */
+        /* 按压：玻璃透镜被点亮——边缘一圈近白柔光扩散，冷色极淡 */
         .model-item.pressing{border-color:rgba(255,255,255,.98);transform:scale(.965);
-            box-shadow:inset 0 1px 1px rgba(255,255,255,1),0 0 0 2px rgba(123,168,240,.3),0 0 20px 2px rgba(150,190,255,.5);}
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 0 0 2px rgba(255,255,255,.65),0 0 20px 2px rgba(255,255,255,.5);}
         .model-item.fadeout{transition:box-shadow .5s ease,border-color .5s ease,transform .3s var(--e-settle);}
         @media(hover:hover){.model-item:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.96);
-            box-shadow:inset 0 1px 1px rgba(255,255,255,.98),0 10px 26px rgba(50,100,180,.16),0 0 0 1px rgba(150,190,255,.28),0 0 22px -4px rgba(150,190,255,.7);}}
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(104,138,184,.1),0 10px 26px rgba(50,100,180,.14),0 0 0 1px rgba(255,255,255,.55),0 0 20px -4px rgba(160,196,246,.5);}}
         .model-item:active{transform:scale(.96);transition-duration:.08s;}
         .model-item.current{border-color:rgba(255,255,255,1);
-            background:linear-gradient(156deg,rgba(228,240,255,.96),rgba(208,228,252,.78));
-            box-shadow:inset 0 1px 1px rgba(255,255,255,1),0 8px 22px rgba(50,100,180,.18),0 0 0 1.5px rgba(123,168,240,.5),0 0 22px -4px rgba(140,180,255,.75);}
+            background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(236,245,252,.5));
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 8px 22px rgba(50,100,180,.14),0 0 0 1.5px rgba(255,255,255,.9),0 0 20px -2px rgba(160,196,246,.6);}
         .model-item .cur-badge{position:absolute;top:6px;right:8px;font-size:9px;color:#fff;background:linear-gradient(135deg,#5b90e0,#2563a8);
             padding:2px 7px;border-radius:10px;letter-spacing:.5px;box-shadow:0 3px 8px rgba(37,99,168,.4);}
         .model-item .mid{color:#1e3a5f;font-size:12px;font-weight:600;padding-right:32px;line-height:1.3;}
@@ -318,8 +318,7 @@
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
             position:absolute;width:46px;height:46px;border-radius:50%;
-            background:var(--glass-fill-ctrl);backdrop-filter:var(--glass-blur-ctrl);
-            -webkit-backdrop-filter:var(--glass-blur-ctrl);
+            background:var(--glass-fill-ctrl);
             border:1px solid var(--glass-rim);
             box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.5),0 0 18px -6px rgba(150,190,244,.66);
             display:flex;align-items:center;justify-content:center;
@@ -328,10 +327,10 @@
             transition:opacity .42s var(--e-expo), transform .56s var(--e-settle), background .25s ease, color .25s ease,
                        left .52s var(--e-settle), right .52s var(--e-settle), top .52s var(--e-settle), bottom .52s var(--e-settle);
         }
-        .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);animation:ctrlGlow 6s ease-in-out 1s infinite;}
+        .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);animation:ctrlGlow .9s cubic-bezier(.22,1,.36,1) backwards;}
         @keyframes ctrlGlow{
-          0%,100%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.5),0 0 16px -8px rgba(150,190,244,.6);}
-          50%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1.4px rgba(255,255,255,.7),0 0 26px -4px rgba(160,196,246,.8),0 0 48px -12px rgba(180,210,248,.5);}
+          0%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.5),0 0 16px -8px rgba(150,190,244,.6);}
+          100%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.55),0 0 20px -6px rgba(160,196,246,.55);}
         }
         .fs-ctrl:hover{transform:scale(1.06);border-color:rgba(255,255,255,.98);}
         .fs-ctrl:active{transform:scale(.86);}
@@ -368,8 +367,8 @@
         /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
-        .fs-ctrl.active{background:linear-gradient(157deg,rgba(226,239,255,.98),rgba(186,216,250,.92));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2.2px rgba(123,168,240,.4),0 6px 18px rgba(90,140,210,.22),0 0 22px -2px rgba(150,190,255,.7);}
-        .icon-btn.active{color:#1d5fae;border-color:rgba(150,190,255,.9);background:linear-gradient(145deg,rgba(214,234,254,.98),rgba(184,214,248,.9));box-shadow:0 0 0 2px rgba(123,168,240,.35),0 0 16px rgba(150,190,255,.55);}
+        .fs-ctrl.active{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(232,243,251,.72));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.75),0 0 22px -2px rgba(160,196,246,.7);}
+        .icon-btn.active{color:#1d5fae;border-color:rgba(255,255,255,.95);background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(232,243,251,.7));box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.7),0 0 18px -2px rgba(160,196,246,.65);}
         /* ===== 网页全屏右侧功能 dock：信息显示时偏小，眼睛隐藏信息后整体放大 ===== */
         .fs-dock{position:absolute;right:12px;top:38%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;pointer-events:auto;transition:top .54s var(--e-settle),gap .45s var(--e-settle);}
         .fs-ctrl-layer .fs-dock .fs-ctrl{position:relative;inset:auto;width:40px;height:40px;margin:0;font-size:18px;line-height:1;transition:opacity .42s var(--e-expo),transform .54s var(--e-settle),width .45s var(--e-settle),height .45s var(--e-settle),background .25s ease,color .25s ease;}
@@ -415,15 +414,15 @@
         }
         .info-card .row .ripple{
             position:absolute;left:0;top:0;width:22px;height:22px;border-radius:50%;pointer-events:none;
-            background:radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(255,255,255,.4) 30%,rgba(168,200,246,.34) 52%,rgba(168,200,246,0) 72%);
+            background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,255,255,.5) 32%,rgba(186,210,246,.22) 54%,rgba(186,210,246,0) 74%);
             transform:translate(-50%,-50%) scale(0);
             filter:blur(.5px);
             animation:cellRipple .72s cubic-bezier(.16,1,.3,1) forwards;
         }
-        /* 点击：外圈较大柔光，近白带极淡冷蓝，像液态玻璃被点亮 */
+        /* 点击：小格整体像被点亮的一块玻璃——顶部镜面高光更亮、底部微冷暗边、外圈近白柔光（不发蓝） */
         .info-card .row.lit{
-            border-color:rgba(255,255,255,.98);background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(238,246,253,.46));
-            box-shadow:inset 0 1px 1px rgba(255,255,255,1),0 0 0 1.4px rgba(150,188,236,.42),0 0 24px 2px rgba(150,190,236,.3),0 0 40px -8px rgba(160,196,246,.5);
+            border-color:rgba(255,255,255,.98);background:linear-gradient(180deg,rgba(255,255,255,.8),rgba(240,247,252,.34));
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1.4px rgba(104,138,184,.12),0 0 0 1.4px rgba(255,255,255,.85),0 0 22px 2px rgba(255,255,255,.6),0 0 44px -8px rgba(150,190,236,.3);
         }
         @keyframes cellRipple{
             0%{transform:translate(-50%,-50%) scale(0);opacity:.95;}
