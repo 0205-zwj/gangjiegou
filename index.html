@@ -148,7 +148,9 @@
         }
         .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.96);
             box-shadow:var(--glass-spec),0 9px 22px rgba(40,72,120,.14),0 2px 4px rgba(40,72,120,.06),0 0 0 1.4px rgba(255,255,255,.55),0 0 22px -2px rgba(150,190,244,.78);}
-        .btn:active{transform:scale(.92);transition:transform .12s ease-out;}
+        .btn:active{transform:scale(.94);transition:transform .12s ease-out;
+            background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.98),rgba(255,255,255,.5) 45%,rgba(236,243,250,.5) 100%);
+            box-shadow:var(--glass-spec),0 6px 16px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 2px rgba(255,255,255,.65),0 0 46px -6px rgba(160,196,246,.5);}
         .btn.active{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(235,244,252,.7));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.7),0 0 22px -2px rgba(160,196,246,.7);}
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%) translateY(-8px);
@@ -223,7 +225,9 @@
         .model-item.fadeout{transition:box-shadow .5s ease,border-color .5s ease,transform .3s var(--e-settle);}
         @media(hover:hover){.model-item:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.96);
             box-shadow:inset 0 1.4px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(104,138,184,.1),0 10px 26px rgba(50,100,180,.14),0 0 0 1px rgba(255,255,255,.55),0 0 20px -4px rgba(160,196,246,.5);}}
-        .model-item:active{transform:scale(.96);transition-duration:.08s;}
+        .model-item:active{transform:scale(.955);transition-duration:.08s;
+            background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(240,247,252,.5));
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 0 0 1.6px rgba(255,255,255,.9),0 0 22px 2px rgba(255,255,255,.6);}
         .model-item.current{border-color:rgba(255,255,255,1);
             background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(236,245,252,.5));
             box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 8px 22px rgba(50,100,180,.14),0 0 0 1.5px rgba(255,255,255,.9),0 0 20px -2px rgba(160,196,246,.6);}
@@ -311,8 +315,10 @@
         .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards!important;}
         .fs-ghost.fs-go.down{animation-name:fsGhostFadeDn!important;}
         .fs-ghost img.fs-shot{animation:fsGhostShot .22s cubic-bezier(.33,0,.3,1) forwards!important;}
-        @keyframes fsGhostFade{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}34%{opacity:.55;filter:blur(3px);}100%{opacity:0;filter:blur(8px);transform:translateY(-3px) scale(.982);}}
-        @keyframes fsGhostFadeDn{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}34%{opacity:.55;filter:blur(3px);}100%{opacity:0;filter:blur(8px);transform:translateY(4px) scale(.982);}}
+        /* 快照淡出：只做纯透明度渐变（不做模糊/位移/缩放），
+           与下方真实层同曲线同时长交叉淡化，两层视觉零错位、无残影无重影 */
+        @keyframes fsGhostFade{0%{opacity:1;}100%{opacity:0;}}
+        @keyframes fsGhostFadeDn{0%{opacity:1;}100%{opacity:0;}}
         @keyframes fsGhostShot{0%{opacity:1;filter:blur(0);transform:scale(1);}100%{opacity:0;filter:blur(16px);transform:scale(.982);}}
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
@@ -332,8 +338,11 @@
           0%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.5),0 0 16px -8px rgba(150,190,244,.6);}
           100%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.55),0 0 20px -6px rgba(160,196,246,.55);}
         }
-        .fs-ctrl:hover{transform:scale(1.06);border-color:rgba(255,255,255,.98);}
-        .fs-ctrl:active{transform:scale(.86);}
+        .fs-ctrl:hover{transform:scale(1.06);border-color:rgba(255,255,255,.98);
+            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 0 0 1.2px rgba(255,255,255,.7),0 0 22px -2px rgba(160,196,246,.7);}
+        .fs-ctrl:active{transform:scale(.88);
+            background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.98),rgba(255,255,255,.5) 45%,rgba(236,243,250,.5) 100%);
+            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 2px rgba(255,255,255,.65),0 0 46px -6px rgba(160,196,246,.5);}
         .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;bottom:auto;}
         .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
@@ -571,10 +580,10 @@
         .fs-ctrl.glow-press{position:absolute;}
         .glow-press>svg,.glow-press>span{position:relative;z-index:2;}
         .glow-press .gp-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
-            background:radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(255,255,255,.42) 28%,rgba(172,204,248,.32) 52%,rgba(172,204,248,0) 74%);
+            background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.6) 26%,rgba(196,220,250,.3) 50%,rgba(196,220,250,0) 72%);
             filter:blur(.5px);
-            transform:translate(-50%,-50%) scale(0);animation:gpWave .72s cubic-bezier(.16,1,.3,1) forwards;}
-        @keyframes gpWave{0%{opacity:.95;transform:translate(-50%,-50%) scale(0);}60%{opacity:.5;}100%{opacity:0;transform:translate(-50%,-50%) scale(1);filter:blur(7px);}}
+            transform:translate(-50%,-50%) scale(0);animation:gpWave .85s cubic-bezier(.16,1,.3,1) forwards;}
+        @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}55%{opacity:.6;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.55);filter:blur(9px);}}
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
         .modal-mask.show .modal-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .06s backwards;}
@@ -882,14 +891,14 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 /* ============ FLIP 平滑全屏（纯CSS，不移动DOM，修复层叠上下文） ============ */
 /* 动效基调：进入用超慢出（expo-out，只减速永不回弹），离场用加速消失，
    对齐 OPPO/vivo 系统面板的手感；杜绝 spring 过冲带来的“弹一下”卡通感 */
-const EASE = 'cubic-bezier(.32,.72,0,1)';        /* iOS 式进场减速：柔和到位、带极轻 settling，不过冲 */
-const EASE_IN = 'cubic-bezier(.4,0,.6,1)';    /* 退场加速：旧画面先保持、末段才消散，交叉淡化全程不露空、不白闪 */
-const FS_IN_MS = 440;
-const XF_MS = 420, XF_SW_MS = 380;             /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
-const XFADE = 'cubic-bezier(.33,0,.22,1)';     /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
-const FLY_MS = 420;
-const EASE_FLY = 'cubic-bezier(.4,0,.72,.45)';
-const ORI_MS = 540, ORI_EASE = 'cubic-bezier(.32,.72,0,1)';   /* 横竖屏旋转：模型容器/信息卡/按键共用同一时长与缓动，保持同步 */
+const EASE = 'cubic-bezier(.33,0,.22,1)';        /* iOS 式柔和缓动：中段速度均匀、两端渐柔，无过冲无弹跳 */
+const EASE_IN = 'cubic-bezier(.33,0,.22,1)';    /* 退场与进场同一曲线，交叉淡化全程不露空、不白闪 */
+const FS_IN_MS = 500;
+const XF_MS = 500, XF_SW_MS = 460;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
+const XFADE = 'cubic-bezier(.33,0,.22,1)';      /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
+const FLY_MS = 480;
+const EASE_FLY = 'cubic-bezier(.33,0,.22,1)';
+const ORI_MS = 580, ORI_EASE = 'cubic-bezier(.33,0,.22,1)';   /* 横竖屏旋转：模型容器/信息卡/按键共用同一时长与缓动，保持同步 */
 let fsState = null;
 let fsPushed = false;   // 是否已为全屏压入历史（让手机返回键先退出全屏，而不是关闭网页）
 let pendingFs = null;   // 两种全屏之间切换时的目标模式
@@ -1146,7 +1155,7 @@ function exitFullscreen(){
         restoreLayout(el, state, bg, ctrl);
         safeResize();
         void el.offsetHeight;
-        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(8px)';
+        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(6px)';
         void fullWrap.offsetHeight;
         let __exDone=false;
         function finishExit(){ if(__exDone)return; __exDone=true;
