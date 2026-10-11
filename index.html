@@ -307,8 +307,18 @@
             filter:blur(26px) saturate(120%);
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
+        /* ===== 静态快照（退场/互切交叉淡出）：真实结构立即复位，快照只盖模型区域在最上层纯 CSS 淡出，
+           先融成柔和光斑再消散，主页/新模式在快照下渐显——无空档、无瞬现、无白闪、无残影 ===== */
+        .fs-ghost{position:fixed;pointer-events:none;overflow:hidden;margin:0;opacity:1;}
+        .fs-ghost .fs-shot{width:100%;height:100%;object-fit:fill;display:block;}
+        .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards;}
+        @keyframes fsGhostFade{
+            0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}
+            46%{opacity:.8;filter:blur(0);transform:translateY(1px) scale(.998);}
+            100%{opacity:0;filter:blur(10px);transform:translateY(6px) scale(.992);}
+        }
         /* ===== 全屏动画说明：进/退/互切全部走纯 opacity+transform（GPU 合成），
-           无截图回读、不克隆 DOM、不叠双层，性能差的手机也流畅（iOS 系统动画同款原则） ===== */
+           退场/互切用低分辨率静态快照交叉淡出，无截图回读卡顿、不克隆 DOM、不叠双层 ===== */
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -1119,9 +1129,46 @@ function requestExitFullscreen(){
 window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
-/* ===== 动画工具：进/退/互切只动 transform+opacity（GPU 合成），
-   不截图、不克隆 DOM、不叠双层——性能一般的手机也流畅 ===== */
+/* ===== 动画工具：进/退/互切只动 transform+opacity（GPU 合成），不克隆 DOM、不叠双层 ===== */
 function hasRotate(el){ try{ return (el.style.transform || '').indexOf('rotate') >= 0; }catch(e){ return false; } }
+/* 静态快照：纯净 div + 低分辨率模型图（只盖模型区域，信息卡不参与交叠，避免文字错位闪跳）。
+   360px drawImage 回读 2-4ms（几乎无感）；快照淡出由纯 CSS 合成器驱动（主线程再忙也不掉帧） */
+function captureGhost(src){
+    try{
+        const mcEl = src.classList && src.classList.contains('model-container') ? src : (src.querySelector('.model-container') || null);
+        const mr = mcEl ? mcEl.getBoundingClientRect() : src.getBoundingClientRect();
+        const c = (function(){
+            try{
+                const mv = (mcEl || src).querySelector('model-viewer');
+                if(!mv || !mv.shadowRoot) return null;
+                return mv.shadowRoot.querySelectorAll('canvas')[1] || null;
+            }catch(e){ return null; }
+        })();
+        const g = document.createElement('div');
+        g.className = 'fs-ghost';
+        g.style.cssText = 'position:fixed;left:' + mr.left + 'px;top:' + mr.top + 'px;width:' + mr.width + 'px;height:' + mr.height + 'px;z-index:9003;border-radius:26px;margin:0;pointer-events:none;overflow:hidden;opacity:1;';
+        if(c && c.width && c.height){
+            const sw = 360, sh = Math.max(1, Math.round(sw * c.height / c.width));
+            const sc = document.createElement('canvas');
+            sc.width = sw; sc.height = sh;
+            const ctx = sc.getContext('2d');
+            if(ctx){ ctx.drawImage(c, 0, 0, sw, sh); }
+            const img = document.createElement('img');
+            img.className = 'fs-shot';
+            img.src = sc.toDataURL('image/webp', .8);
+            img.alt = '';
+            g.appendChild(img);
+        }
+        document.body.appendChild(g);
+        return g;
+    }catch(e){ return null; }
+}
+/* 纯 CSS 快照淡出：柔和光斑消散 + 轻微下沉，播完移除 */
+function fadeGhostOut(ghost, ms){
+    if(!ghost) return;
+    try{ ghost.style.setProperty('--gd', ms + 'ms'); ghost.classList.add('fs-go'); }catch(e){}
+    setTimeout(()=>{ try{ ghost.remove(); }catch(e){} }, ms + 220);
+}
 /* 进场动画结束后同帧落定 fixed 全屏布局：transform 终态与全屏布局视觉一致，切换瞬间无跳变、无白闪 */
 function setLayoutLand(el, type){
     el.style.transition = 'none';
@@ -1163,18 +1210,15 @@ function exitFullscreen(){
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
     if(hasRotate(el)){ try{ resetLandscape(true); }catch(e){} }
 
-    /* ===== 互切：旧层柔和淡出（下浮微缩）→ 透明帧内切换布局 → 新模式淡入浮现。
-       与打开/退出同一套时长与曲线，无截图回读、无叠层，切换干净不卡 ===== */
+    /* ===== 互切：旧画面静态快照纯 CSS 淡出（先融成柔和光斑再消散），
+       同时新模式真实层浮现——两层交叉，无缝无空档；快照淡出由合成器驱动，复位再忙也不掉帧 ===== */
     if(switching){
         ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; ctrl.style.pointerEvents='none';
-        const fo = 280;
-        el.style.transition = 'opacity ' + fo + 'ms ' + XFADE + ', transform ' + fo + 'ms ' + XFADE;
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(8px) scale(.994)';
+        const ghost = captureGhost(el);
         setTimeout(()=>{
             try{
                 if(type === 'page' && switching === 'model'){
-                    /* 网页全屏 → 构件全屏：外壳回主页布局（透明不可见），模型容器随后全屏浮现 */
+                    /* 网页全屏 → 构件全屏：外壳回主页布局（被快照盖住不可见），模型容器随后全屏浮现 */
                     restoreToHome(el, state);
                     fullWrap.classList.remove('fs-page','info-collapsed','ls-card');
                     fullWrap.classList.add('model-backdrop');
@@ -1192,27 +1236,17 @@ function exitFullscreen(){
                 try{ safeResize(); }catch(e){}
             }catch(e){}
             enterFullscreen(switching, true, {bg, ctrl});
-        }, fo + 40);
+        }, 30);
+        fadeGhostOut(ghost, XF_SW_MS);
         return;
     }
 
-    /* ===== 退出：全屏画面柔和淡出（下浮微缩，底部氛围光始终在，无空档）→ 透明帧内恢复主页布局 → 主页淡入浮现。
-       全程无截图回读、无布局动画可见，与打开动画同一套时长/曲线，对称柔和 ===== */
-    const fo = 300, fi = 320;
-    el.style.transition = 'opacity ' + fo + 'ms ' + XFADE + ', transform ' + fo + 'ms ' + XFADE;
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(10px) scale(.99)';
-    try{ ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
-    setTimeout(()=>{
-        restoreLayout(el, state, bg, ctrl, false);
-        try{ safeResize(); }catch(e){}
-        /* 主页从透明帧里淡入浮现（布局已复位，无瞬现、无空档） */
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(10px) scale(.992)';
-        el.style.transition = 'opacity ' + fi + 'ms ' + XFADE + ', transform ' + fi + 'ms ' + XFADE;
-        el.style.opacity = '1';
-        el.style.transform = 'translateY(0) scale(1)';
-    }, fo + 40);
+    /* ===== 退出：静态快照纯 CSS 淡出（柔和光斑消散+轻微下沉），主页真实层已复位在快照下，
+       快照透明时主页渐显——无空档、无瞬现、无白闪；低分辨率回读 2-4ms 无卡顿 ===== */
+    const ghost = captureGhost(el);
+    restoreLayout(el, state, bg, ctrl, false);
+    try{ safeResize(); }catch(e){}
+    fadeGhostOut(ghost, XF_MS);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
