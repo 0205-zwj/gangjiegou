@@ -307,8 +307,8 @@
             filter:blur(26px) saturate(120%);
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
-        /* ===== 全屏动画说明：进/退/互切全部走纯 opacity+transform（GPU 合成），
-           退出/互切与打开完全对称，不截图、不克隆 DOM、不叠双层，性能差的手机也流畅 ===== */
+        /* ===== 全屏动画说明：进/退/互切 = 模型容器 FLIP 连续位移缩放（单画面移动）+ 页面双 rAF 淡入淡出，
+           无快照、无双层交叠、无空档、无闪白，GPU 合成，性能差的手机也流畅 ===== */
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -365,8 +365,11 @@
         /* 悬浮眼睛按钮：收起信息时显示小红点提示 */
         .fs-eye .eye-badge{display:none;position:absolute;top:-3px;right:-3px;width:9px;height:9px;border-radius:50%;background:#e0566b;box-shadow:0 0 8px rgba(224,86,107,.8);}
         .fs-eye.collapsed .eye-badge{display:block;}
-        .fs-ctrl.active{background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(232,243,251,.72));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.75),0 0 22px -2px rgba(160,196,246,.7);}
-        .icon-btn.active{color:#1d5fae;border-color:rgba(255,255,255,.95);background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(232,243,251,.7));box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.7),0 0 18px -2px rgba(160,196,246,.65);}
+        /* 功能键"已开启"激活态：深冷蓝底 + 白色图标 + 冷白辉光（与默认玻璃白底一眼可辨） */
+        .fs-ctrl.active{color:#fff;border-color:rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(66,98,164,.94),rgba(38,64,120,.8));box-shadow:0 4px 16px rgba(38,76,146,.5),0 0 24px 3px rgba(128,178,250,.55),inset 0 1px 3px rgba(255,255,255,.4);}
+        .fs-ctrl.active svg,.fs-ctrl.active .gp-label,.fs-ctrl.active .tool-label{stroke:#fff;color:#fff;}
+        .icon-btn.active{color:#fff;border-color:rgba(255,255,255,.85);background:linear-gradient(180deg,rgba(66,98,164,.94),rgba(38,64,120,.8));box-shadow:0 4px 16px rgba(38,76,146,.5),0 0 24px 3px rgba(128,178,250,.55),inset 0 1px 3px rgba(255,255,255,.4);}
+        .icon-btn.active svg{stroke:#fff;}
         /* ===== 网页全屏右侧功能 dock：信息显示时偏小，眼睛隐藏信息后整体放大 ===== */
         .fs-dock{position:absolute;right:12px;top:38%;transform:translateY(-50%);display:flex;flex-direction:column;gap:9px;pointer-events:auto;transition:top .54s var(--e-settle),gap .45s var(--e-settle);}
         .fs-ctrl-layer .fs-dock .fs-ctrl{position:relative;inset:auto;width:40px;height:40px;margin:0;font-size:18px;line-height:1;transition:opacity .42s var(--e-expo),transform .54s var(--e-settle),width .45s var(--e-settle),height .45s var(--e-settle),background .25s ease,color .25s ease;}
@@ -458,7 +461,8 @@
         .model-container.fs-model .toolbar{opacity:0;pointer-events:none;}
         .model-container.fs-model .tip-banner{opacity:0!important;pointer-events:none!important;}
         body.in-fs .toolbar{opacity:0!important;pointer-events:none!important;}
-        /* 模型一键全屏：构件信息做成与扫码页同款卡片，收成左下角毛玻璃小面板（模型在上可遮挡卡片） */
+        /* 模型一键全屏：构件信息做成与扫码页同款卡片，收成左下角毛玻璃小面板（模型在上可遮挡卡片）。
+           fixed 相对视口锚定左下角；el 做缩放动画时 transform 祖先会接管其基准，卡片随动画整体缩放跟随 */
         .full-wrap.model-backdrop .info-card{
             position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:9001;
             width:min(320px,64vw);max-height:58vh;overflow:hidden;margin-top:0;padding:10px 12px 8px;gap:5px;
@@ -573,18 +577,22 @@
             filter:blur(.5px);
             transform:translate(-50%,-50%) scale(0);animation:gpWave .9s cubic-bezier(.16,1,.3,1) forwards;}
         @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}45%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.15);filter:blur(10px);}}
-        /* 点按按压感：背景亮起 + 轻放大（iOS/澎湃按压反馈），配合外圈暖金辉光 */
-        .gp-press{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(255,238,214,.92))!important;
-            border-color:rgba(255,214,170,.95)!important;
-            transform:scale(1.08)!important;
-            box-shadow:var(--glass-spec),0 2px 14px rgba(255,196,130,.38),inset 0 1px 3px rgba(255,255,255,.95),0 0 26px 4px rgba(255,214,160,.4)!important;
-            transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease!important;}
-        /* 点击外圈光晕脉冲：暖金辉光从按钮边缘漾开（浅背景下清晰可见），抬起后余晖渐隐 */
-        .gp-burst{animation:gpBurst .6s cubic-bezier(.16,1,.3,1) forwards;}
+        /* 点按按压感（iOS 按钮式）：背景加深为深冷蓝 + 按压缩小 + 图标文字变白 + 大外圈冷白辉光，
+           浅背景下"点没点"一眼可辨 */
+        .gp-press{background:linear-gradient(160deg,rgba(52,84,150,.82),rgba(30,56,110,.66))!important;
+            border-color:rgba(255,255,255,.8)!important;
+            transform:scale(.9)!important;
+            color:#fff!important;
+            box-shadow:0 6px 22px rgba(30,60,120,.5),inset 0 2px 8px rgba(255,255,255,.32),0 0 30px 6px rgba(140,185,250,.6)!important;
+            transition:transform .28s cubic-bezier(.22,1,.36,1),box-shadow .28s ease,background .2s ease!important;}
+        .gp-press svg{stroke:#fff!important;fill:none!important;}
+        .gp-press .gp-label,.gp-press .tool-label{color:#fff!important;}
+        /* 点击外圈光晕脉冲：更亮更扩散的冷白辉光从按钮边缘漾开，抬起后余晖渐隐 */
+        .gp-burst{animation:gpBurst .62s cubic-bezier(.16,1,.3,1) forwards;}
         @keyframes gpBurst{
-            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.7),0 0 0 8px rgba(255,214,160,.28),0 0 22px 3px rgba(255,196,130,.34);}
-            45%{box-shadow:var(--glass-spec),0 0 0 1.6px rgba(255,255,255,.98),0 0 0 15px rgba(255,214,160,.16),0 0 40px 9px rgba(255,196,130,.4);}
-            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.6),0 0 0 0 rgba(255,214,160,0),0 0 20px -2px rgba(255,204,150,.45);}
+            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.85),0 0 0 10px rgba(160,200,255,.4),0 0 26px 4px rgba(130,180,250,.5);}
+            45%{box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,1),0 0 0 20px rgba(160,200,255,.22),0 0 46px 12px rgba(130,180,250,.62);}
+            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.7),0 0 0 0 rgba(160,200,255,0),0 0 22px -2px rgba(140,190,250,.55);}
         }
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
@@ -780,6 +788,8 @@ if(id && window.partData && partData[id]){
             document.querySelector('.progress').classList.add('done');
             tipBanner.classList.add('show');
             tipTimer = setTimeout(()=>tipBanner.classList.remove('show'), 5000);
+            /* 记录主页模型区位置：FLIP 进入/退出的归位锚点（主页布局此刻已稳定，测量最准） */
+            try{ HOME_MODEL_RECT = modelContainer.getBoundingClientRect(); }catch(e){}
             /* 热切换到新构件后：关掉平移/自由旋转，并用 resetCameraView 轮询等新模型取景稳定、
                按新模型自身尺寸重新标定取景半径（不能复用上一个构件的半径，否则模型会偏小/偏大） */
             if(needReframe){
@@ -937,6 +947,22 @@ function enterFullscreen(type, isSwitch, reuse){
         transform: el.style.transform, transformOrigin: el.style.transformOrigin,
         willChange: el.style.willChange, wrapZ: fullWrap.style.zIndex
     };
+    /* 非互切（首次进入）：记录两个容器的主页样式快照，
+       退出/互切恢复时按元素取用——互切多次 saved 也不串位 */
+    if(!isSwitch){
+        HOME_STYLE = {
+            fw: { position: fullWrap.style.position, left: fullWrap.style.left, top: fullWrap.style.top,
+                  width: fullWrap.style.width, height: fullWrap.style.height, zIndex: fullWrap.style.zIndex,
+                  borderRadius: fullWrap.style.borderRadius, transition: fullWrap.style.transition,
+                  transform: fullWrap.style.transform, transformOrigin: fullWrap.style.transformOrigin,
+                  willChange: fullWrap.style.willChange },
+            mc: { position: modelContainer.style.position, left: modelContainer.style.left, top: modelContainer.style.top,
+                  width: modelContainer.style.width, height: modelContainer.style.height, zIndex: modelContainer.style.zIndex,
+                  borderRadius: modelContainer.style.borderRadius, transition: modelContainer.style.transition,
+                  transform: modelContainer.style.transform, transformOrigin: modelContainer.style.transformOrigin,
+                  willChange: modelContainer.style.willChange }
+        };
+    }
 
     /* 进入：立即 fixed 全屏 + 柔和淡入（iOS 式：微上浮+微放大，纯 opacity/transform，GPU 合成）。
        不截图、不克隆、不叠层、不动布局动画——性能差的手机也流畅 */
@@ -964,9 +990,11 @@ function enterFullscreen(type, isSwitch, reuse){
     }
     makeBtn('fs-exit', ICON_EXIT, requestExitFullscreen);
     if(type === 'model'){
-        /* 进入模型全屏一律先复位竖屏/横屏残留 */
-
+        /* 进入模型全屏一律先复位竖屏/横屏残留；外壳保持主页布局且无 transform，
+           保证构件信息卡（fixed）锚定视口左下角，不被外壳 transform 拉走基准 */
         fullWrap.classList.remove('ls-card');
+        fullWrap.style.transform = 'none';
+        fullWrap.style.transition = 'none';
         modelContainer.style.transform = 'none';
         makeBtn('fs-rotate', ICON_ROTATE, toggleLandscape);
         makeBtn('fs-pagebtn', homeIcon('btnFull'), () => switchFullscreen('page'));
@@ -1051,28 +1079,31 @@ function enterFullscreen(type, isSwitch, reuse){
     fullWrap.classList.remove('ls-card');
     fullWrap.classList.remove('fs-exiting');
 
-    /* 进入：立即落定 fixed 全屏布局，并用 FLIP 补偿把视觉钉在主页原位，
-       随后 transform 平滑放大铺满（位置连续 = 用户认可的"流畅放大"手感）。
-       动画期间无布局变化、无快照、无叠层；canvas 已在本帧 resize 一次，被补偿掩盖 */
+    /* ===== 进入/互切动画（iOS 式）：模型容器用 FLIP 连续位移缩放（单画面移动，无快照、无交叠、无空档），
+       页面（信息卡/外壳）随透明度柔和淡入 ===== */
+    /* 首次进入前记录主页模型区锚点（若加载阶段已记录则复用；兜底防止未记录导致补偿异常） */
+    if(!isSwitch && (!HOME_MODEL_RECT || HOME_MODEL_RECT.height < 10)){
+        const hr = modelContainer.getBoundingClientRect();
+        HOME_MODEL_RECT = (hr && hr.height >= 10) ? hr : { left: window.innerWidth*0.12, top: window.innerHeight*0.18, width: window.innerWidth*0.6, height: window.innerHeight*0.42 };
+    }
+    /* from = 动画起点（模型区旧位置）：非互切=主页模型区；互切=切换前的模型区 */
+    const fromRect = isSwitch ? modelContainer.getBoundingClientRect() : HOME_MODEL_RECT;
     try{ setLayoutLand(el, type); }catch(e){}
     if(type === 'model'){ fullWrap.classList.add('model-backdrop'); }
     const xd = isSwitch ? XF_SW_MS : XF_MS;
-    el.style.transition = 'none';
-    el.style.transformOrigin = '0 0';
-    if(isSwitch){
-        /* 互切：新层透明起步，与旧层快照淡出交叉 */
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(14px) scale(.985)';
-    } else {
-        /* 非互切：透明起步，柔和浮现（微上浮+轻放大） */
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(16px) scale(.985)';
-    }
-    if(!reuse){ bg.style.transition = "none"; bg.style.opacity = "0"; }
-    else { bg.style.transition = "none"; bg.style.opacity = "1"; }
-
-    /* 互切时保留首次进入的主页布局记录（saved），仅更新当前模式信息，避免退出残留全屏样式 */
-    if(isSwitch && fsState && fsState.saved){
+    const toRect = (type === 'model') ? {left:0, top:0, width:window.innerWidth, height:window.innerHeight} : modelContainer.getBoundingClientRect();
+    fullWrap.style.transition = 'none';
+    fullWrap.style.opacity = '0';
+    try{ flipModelTo(fromRect, toRect, xd, EASE_FLY); }catch(e){}
+    void el.offsetHeight;
+    /* 双 rAF 后启动淡入：等两帧确保 opacity 0 已被真正绘制，过渡从 0 播放到 1（柔和浮现，无瞬变） */
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        fullWrap.style.transition = 'opacity ' + xd + 'ms ' + XFADE;
+        fullWrap.style.opacity = '1';
+    }));
+    if(!reuse){ bg.style.transition='none'; bg.style.opacity='0'; requestAnimationFrame(()=>requestAnimationFrame(()=>{ bg.style.transition='opacity ' + xd + 'ms ' + XFADE; bg.style.opacity='1'; })); }
+    /* 记录当前全屏状态（互切时复用首次的主页样式快照，仅更新模式信息） */
+    if(isSwitch && fsState){
         fsState.el = el; fsState.type = type; fsState.bg = bg; fsState.ctrl = ctrl;
         fsState.rect = rect; fsState.srcRect = srcRect;
         fsState.exiting = false;
@@ -1081,33 +1112,6 @@ function enterFullscreen(type, isSwitch, reuse){
         fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
     }
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
-    void el.offsetHeight;
-    /* 进场动画：非互切 = FLIP 平滑放大铺满；互切 = 淡入与旧层交叉；横屏 rotate 态只淡入不动 transform */
-    let __enterDone=false;
-    function finishEnter(){
-        if(__enterDone) return; __enterDone=true;
-        if(hasRotate(el)){
-            el.style.transition = "opacity " + xd + "ms " + XFADE;
-            el.style.opacity = "1";
-            if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
-            setTimeout(safeResize, 120);
-            return;
-        }
-        if(isSwitch){
-            el.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
-            el.style.opacity = "1";
-            el.style.transform = "translateY(0) scale(1)";
-        } else {
-            /* 非互切进入：柔和浮现（微上浮 + 轻放大），canvas 在本帧已 resize（opacity 0 起步，跳变不可见） */
-            el.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
-            el.style.opacity = "1";
-            el.style.transform = "translateY(0) scale(1)";
-            setTimeout(safeResize, 150);
-        }
-        if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
-    }
-    requestAnimationFrame(() => requestAnimationFrame(finishEnter));
-    setTimeout(finishEnter, 150);
     setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 230);
 }
 function requestExitFullscreen(){
@@ -1119,9 +1123,25 @@ function requestExitFullscreen(){
 window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
-/* ===== 动画工具：进/退/互切只动 transform+opacity（GPU 合成），
-   与打开动画完全对称，不截图、不克隆 DOM、不叠双层 ===== */
+/* ===== 动画工具：进/退/互切 = 模型容器 FLIP 连续位移缩放 + 页面淡入（iOS 式，无快照、无交叠、无空档） ===== */
+let HOME_MODEL_RECT = null;   /* 主页模型区锚点：模型加载完成时记录，FLIP 进/退的归位目标 */
 function hasRotate(el){ try{ return (el.style.transform || '').indexOf('rotate') >= 0; }catch(e){ return false; } }
+/* FLIP 模型：模型容器布局已突变到 to 位置，用 transform 补偿把视觉钉回 from，
+   再平滑过渡到 identity——单画面连续移动（放大/缩小/位移），无第二画面交叠 */
+function flipModelTo(from, to, dur, ease){
+    const mc = modelContainer;
+    const f = (from && from.width && from.height) ? from : {left:0, top:0, width:to.width, height:to.height};
+    const sx = f.width / to.width, sy = f.height / to.height;
+    const tx = (f.left + f.width/2) - (to.left + to.width/2);
+    const ty = (f.top + f.height/2) - (to.top + to.height/2);
+    mc.style.transition = 'none';
+    mc.style.transformOrigin = '50% 50%';
+    mc.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
+    void mc.offsetHeight;
+    mc.style.transition = 'transform ' + dur + 'ms ' + ease;
+    mc.style.transform = 'translate(0,0) scale(1,1)';
+    setTimeout(()=>{ try{ mc.style.transition=''; mc.style.transform=''; }catch(e){} }, dur + 60);
+}
 /* 进场动画结束后同帧落定 fixed 全屏布局：transform 终态与全屏布局视觉一致，切换瞬间无跳变、无白闪 */
 function setLayoutLand(el, type){
     el.style.transition = 'none';
@@ -1134,22 +1154,27 @@ function setLayoutLand(el, type){
     if(type === 'model') el.style.borderRadius = '26px';
     try{ safeResize(); }catch(e){}
 }
+/* 按元素取主页样式快照（互切多次后 saved 不串位） */
+function homeStyleOf(el){
+    const hs = HOME_STYLE || { fw:{}, mc:{} };
+    return (el === modelContainer) ? hs.mc : hs.fw;
+}
 /* 恢复主页布局（互切中途用：不清背景/按键层、不动 in-fs），元素须已透明才调用，无可见跳变 */
 function restoreToHome(el, state){
-    const { saved } = state;
+    const hs = homeStyleOf(el);
     el.style.transition = 'none';
-    el.style.transformOrigin = saved.transformOrigin;
-    el.style.position = saved.position;
-    el.style.left = saved.left; el.style.top = saved.top;
-    el.style.width = saved.width; el.style.height = saved.height;
-    el.style.zIndex = saved.zIndex;
-    el.style.borderRadius = saved.borderRadius;
-    el.style.willChange = saved.willChange;
+    el.style.transformOrigin = hs.transformOrigin || '';
+    el.style.position = hs.position || '';
+    el.style.left = hs.left || ''; el.style.top = hs.top || '';
+    el.style.width = hs.width || ''; el.style.height = hs.height || '';
+    el.style.zIndex = hs.zIndex || '';
+    el.style.borderRadius = hs.borderRadius || '';
+    el.style.willChange = hs.willChange || '';
     el.style.opacity = '';
-    el.style.transform = saved.transform || '';
+    el.style.transform = hs.transform || '';
     if(el !== modelContainer){ modelContainer.style.transform='none'; modelContainer.style.transformOrigin=''; }
     modelContainer.classList.remove('fs-model');
-    fullWrap.style.zIndex = saved.wrapZ;
+    fullWrap.style.zIndex = (hs.zIndex || '');
 }
 function exitFullscreen(){
     const state = fsState;
@@ -1163,63 +1188,92 @@ function exitFullscreen(){
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
     if(hasRotate(el)){ try{ resetLandscape(true); }catch(e){} }
 
-    /* ===== 互切：旧层瞬间收起（1 帧内透明切换布局），新模式淡入浮现——与进入同一套动作，干净无模糊 ===== */
+    /* ===== 互切：直接切换布局（旧画面被 FLIP 补偿钉在原位，无空档、无闪白），新模式 FLIP+淡入浮现 ===== */
     if(switching){
         ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; ctrl.style.pointerEvents='none';
-        el.style.transition = 'none';
-        el.style.opacity = '0';
-        el.style.transform = 'translateY(10px) scale(.992)';
-        try{
-            if(type === 'page' && switching === 'model'){
-                /* 网页全屏 → 构件全屏：外壳回主页布局（透明不可见），模型容器随后全屏浮现 */
-                restoreToHome(el, state);
-                fullWrap.classList.remove('fs-page','info-collapsed','ls-card');
-                fullWrap.classList.add('model-backdrop');
-                modelContainer.classList.add('fs-model');
-            } else if(type === 'model' && switching === 'page'){
-                /* 构件全屏 → 网页全屏：外壳转整页全屏（信息卡两列），模型容器回 flex 流 */
-                fullWrap.style.transition = 'none';
-                fullWrap.style.position = 'fixed'; fullWrap.style.left = '0'; fullWrap.style.top = '0';
-                fullWrap.style.width = '100vw'; fullWrap.style.height = '100vh';
-                fullWrap.style.zIndex = '9001';
-                fullWrap.classList.remove('model-backdrop','ls-card');
-                fullWrap.classList.add('fs-page');
-                restoreToHome(el, state);
-            }
-            try{ safeResize(); }catch(e){}
-        }catch(e){}
-        enterFullscreen(switching, true, {bg, ctrl});
+        setTimeout(()=>{
+            try{
+                if(type === 'page' && switching === 'model'){
+                    /* 网页全屏 → 构件全屏：外壳回主页布局（透明不可见），模型容器随后全屏浮现 */
+                    restoreToHome(el, state);
+                    fullWrap.classList.remove('fs-page','info-collapsed','ls-card');
+                    fullWrap.classList.add('model-backdrop');
+                    fullWrap.style.transform = 'none';
+                    fullWrap.style.transition = 'none';
+                    modelContainer.classList.add('fs-model');
+                } else if(type === 'model' && switching === 'page'){
+                    /* 构件全屏 → 网页全屏：外壳转整页全屏（信息卡两列），模型容器回 flex 流 */
+                    fullWrap.style.transition = 'none';
+                    fullWrap.style.position = 'fixed'; fullWrap.style.left = '0'; fullWrap.style.top = '0';
+                    fullWrap.style.width = '100vw'; fullWrap.style.height = '100vh';
+                    fullWrap.style.zIndex = '9001';
+                    fullWrap.classList.remove('model-backdrop','ls-card');
+                    fullWrap.classList.add('fs-page');
+                    restoreToHome(el, state);
+                }
+                /* 布局切换后由 model-viewer 内置 ResizeObserver 自适应画布，
+                   不在动画期间手动同步尺寸（动画中的 transform 会让测量值异常） */
+            }catch(e){}
+            enterFullscreen(switching, true, {bg, ctrl});
+        }, 30);
         return;
     }
 
-    /* ===== 退出：与进入完全对称——全屏画面 1 帧内切换回主页布局，主页柔和淡入浮现（微上浮），
-       无快照、无模糊、无淡出段、无空档 ===== */
+    /* ===== 退出（进入的精确反向，iOS 收起式）：
+       第一步：模型容器 FLIP 连续缩回主页原位（模型渐渐变小回到主页位置）+ 全屏画面（信息卡等）柔和淡出；
+       第二步（淡出完成后）：恢复主页布局，主页柔和淡入浮现——全程单画面、无快照、无突变、无闪白 ===== */
     const d = XF_MS;
-    restoreLayout(el, state, bg, ctrl, false);
-    try{ safeResize(); }catch(e){}
-    /* 布局已复位：置主页为透明（1 帧），reflow 分隔后淡入浮现——过渡真实播放 */
-    el.style.transition = 'none';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(10px) scale(.992)';
-    void el.offsetHeight;
-    el.style.transition = 'opacity ' + d + 'ms ' + XFADE + ', transform ' + d + 'ms ' + XFADE;
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0) scale(1)';
+    const mcE = modelContainer;
+    const curR = mcE.getBoundingClientRect();
+    const mr = HOME_MODEL_RECT;
+    const sx = mr.width / curR.width, sy = mr.height / curR.height;
+    const tx = (mr.left + mr.width/2) - (curR.left + curR.width/2);
+    const ty = (mr.top + mr.height/2) - (curR.top + curR.height/2);
+    /* 模型缩回原位（当前布局内 transform 连续位移缩放，不触发布局突变） */
+    mcE.style.transition = 'none';
+    mcE.style.transformOrigin = '50% 50%';
+    mcE.style.transform = 'translate(0,0) scale(1,1)';
+    void mcE.offsetHeight;
+    mcE.style.transition = 'transform ' + d + 'ms ' + EASE_FLY;
+    mcE.style.transform = 'translate(' + tx.toFixed(2) + 'px,' + ty.toFixed(2) + 'px) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')';
+    /* 全屏画面柔和淡出（与模型缩回同步，渐渐消失而非瞬变） */
+    const fadeMs = Math.round(d * 0.62);
+    fullWrap.style.transition = 'opacity ' + fadeMs + 'ms ' + XFADE;
+    fullWrap.style.opacity = '0';
+    try{ ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
+    /* 淡出完成后：清模型 transform（已缩到主页位置）、恢复主页布局、主页淡入浮现 */
+    setTimeout(()=>{
+        try{ mcE.style.transition='none'; mcE.style.transform=''; }catch(e){}
+        restoreLayout(el, state, bg, ctrl, false);
+        fullWrap.style.transition = 'none';
+        fullWrap.style.opacity = '0';
+        void el.offsetHeight;
+        /* 双 rAF 后启动主页淡入：等两帧确保 opacity 0 已被真正绘制，过渡从 0 播放到 1（柔和浮现，无瞬变、无闪白） */
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            fullWrap.style.transition = 'opacity ' + d + 'ms ' + XFADE;
+            fullWrap.style.opacity = '1';
+        }));
+        /* 动画结束再触发尺寸同步：由 ResizeObserver 自适应（避免主页模型区被撑成异常高度） */
+        setTimeout(()=>{ try{ safeResize(); }catch(e){} }, d + 90);
+        /* 动画完成后清掉残留 transform/transition：主页无 transform，
+           构件信息卡（fixed）的定位基准才不会漂移（修复手机端信息卡跑到顶部） */
+        setTimeout(()=>{ try{ el.style.transition=''; el.style.transform=''; fullWrap.style.transition=''; }catch(e){} }, d + 70);
+    }, fadeMs + 40);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
-    const { saved } = state;
+    const hs = homeStyleOf(el);
     el.style.transition = 'none';
-    el.style.transformOrigin = saved.transformOrigin;
-    el.style.position = saved.position;
-    el.style.left = saved.left; el.style.top = saved.top;
-    el.style.width = saved.width; el.style.height = saved.height;
-    el.style.zIndex = saved.zIndex;
-    el.style.borderRadius = saved.borderRadius;
-    el.style.willChange = saved.willChange;
+    el.style.transformOrigin = hs.transformOrigin || '';
+    el.style.position = hs.position || '';
+    el.style.left = hs.left || ''; el.style.top = hs.top || '';
+    el.style.width = hs.width || ''; el.style.height = hs.height || '';
+    el.style.zIndex = hs.zIndex || '';
+    el.style.borderRadius = hs.borderRadius || '';
+    el.style.willChange = hs.willChange || '';
     el.style.opacity = '';
-    el.style.transform = saved.transform || '';
-    fullWrap.style.zIndex = saved.wrapZ;
+    el.style.transform = hs.transform || '';
+    fullWrap.style.zIndex = (hs.zIndex || '');
     fullWrap.classList.remove('fs-page','info-collapsed','model-backdrop','fs-exiting','ls-card');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
     if(el !== modelContainer){ modelContainer.style.transform='none'; modelContainer.style.transformOrigin=''; }
@@ -1233,6 +1287,7 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     fsState = null;
     try{ syncControls(); }catch(e){}
 }
+let HOME_STYLE = null;        /* 首次进入时两个容器的主页样式快照（退出/互切按元素恢复） */
 /* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
 function switchFullscreen(type){
     if(!fsState || fsState.exiting || fsState.type === type) return;
@@ -1733,7 +1788,8 @@ function bindGlowPress(el){
         /* 点按背景高亮（按压感）+ 外圈暖金辉光脉冲，抬起后余晖渐隐 */
         el.classList.remove('gp-press','gp-burst'); void el.offsetWidth;
         el.classList.add('gp-press','gp-burst');
-        setTimeout(()=>el.classList.remove('gp-press'),380);
+        /* 按压背景色保持约 750ms（清晰可辨"已点击"），余晖渐隐 */
+        setTimeout(()=>el.classList.remove('gp-press'),750);
         setTimeout(()=>el.classList.remove('gp-burst'),650);
     });
     /* 点按后立即失焦，清除手机 WebView 残留在按钮上的蓝色聚焦框（输入框除外） */
