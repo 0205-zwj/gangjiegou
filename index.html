@@ -146,11 +146,11 @@
             transition:transform .32s var(--e-expo),box-shadow .3s ease,background .25s ease;
             display:flex;align-items:center;justify-content:center;
         }
-        .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.96);
-            box-shadow:var(--glass-spec),0 9px 22px rgba(40,72,120,.14),0 2px 4px rgba(40,72,120,.06),0 0 0 1.4px rgba(255,255,255,.55),0 0 22px -2px rgba(150,190,244,.78);}
+        .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.98);
+            box-shadow:var(--glass-spec),0 9px 22px rgba(40,72,120,.14),0 2px 4px rgba(40,72,120,.06),0 0 0 1.6px rgba(255,255,255,.8),0 0 16px 3px rgba(255,255,255,.6),0 0 34px -2px rgba(176,205,248,.85);}
         .btn:active{transform:scale(.94);transition:transform .12s ease-out;
             background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.98),rgba(255,255,255,.5) 45%,rgba(236,243,250,.5) 100%);
-            box-shadow:var(--glass-spec),0 6px 16px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 2px rgba(255,255,255,.65),0 0 46px -6px rgba(160,196,246,.5);}
+            box-shadow:var(--glass-spec),0 6px 16px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 4px rgba(255,255,255,.8),0 0 52px -4px rgba(180,208,250,.7);}
         .btn.active{background:linear-gradient(180deg,rgba(255,255,255,.92),rgba(235,244,252,.7));color:#1d5fae;border-color:#fff;box-shadow:var(--glass-spec),0 0 0 2px rgba(255,255,255,.7),0 0 22px -2px rgba(160,196,246,.7);}
         .tip-banner{
             position:absolute;left:50%;transform:translateX(-50%) translateY(-8px);
@@ -223,14 +223,14 @@
         .model-item.pressing{border-color:rgba(255,255,255,.98);transform:scale(.965);
             box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 0 0 2px rgba(255,255,255,.65),0 0 20px 2px rgba(255,255,255,.5);}
         .model-item.fadeout{transition:box-shadow .5s ease,border-color .5s ease,transform .3s var(--e-settle);}
-        @media(hover:hover){.model-item:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.96);
-            box-shadow:inset 0 1.4px 1px rgba(255,255,255,.95),inset 0 -1px 1px rgba(104,138,184,.1),0 10px 26px rgba(50,100,180,.14),0 0 0 1px rgba(255,255,255,.55),0 0 20px -4px rgba(160,196,246,.5);}}
+        @media(hover:hover){.model-item:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.98);
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 12px 28px rgba(50,100,180,.16),0 0 0 1.4px rgba(255,255,255,.85),0 0 18px 3px rgba(255,255,255,.55),0 0 36px -2px rgba(176,205,248,.8);}}
         .model-item:active{transform:scale(.955);transition-duration:.08s;
             background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(240,247,252,.5));
-            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 0 0 1.6px rgba(255,255,255,.9),0 0 22px 2px rgba(255,255,255,.6);}
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 0 0 1.6px rgba(255,255,255,.95),0 0 24px 4px rgba(255,255,255,.7),0 0 46px -4px rgba(180,208,250,.75);}
         .model-item.current{border-color:rgba(255,255,255,1);
-            background:linear-gradient(180deg,rgba(255,255,255,.88),rgba(236,245,252,.5));
-            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 8px 22px rgba(50,100,180,.14),0 0 0 1.5px rgba(255,255,255,.9),0 0 20px -2px rgba(160,196,246,.6);}
+            background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(236,245,252,.55));
+            box-shadow:inset 0 1.4px 1px rgba(255,255,255,1),inset 0 -1px 1px rgba(104,138,184,.1),0 8px 22px rgba(50,100,180,.14),0 0 0 1.5px rgba(255,255,255,.95),0 0 22px 2px rgba(255,255,255,.6),0 0 34px -2px rgba(176,205,248,.75);}
         .model-item .cur-badge{position:absolute;top:6px;right:8px;font-size:9px;color:#fff;background:linear-gradient(135deg,#5b90e0,#2563a8);
             padding:2px 7px;border-radius:10px;letter-spacing:.5px;box-shadow:0 3px 8px rgba(37,99,168,.4);}
         .model-item .mid{color:#1e3a5f;font-size:12px;font-weight:600;padding-right:32px;line-height:1.3;}
@@ -307,19 +307,8 @@
             filter:blur(26px) saturate(120%);
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
-        /* ===== 进出场快照幽灵层：克隆当前画面做交叉淡化，模型用静态截图替换 ===== */
-        .fs-ghost *:not(.fs-shot){animation:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-        .fs-ghost{box-sizing:border-box;will-change:opacity,filter,transform;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
-        .fs-ghost img{display:block;background:transparent;}
-        /* 纯 CSS 自动淡出：快照一旦插入即从首个合成帧柔化消散，不依赖 JS 帧（模型复位阻塞主线程/切后台也能跑），杜绝残影 */
-        .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards!important;}
-        .fs-ghost.fs-go.down{animation-name:fsGhostFadeDn!important;}
-        .fs-ghost img.fs-shot{animation:fsGhostShot .22s cubic-bezier(.33,0,.3,1) forwards!important;}
-        /* 快照淡出：只做纯透明度渐变（不做模糊/位移/缩放），
-           与下方真实层同曲线同时长交叉淡化，两层视觉零错位、无残影无重影 */
-        @keyframes fsGhostFade{0%{opacity:1;}100%{opacity:0;}}
-        @keyframes fsGhostFadeDn{0%{opacity:1;}100%{opacity:0;}}
-        @keyframes fsGhostShot{0%{opacity:1;filter:blur(0);transform:scale(1);}100%{opacity:0;filter:blur(16px);transform:scale(.982);}}
+        /* ===== 全屏动画说明：进/退/互切全部走 FLIP 单元素 transform（GPU 合成），
+           不截图、不克隆 DOM、不叠双层，性能差的手机也流畅（iOS 系统动画同款原则） ===== */
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -339,10 +328,10 @@
           100%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.55),0 0 20px -6px rgba(160,196,246,.55);}
         }
         .fs-ctrl:hover{transform:scale(1.06);border-color:rgba(255,255,255,.98);
-            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 0 0 1.2px rgba(255,255,255,.7),0 0 22px -2px rgba(160,196,246,.7);}
+            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 0 0 1.6px rgba(255,255,255,.8),0 0 16px 3px rgba(255,255,255,.6),0 0 34px -2px rgba(176,205,248,.85);}
         .fs-ctrl:active{transform:scale(.88);
             background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.98),rgba(255,255,255,.5) 45%,rgba(236,243,250,.5) 100%);
-            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 2px rgba(255,255,255,.65),0 0 46px -6px rgba(160,196,246,.5);}
+            box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.14),0 0 0 1.6px rgba(255,255,255,.95),0 0 26px 4px rgba(255,255,255,.8),0 0 52px -4px rgba(180,208,250,.7);}
         .fs-exit{top:calc(16px + env(safe-area-inset-top));left:16px;right:auto;bottom:auto;}
         .fs-pagebtn,.fs-modelbtn{top:calc(16px + env(safe-area-inset-top));right:16px;left:auto;bottom:auto;}
         .fs-rotate{bottom:calc(78px + env(safe-area-inset-bottom));right:16px;left:auto;top:auto;}
@@ -580,10 +569,17 @@
         .fs-ctrl.glow-press{position:absolute;}
         .glow-press>svg,.glow-press>span{position:relative;z-index:2;}
         .glow-press .gp-ripple{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
-            background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.6) 26%,rgba(196,220,250,.3) 50%,rgba(196,220,250,0) 72%);
+            background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.72) 24%,rgba(226,238,252,.5) 46%,rgba(200,222,250,0) 74%);
             filter:blur(.5px);
-            transform:translate(-50%,-50%) scale(0);animation:gpWave .85s cubic-bezier(.16,1,.3,1) forwards;}
-        @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}55%{opacity:.6;}100%{opacity:0;transform:translate(-50%,-50%) scale(1.55);filter:blur(9px);}}
+            transform:translate(-50%,-50%) scale(0);animation:gpWave .9s cubic-bezier(.16,1,.3,1) forwards;}
+        @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}45%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.15);filter:blur(10px);}}
+        /* 点击外部大光晕脉冲：暖白辉光从按钮边缘漾开，抬起后余晖渐隐（iOS/澎湃按压弹起发光） */
+        .gp-burst{animation:gpBurst .62s cubic-bezier(.16,1,.3,1) forwards;}
+        @keyframes gpBurst{
+            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.65),0 0 0 9px rgba(255,255,255,.42),0 0 26px 4px rgba(180,208,250,.55);}
+            42%{box-shadow:var(--glass-spec),0 0 0 1.6px rgba(255,255,255,.95),0 0 0 16px rgba(255,255,255,.28),0 0 44px 10px rgba(170,202,250,.5);}
+            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.6),0 0 0 0 rgba(255,255,255,0),0 0 22px -2px rgba(176,205,248,.6);}
+        }
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
         .modal-mask.show .modal-title{animation:softIn .5s cubic-bezier(.22,1,.36,1) .06s backwards;}
@@ -936,13 +932,15 @@ function enterFullscreen(type, isSwitch, reuse){
         willChange: el.style.willChange, wrapZ: fullWrap.style.zIndex
     };
 
-    const homeGhost = (!isSwitch && !reuse) ? captureGhost(fullWrap) : null;
-    /* 主页快照立即开始纯 CSS 柔化淡出（不依赖收尾 rAF），与进场同档时长，避免被模型解码阻塞而卡住残影 */
-    if(homeGhost) fadeGhostOut(homeGhost, {dur:XF_MS});
+    /* 进入：立即 fixed 全屏 + 柔和淡入（iOS 式：微上浮+微放大，纯 opacity/transform，GPU 合成）。
+       不截图、不克隆、不叠层、不动布局动画——性能差的手机也流畅 */
     fullWrap.style.zIndex = '9001';
 
     let bg, ctrl;
-    if(reuse){ bg = reuse.bg; ctrl = reuse.ctrl; ctrl.innerHTML = ""; }
+    if(reuse){ bg = reuse.bg; ctrl = reuse.ctrl; ctrl.innerHTML = "";
+        /* 互切：旧键层已淡出，立即恢复交互与不透明度，新键随后逐个淡入 */
+        ctrl.style.transition='none'; ctrl.style.opacity='1'; ctrl.style.pointerEvents='';
+    }
     else {
         document.querySelectorAll('.fs-bg,.fs-ctrl-layer').forEach(n=>{ try{n.remove();}catch(e){} });
         bg = document.createElement("div");
@@ -1047,43 +1045,43 @@ function enterFullscreen(type, isSwitch, reuse){
     fullWrap.classList.remove('ls-card');
     fullWrap.classList.remove('fs-exiting');
 
-    /* 最终布局一次性到位：fixed 铺满 */
-    el.style.position = "fixed";
-    el.style.left = "0px"; el.style.top = "0px";
-    el.style.width = "100vw"; el.style.height = "100vh";
-    el.style.zIndex = "9002";
-    el.style.transformOrigin = "center center";
-    el.style.willChange = "opacity, transform";
-    if(type === "model") el.style.borderRadius = "26px";
-
-    /* 进入：普通=纯透明度柔和淡入；互切=新层从左下向右上轻移淡入；双 rAF 保证首帧 */
-    const fromTransform = isSwitch ? "translateY(5px)" : "translateY(6px)";   /* 纯淡入+极轻微上浮，不缩放 */
-    el.style.transition = "none";
-    el.style.opacity = isSwitch ? ".22" : "0";
-    el.style.transform = fromTransform;
+    /* 立即落定全屏布局（fixed 铺满，flex 正常计算无塌陷），随后柔和淡入 */
+    try{ setLayoutLand(el, type); }catch(e){}
+    if(type === 'model'){ fullWrap.classList.add('model-backdrop'); }
+    const xd = isSwitch ? XF_SW_MS : XF_MS;
+    el.style.transition = 'none';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px) scale(.985)';
     if(!reuse){ bg.style.transition = "none"; bg.style.opacity = "0"; }
     else { bg.style.transition = "none"; bg.style.opacity = "1"; }
 
-    fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
+    /* 互切时保留首次进入的主页布局记录（saved），仅更新当前模式信息，避免退出残留全屏样式 */
+    if(isSwitch && fsState && fsState.saved){
+        fsState.el = el; fsState.type = type; fsState.bg = bg; fsState.ctrl = ctrl;
+        fsState.rect = rect; fsState.srcRect = srcRect;
+        fsState.exiting = false;
+        fsState.isLandscape = false; fsState.wantLandscape = false; fsState.cssRotated = false;
+    } else {
+        fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
+    }
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
     void el.offsetHeight;
-    /* 收尾幂等：双 rAF 走正常动画，另加硬兜底定时器。进入瞬间 model-viewer 缩放/解码可能吞掉个别帧，
-       若只靠 rAF 会让模型容器永久停在 opacity:0、快照层不消失（白屏卡死）；硬兜底保证必定收尾。 */
+    /* 柔和淡入：微上浮+微放大到原位（iOS 打开应用手感）；横屏 rotate 态只淡入不动 transform */
     let __enterDone=false;
     function finishEnter(){
         if(__enterDone) return; __enterDone=true;
-        const xd = isSwitch ? XF_SW_MS : XF_MS;
-        /* 进层与出层用同一时长、同一曲线、同一帧启动，透明度互补，速度均匀；出层里的模型先柔化消散，杜绝双模型残影 */
-        if(el.style.transform && el.style.transform.indexOf('rotate') >= 0){
+        if(hasRotate(el)){
+            el.style.transition = "opacity " + xd + "ms " + XFADE;
             el.style.opacity = "1";
             if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
+            setTimeout(safeResize, 120);
             return;
         }
         el.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
-        el.style.transform = "translateY(0)";
         el.style.opacity = "1";
+        el.style.transform = "translateY(0) scale(1)";
         if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = "1"; }
-        setTimeout(safeResize, 110);
+        setTimeout(safeResize, 120);
     }
     requestAnimationFrame(() => requestAnimationFrame(finishEnter));
     setTimeout(finishEnter, 150);
@@ -1100,72 +1098,99 @@ window.addEventListener('popstate', () => {
 });
 /* 克隆当前画面为静态快照（模型用 toDataURL 截图替换，绝不新建第二个 WebGL 上下文），
    让真实结构可立即复位/重建，快照在最上层交叉淡出，从根上消除单元素搬移造成的白闪/跳变 */
-function captureGhost(src){
-    try{
-        let shot=''; try{ shot = viewer.toDataURL('image/webp',0.82) || ''; }catch(e){}
-        const g = src.cloneNode(true);
-        g.removeAttribute('id'); g.classList.add('fs-ghost');
-        g.querySelectorAll('model-viewer').forEach(mv=>{
-            const img=document.createElement('img');
-            img.className='fs-shot';
-            if(shot) img.src=shot;
-            img.style.cssText='width:100%;height:100%;object-fit:contain;display:block;border:0;';
-            mv.replaceWith(img);
-        });
-        g.querySelectorAll('.toolbar,#loading,.tip-banner,.progress,.fs-dock,.fs-ctrl-layer').forEach(n=>n.remove());
-        const r=src.getBoundingClientRect();
-        g.style.cssText += ';position:fixed;left:'+r.left+'px;top:'+r.top+'px;width:'+r.width+'px;height:'+r.height+'px;margin:0;z-index:9003;pointer-events:none;overflow:hidden;';
-        document.body.appendChild(g);
-        return g;
-    }catch(e){ return null; }
+/* ===== FLIP 单元素动画工具：进/退/互切只动 transform+opacity（GPU 合成），
+   不 toDataURL 截图、不克隆 DOM、不叠双层——性能一般的手机也流畅 ===== */
+function flipMatrix(rect, x, y, w, h){
+    const sx = w / (rect.width || 1), sy = h / (rect.height || 1);
+    return 'translate(' + (x - rect.left) + 'px,' + (y - rect.top) + 'px) scale(' + sx + ',' + sy + ')';
 }
-function fadeGhostOut(g, opts){
-    if(!g) return;
-    opts = opts || {};
-    const dur = opts.dur || XF_MS;
-    /* 纯 CSS 动画：立即打上标记并设时长/方向，元素插入后的首个合成帧即自动播放，
-       不再依赖 requestAnimationFrame（主线程被模型复位阻塞、或切后台被限流时也照常消散），JS 只负责到时移除 */
-    g.style.setProperty('--gd', dur+'ms');
-    g.classList.add('fs-go', opts.down ? 'down' : 'up');
-    setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+160);
+function hasRotate(el){ try{ return (el.style.transform || '').indexOf('rotate') >= 0; }catch(e){ return false; } }
+/* 进场动画结束后同帧落定 fixed 全屏布局：transform 终态与全屏布局视觉一致，切换瞬间无跳变、无白闪 */
+function setLayoutLand(el, type){
+    el.style.transition = 'none';
+    el.style.transformOrigin = 'center center';
+    el.style.transform = 'none';
+    el.style.position = 'fixed'; el.style.left = '0'; el.style.top = '0';
+    el.style.width = '100vw'; el.style.height = '100vh';
+    el.style.zIndex = '9002';
+    el.style.willChange = 'opacity, transform';
+    if(type === 'model') el.style.borderRadius = '26px';
+    try{ safeResize(); }catch(e){}
+}
+/* 恢复主页布局（互切中途用：不清背景/按键层、不动 in-fs），元素须已透明才调用，无可见跳变 */
+function restoreToHome(el, state){
+    const { saved } = state;
+    el.style.transition = 'none';
+    el.style.transformOrigin = saved.transformOrigin;
+    el.style.position = saved.position;
+    el.style.left = saved.left; el.style.top = saved.top;
+    el.style.width = saved.width; el.style.height = saved.height;
+    el.style.zIndex = saved.zIndex;
+    el.style.borderRadius = saved.borderRadius;
+    el.style.willChange = saved.willChange;
+    el.style.opacity = '';
+    el.style.transform = saved.transform || '';
+    if(el !== modelContainer){ modelContainer.style.transform='none'; modelContainer.style.transformOrigin=''; }
+    modelContainer.classList.remove('fs-model');
+    fullWrap.style.zIndex = saved.wrapZ;
 }
 function exitFullscreen(){
     const state = fsState;
-    const { el, type, saved, bg, ctrl, rect } = state;
-    /* 横屏复位放到 land() 里，避免退出瞬间闪跳 */
+    if(!state) return;
+    const { el, type, saved, bg, ctrl } = state;
     state.exiting = true;
     try{ resetGestureState(false); }catch(e){}
     if(state.inTimer){ clearTimeout(state.inTimer); state.inTimer = null; }
     const switching = pendingFs; pendingFs = null;
 
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
+    if(hasRotate(el)){ try{ resetLandscape(true); }catch(e){} }
 
+    /* ===== 互切：旧层柔和淡出，新模式落定后淡入——双元素交叉淡化，纯 opacity+transform，
+       无截图、无布局动画、无叠层 ===== */
     if(switching){
-        /* 互切：冻结旧全屏快照，真实结构立即复位并重建新全屏，新画面在快照下淡入、快照同时淡出（交叉淡化，无白闪） */
-        const ghost = captureGhost(el);
-        fadeGhostOut(ghost, {dur:XF_SW_MS});
-        restoreLayout(el, state, bg, ctrl, true);
-        safeResize();
-        void el.offsetHeight;
-        enterFullscreen(switching, true, {bg, ctrl});
-    } else {
-        /* 退出：冻结全屏快照并立即纯 CSS 淡出；真实结构回到主页，主页与快照同档交叉淡化，速度均匀无残影 */
-        const ghost = captureGhost(el);
-        fadeGhostOut(ghost, {dur:XF_MS, down:true});
-        restoreLayout(el, state, bg, ctrl);
-        safeResize();
-        void el.offsetHeight;
-        fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(6px)';
-        void fullWrap.offsetHeight;
-        let __exDone=false;
-        function finishExit(){ if(__exDone)return; __exDone=true;
-            fullWrap.style.transition='opacity '+XF_MS+'ms '+XFADE+',transform '+XF_MS+'ms '+XFADE;
-            fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
-        }
-        requestAnimationFrame(()=>requestAnimationFrame(finishExit));
-        setTimeout(finishExit,150);
-        setTimeout(()=>{ fullWrap.style.transition=''; fullWrap.style.opacity=''; fullWrap.style.transform=''; try{ safeResize(); }catch(e){} }, XF_MS+160);
+        ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; ctrl.style.pointerEvents='none';
+        const fadeMs = Math.round(XF_SW_MS * 0.55);
+        el.style.transition = 'opacity ' + fadeMs + 'ms ' + XFADE + ', transform ' + fadeMs + 'ms ' + XFADE;
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px) scale(.99)';
+        setTimeout(()=>{
+            try{
+                if(type === 'page' && switching === 'model'){
+                    /* 网页全屏 → 构件全屏：外壳回主页布局（透明不可见），模型容器随后全屏淡入 */
+                    restoreToHome(el, state);
+                    fullWrap.classList.remove('fs-page','info-collapsed','ls-card');
+                    fullWrap.classList.add('model-backdrop');
+                    modelContainer.classList.add('fs-model');
+                } else if(type === 'model' && switching === 'page'){
+                    /* 构件全屏 → 网页全屏：外壳转整页全屏（信息卡两列），模型容器回 flex 流 */
+                    fullWrap.style.transition = 'none';
+                    fullWrap.style.position = 'fixed'; fullWrap.style.left = '0'; fullWrap.style.top = '0';
+                    fullWrap.style.width = '100vw'; fullWrap.style.height = '100vh';
+                    fullWrap.style.zIndex = '9001';
+                    fullWrap.classList.remove('model-backdrop','ls-card');
+                    fullWrap.classList.add('fs-page');
+                    restoreToHome(el, state);
+                }
+                try{ safeResize(); }catch(e){}
+            }catch(e){}
+            enterFullscreen(switching, true, {bg, ctrl});
+        }, fadeMs + 20);
+        return;
     }
+
+    /* ===== 退出：全屏层柔和淡出（下浮+微缩），主页在底层渐显；淡出结束后恢复主页布局
+       （此时全屏层已透明，切换不可见，无跳变无白闪） ===== */
+    const fadeMs = Math.round(XF_MS * 0.66);
+    el.style.transition = 'opacity ' + fadeMs + 'ms ' + XFADE + ', transform ' + fadeMs + 'ms ' + XFADE;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(12px) scale(.988)';
+    bg.style.transition = 'opacity ' + Math.round(XF_MS*0.8) + 'ms ' + XFADE; bg.style.opacity = '0';
+    try{ ctrl.style.transition='opacity .3s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
+    setTimeout(()=>{
+        restoreLayout(el, state, bg, ctrl, false);
+        try{ safeResize(); }catch(e){}
+    }, fadeMs + 40);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
@@ -1183,20 +1208,16 @@ function restoreLayout(el, state, bg, ctrl, keepOverlay){
     fullWrap.style.zIndex = saved.wrapZ;
     fullWrap.classList.remove('fs-page','info-collapsed','model-backdrop','fs-exiting','ls-card');
     (function(){const ei=document.getElementById('btnEyeInline');if(ei){ei.innerHTML=ICON_EYE;ei.classList.remove('active');}})();
-    modelContainer.style.transform='none';modelContainer.style.transformOrigin='';const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';ic.style.maxHeight='';ic.style.padding='';}
+    if(el !== modelContainer){ modelContainer.style.transform='none'; modelContainer.style.transformOrigin=''; }
+    const ic=document.getElementById('infoCard');if(ic){ic.style.transform='';ic.style.transition='';ic.style.opacity='';ic.style.maxHeight='';ic.style.padding='';}
     modelContainer.classList.remove('fs-model');
     if(!keepOverlay){
         document.body.classList.remove("in-fs");
-        /* 退出：遮罩与按键层柔和淡出后再移除，避免瞬间抽掉背景造成白跳 */
-        try{ ctrl.style.transition='opacity .34s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
-        try{ bg.style.transition='opacity '+XF_MS+'ms '+XFADE; bg.style.opacity='0'; }catch(e){}
-        setTimeout(()=>{ try{bg.remove();}catch(e){} try{ctrl.remove();}catch(e){} }, XF_MS+140);
+        try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
+        setTimeout(()=>{ try{bg.remove();}catch(e){} try{ctrl.remove();}catch(e){} }, 320);
     }
-    try{ viewer.setAttribute('interaction-prompt','auto'); viewer.interactionPrompt='auto'; }catch(e){}
     fsState = null;
     try{ syncControls(); }catch(e){}
-    void el.offsetHeight;
-    /* 退场交叉淡化结束后由 exitFullscreen 统一清理 fullWrap 内联样式，避免提前清掉导致跳变 */
 }
 /* 全屏模式之间互切：整页 ⇄ 模型，收场即开场，一段连贯动作 */
 function switchFullscreen(type){
@@ -1694,7 +1715,10 @@ function bindGlowPress(el){
         const d=Math.max(r.width,r.height)*2.6;
         const sp=document.createElement('span'); sp.className='gp-ripple';
         sp.style.left=x+'px'; sp.style.top=y+'px'; sp.style.width=d+'px'; sp.style.height=d+'px';
-        el.appendChild(sp); setTimeout(()=>sp.remove(),640);
+        el.appendChild(sp); setTimeout(()=>sp.remove(),680);
+        /* 按钮外圈大光晕脉冲（抬起后余晖渐隐，视觉上"点到发光"） */
+        el.classList.remove('gp-burst'); void el.offsetWidth; el.classList.add('gp-burst');
+        setTimeout(()=>el.classList.remove('gp-burst'),650);
     });
     /* 点按后立即失焦，清除手机 WebView 残留在按钮上的蓝色聚焦框（输入框除外） */
     el.addEventListener('click',function(){ const t=el.tagName; if(t!=='INPUT'&&t!=='TEXTAREA'&&t!=='SELECT'){ try{ el.blur(); }catch(e){} } });
