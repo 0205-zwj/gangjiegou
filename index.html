@@ -143,7 +143,7 @@
             color:var(--accent);border:1px solid var(--glass-rim);
             font-size:18px;cursor:pointer;
             box-shadow:var(--glass-spec),0 5px 14px rgba(40,72,120,.10),0 1.5px 3px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.4),0 0 16px -6px rgba(150,190,244,.6);
-            transition:transform .18s var(--e-expo),box-shadow .18s ease,background .08s ease,color .08s ease,border-color .08s ease;
+            transition:transform .12s var(--e-expo),box-shadow .12s ease,background .04s ease,color .04s ease,border-color .04s ease;
             display:flex;align-items:center;justify-content:center;
         }
         .btn:hover{transform:translateY(-1.5px) scale(1.06);border-color:rgba(255,255,255,.98);
@@ -512,7 +512,7 @@
         .icon-btn{width:34px;height:34px;border-radius:12px;border:1px solid rgba(255,255,255,.66);
             background:radial-gradient(130% 130% at 50% 16%,rgba(255,255,255,.82),rgba(255,255,255,.3) 40%,rgba(236,243,250,.34) 100%);color:var(--accent);display:grid;place-items:center;cursor:pointer;
             box-shadow:var(--glass-spec),0 4px 12px rgba(60,110,190,.1),0 0 14px -6px rgba(150,190,255,.6);
-            transition:box-shadow .18s ease,border-color .08s ease,background .08s ease,color .08s ease,transform .15s var(--e-expo);}
+            transition:box-shadow .12s ease,border-color .04s ease,background .04s ease,color .04s ease,transform .12s var(--e-expo);}
         .icon-btn:hover{transform:translateY(-1px) scale(1.05);border-color:rgba(255,255,255,.98);background:radial-gradient(130% 130% at 50% 12%,rgba(255,255,255,.95),rgba(255,255,255,.42) 42%,rgba(236,243,250,.4) 100%);
             box-shadow:var(--glass-spec),0 6px 16px rgba(60,110,190,.14),0 0 18px -4px rgba(150,190,255,.8);}
         .icon-btn:active{transform:scale(.92);}
@@ -922,7 +922,7 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 const EASE = 'cubic-bezier(.33,0,.22,1)';        /* iOS 式柔和缓动：中段速度均匀、两端渐柔，无过冲无弹跳 */
 const EASE_IN = 'cubic-bezier(.33,0,.22,1)';    /* 退场与进场同一曲线，交叉淡化全程不露空、不白闪 */
 const FS_IN_MS = 500;
-const XF_MS = 480, XF_SW_MS = 440;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
+const XF_MS = 380, XF_SW_MS = 340;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
 const XFADE = 'cubic-bezier(.33,0,.22,1)';      /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
 const FLY_MS = 480;
 const EASE_FLY = 'cubic-bezier(.33,0,.22,1)';
