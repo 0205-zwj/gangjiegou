@@ -307,18 +307,8 @@
             filter:blur(26px) saturate(120%);
             opacity:0;transition:opacity .5s cubic-bezier(.22,.61,.36,1);
         }
-        /* ===== 静态快照（退场/互切）：真实结构立即复位，快照在最上层纯 CSS 淡出，
-           先融成柔和光斑再消散，主页在快照下渐显——无空档、无瞬现、无白闪 ===== */
-        .fs-ghost{position:fixed;pointer-events:none;overflow:hidden;margin:0;opacity:1;}
-        .fs-ghost .fs-shot{width:100%;height:100%;object-fit:fill;display:block;}
-        .fs-ghost.fs-go{animation:fsGhostFade var(--gd,420ms) cubic-bezier(.33,0,.22,1) forwards;}
-        @keyframes fsGhostFade{
-            0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}
-            46%{opacity:.82;filter:blur(0);transform:translateY(1px) scale(.998);}
-            100%{opacity:0;filter:blur(12px);transform:translateY(7px) scale(.99);}
-        }
-        /* ===== 全屏动画说明：进/退/互切全部走 FLIP 单元素 transform（GPU 合成），
-           不截图、不克隆 DOM、不叠双层，性能差的手机也流畅（iOS 系统动画同款原则） ===== */
+        /* ===== 全屏动画说明：进/退/互切全部走纯 opacity+transform（GPU 合成），
+           无截图回读、不克隆 DOM、不叠双层，性能差的手机也流畅（iOS 系统动画同款原则） ===== */
         /* ===== 全屏控制按钮层 ===== */
         .fs-ctrl-layer{position:fixed;inset:0;z-index:9100;pointer-events:none;}
         .fs-ctrl{
@@ -583,21 +573,18 @@
             filter:blur(.5px);
             transform:translate(-50%,-50%) scale(0);animation:gpWave .9s cubic-bezier(.16,1,.3,1) forwards;}
         @keyframes gpWave{0%{opacity:1;transform:translate(-50%,-50%) scale(0);}45%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(2.15);filter:blur(10px);}}
-        /* 点击外部大光晕脉冲：暖白辉光从按钮边缘漾开，抬起后余晖渐隐（iOS/澎湃按压弹起发光） */
-        .gp-burst{animation:gpBurst .62s cubic-bezier(.16,1,.3,1) forwards;}
+        /* 点按按压感：背景亮起 + 轻放大（iOS/澎湃按压反馈），配合外圈暖金辉光 */
+        .gp-press{background:linear-gradient(160deg,rgba(255,255,255,.98),rgba(255,238,214,.92))!important;
+            border-color:rgba(255,214,170,.95)!important;
+            transform:scale(1.08)!important;
+            box-shadow:var(--glass-spec),0 2px 14px rgba(255,196,130,.38),inset 0 1px 3px rgba(255,255,255,.95),0 0 26px 4px rgba(255,214,160,.4)!important;
+            transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease!important;}
+        /* 点击外圈光晕脉冲：暖金辉光从按钮边缘漾开（浅背景下清晰可见），抬起后余晖渐隐 */
+        .gp-burst{animation:gpBurst .6s cubic-bezier(.16,1,.3,1) forwards;}
         @keyframes gpBurst{
-            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.65),0 0 0 9px rgba(255,255,255,.42),0 0 26px 4px rgba(180,208,250,.55);}
-            42%{box-shadow:var(--glass-spec),0 0 0 1.6px rgba(255,255,255,.95),0 0 0 16px rgba(255,255,255,.28),0 0 44px 10px rgba(170,202,250,.5);}
-            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.6),0 0 0 0 rgba(255,255,255,0),0 0 22px -2px rgba(176,205,248,.6);}
-        }
-        /* 点击外部大光斑：明显可见的柔光扩散（独立于按钮层，浅背景下清晰可辨） */
-        .gp-halo{position:fixed;border-radius:50%;pointer-events:none;z-index:9999;
-            background:radial-gradient(circle,rgba(255,255,255,1) 0%,rgba(255,255,255,.72) 20%,rgba(214,230,255,.45) 46%,rgba(158,196,246,.2) 66%,rgba(158,196,246,0) 80%);
-            transform:translate(-50%,-50%) scale(.2);animation:gpHalo .72s cubic-bezier(.16,1,.3,1) forwards;}
-        @keyframes gpHalo{
-            0%{opacity:.95;transform:translate(-50%,-50%) scale(.25);}
-            55%{opacity:.65;transform:translate(-50%,-50%) scale(1);}
-            100%{opacity:0;transform:translate(-50%,-50%) scale(1.62);}
+            0%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.7),0 0 0 8px rgba(255,214,160,.28),0 0 22px 3px rgba(255,196,130,.34);}
+            45%{box-shadow:var(--glass-spec),0 0 0 1.6px rgba(255,255,255,.98),0 0 0 15px rgba(255,214,160,.16),0 0 40px 9px rgba(255,196,130,.4);}
+            100%{box-shadow:var(--glass-spec),0 0 0 1px rgba(255,255,255,.6),0 0 0 0 rgba(255,214,160,0),0 0 20px -2px rgba(255,204,150,.45);}
         }
         /* ===== 柔和散入/飞入（iOS / 澎湃 / ColorOS 手感） ===== */
         @keyframes softIn{from{opacity:0;transform:translateY(16px) scale(.97);filter:blur(8px);}to{opacity:1;transform:none;filter:blur(0);}}
@@ -1132,52 +1119,8 @@ function requestExitFullscreen(){
 window.addEventListener('popstate', () => {
     if(fsState){ fsPushed = false; exitFullscreen(); }
 });
-/* 克隆当前画面为静态快照（模型用 toDataURL 截图替换，绝不新建第二个 WebGL 上下文），
-   让真实结构可立即复位/重建，快照在最上层交叉淡出，从根上消除单元素搬移造成的白闪/跳变 */
-/* ===== FLIP 单元素动画工具：进/退/互切只动 transform+opacity（GPU 合成），
-   不 toDataURL 截图、不克隆 DOM、不叠双层——性能一般的手机也流畅 ===== */
-function flipMatrix(rect, x, y, w, h){
-    const sx = w / (rect.width || 1), sy = h / (rect.height || 1);
-    return 'translate(' + (x - rect.left) + 'px,' + (y - rect.top) + 'px) scale(' + sx + ',' + sy + ')';
-}
-/* 静态快照：纯净 div + 低分辨率模型图（只盖模型区域，信息卡不参与交叠，避免文字错位闪跳）。
-   低分辨率 drawImage 回读极小（几乎零卡顿）；快照淡出由纯 CSS 驱动（不依赖 JS 帧，主线程忙也不卡） */
-function captureGhost(src){
-    try{
-        const mcEl = src.classList && src.classList.contains('model-container') ? src : (src.querySelector('.model-container') || null);
-        const mr = mcEl ? mcEl.getBoundingClientRect() : src.getBoundingClientRect();
-        const c = (function(){
-            try{
-                const mv = (mcEl || src).querySelector('model-viewer');
-                if(!mv || !mv.shadowRoot) return null;
-                return mv.shadowRoot.querySelectorAll('canvas')[1] || null;
-            }catch(e){ return null; }
-        })();
-        const g = document.createElement('div');
-        g.className = 'fs-ghost';
-        g.style.cssText = 'position:fixed;left:' + mr.left + 'px;top:' + mr.top + 'px;width:' + mr.width + 'px;height:' + mr.height + 'px;z-index:9003;border-radius:26px;margin:0;pointer-events:none;overflow:hidden;opacity:1;';
-        if(c && c.width && c.height){
-            const sw = 480, sh = Math.max(1, Math.round(sw * c.height / c.width));
-            const sc = document.createElement('canvas');
-            sc.width = sw; sc.height = sh;
-            const ctx = sc.getContext('2d');
-            if(ctx){ ctx.drawImage(c, 0, 0, sw, sh); }
-            const img = document.createElement('img');
-            img.className = 'fs-shot';
-            img.src = sc.toDataURL('image/webp', .82);
-            img.alt = '';
-            g.appendChild(img);
-        }
-        document.body.appendChild(g);
-        return g;
-    }catch(e){ return null; }
-}
-/* 纯 CSS 快照淡出：柔和光斑消散 + 轻微下沉，播完移除 */
-function fadeGhostOut(ghost, ms){
-    if(!ghost) return;
-    try{ ghost.style.setProperty('--gd', ms + 'ms'); ghost.classList.add('fs-go'); }catch(e){}
-    setTimeout(()=>{ try{ ghost.remove(); }catch(e){} }, ms + 220);
-}
+/* ===== 动画工具：进/退/互切只动 transform+opacity（GPU 合成），
+   不截图、不克隆 DOM、不叠双层——性能一般的手机也流畅 ===== */
 function hasRotate(el){ try{ return (el.style.transform || '').indexOf('rotate') >= 0; }catch(e){ return false; } }
 /* 进场动画结束后同帧落定 fixed 全屏布局：transform 终态与全屏布局视觉一致，切换瞬间无跳变、无白闪 */
 function setLayoutLand(el, type){
@@ -1220,15 +1163,18 @@ function exitFullscreen(){
     ctrl.querySelectorAll('.fs-ctrl').forEach(b=>{ b.style.transitionDelay='0ms'; b.classList.remove('show'); });
     if(hasRotate(el)){ try{ resetLandscape(true); }catch(e){} }
 
-    /* ===== 互切：旧画面静态快照纯 CSS 淡出（先融成柔和光斑再消散），
-       同时新模式真实层浮现——两层交叉，无缝无空档，主线程被复位占用也不影响快照消散 ===== */
+    /* ===== 互切：旧层柔和淡出（下浮微缩）→ 透明帧内切换布局 → 新模式淡入浮现。
+       与打开/退出同一套时长与曲线，无截图回读、无叠层，切换干净不卡 ===== */
     if(switching){
         ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; ctrl.style.pointerEvents='none';
-        const ghost = captureGhost(el);
+        const fo = 280;
+        el.style.transition = 'opacity ' + fo + 'ms ' + XFADE + ', transform ' + fo + 'ms ' + XFADE;
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(8px) scale(.994)';
         setTimeout(()=>{
             try{
                 if(type === 'page' && switching === 'model'){
-                    /* 网页全屏 → 构件全屏：外壳回主页布局（被快照盖住不可见），模型容器随后全屏浮现 */
+                    /* 网页全屏 → 构件全屏：外壳回主页布局（透明不可见），模型容器随后全屏浮现 */
                     restoreToHome(el, state);
                     fullWrap.classList.remove('fs-page','info-collapsed','ls-card');
                     fullWrap.classList.add('model-backdrop');
@@ -1246,17 +1192,27 @@ function exitFullscreen(){
                 try{ safeResize(); }catch(e){}
             }catch(e){}
             enterFullscreen(switching, true, {bg, ctrl});
-        }, 30);
-        fadeGhostOut(ghost, XF_SW_MS);
+        }, fo + 40);
         return;
     }
 
-    /* ===== 退出：静态快照纯 CSS 淡出（柔和光斑消散+轻微下沉），主页真实层已复位在快照下，
-       快照透明时主页渐显——无空档、无瞬现、无白闪 ===== */
-    const ghost = captureGhost(el);
-    restoreLayout(el, state, bg, ctrl, false);
-    try{ safeResize(); }catch(e){}
-    fadeGhostOut(ghost, XF_MS);
+    /* ===== 退出：全屏画面柔和淡出（下浮微缩，底部氛围光始终在，无空档）→ 透明帧内恢复主页布局 → 主页淡入浮现。
+       全程无截图回读、无布局动画可见，与打开动画同一套时长/曲线，对称柔和 ===== */
+    const fo = 300, fi = 320;
+    el.style.transition = 'opacity ' + fo + 'ms ' + XFADE + ', transform ' + fo + 'ms ' + XFADE;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px) scale(.99)';
+    try{ ctrl.style.transition='opacity .22s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
+    setTimeout(()=>{
+        restoreLayout(el, state, bg, ctrl, false);
+        try{ safeResize(); }catch(e){}
+        /* 主页从透明帧里淡入浮现（布局已复位，无瞬现、无空档） */
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px) scale(.992)';
+        el.style.transition = 'opacity ' + fi + 'ms ' + XFADE + ', transform ' + fi + 'ms ' + XFADE;
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0) scale(1)';
+    }, fo + 40);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
@@ -1782,14 +1738,10 @@ function bindGlowPress(el){
         const sp=document.createElement('span'); sp.className='gp-ripple';
         sp.style.left=x+'px'; sp.style.top=y+'px'; sp.style.width=d+'px'; sp.style.height=d+'px';
         el.appendChild(sp); setTimeout(()=>sp.remove(),680);
-        /* 外部大光斑：独立于按钮、明显可见的柔光扩散（抬起后余晖渐隐） */
-        const halo=document.createElement('span'); halo.className='gp-halo';
-        const hd=Math.max(r.width,r.height)*3.4;
-        halo.style.width=hd+'px'; halo.style.height=hd+'px';
-        halo.style.left=(r.left+r.width/2)+'px'; halo.style.top=(r.top+r.height/2)+'px';
-        document.body.appendChild(halo); setTimeout(()=>halo.remove(),740);
-        /* 按钮外圈 box-shadow 脉冲（附加柔光） */
-        el.classList.remove('gp-burst'); void el.offsetWidth; el.classList.add('gp-burst');
+        /* 点按背景高亮（按压感）+ 外圈暖金辉光脉冲，抬起后余晖渐隐 */
+        el.classList.remove('gp-press','gp-burst'); void el.offsetWidth;
+        el.classList.add('gp-press','gp-burst');
+        setTimeout(()=>el.classList.remove('gp-press'),380);
         setTimeout(()=>el.classList.remove('gp-burst'),650);
     });
     /* 点按后立即失焦，清除手机 WebView 残留在按钮上的蓝色聚焦框（输入框除外） */
