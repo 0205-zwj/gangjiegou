@@ -324,11 +324,7 @@
             transition:opacity .42s var(--e-expo), transform .56s var(--e-settle), background .25s ease, color .25s ease,
                        left .52s var(--e-settle), right .52s var(--e-settle), top .52s var(--e-settle), bottom .52s var(--e-settle);
         }
-        .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);animation:ctrlGlow .9s cubic-bezier(.22,1,.36,1) backwards;}
-        @keyframes ctrlGlow{
-          0%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.5),0 0 16px -8px rgba(150,190,244,.6);}
-          100%{box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 2px 4px rgba(40,72,120,.06),0 0 0 1px rgba(255,255,255,.55),0 0 20px -6px rgba(160,196,246,.55);}
-        }
+        .fs-ctrl.show{opacity:1;transform:scale(1) translateY(0);}
         .fs-ctrl:hover{transform:scale(1.06);border-color:rgba(255,255,255,.98);
             box-shadow:var(--glass-spec),0 8px 24px rgba(40,72,120,.12),0 0 0 1.6px rgba(255,255,255,.8),0 0 16px 3px rgba(255,255,255,.6),0 0 34px -2px rgba(176,205,248,.85);}
         .fs-ctrl:active{transform:scale(.88);
@@ -349,8 +345,8 @@
         .fs-ls .fs-pagebtn,.fs-ls .fs-modelbtn{top:auto;bottom:16px;right:16px;left:auto;}
         .fs-ls .fs-rotate{bottom:16px;left:70px;top:auto;right:auto;}
         .fs-ls .fs-panbtn{top:auto;bottom:16px;left:16px;right:auto;}
-        .fs-ls .fs-eye{top:auto;bottom:16px;right:16px;left:auto;}
-        .fs-ctrl-layer.fs-ls > .fs-freebtn{top:auto;bottom:16px;right:70px;left:auto;}
+        .fs-ls .fs-eye{top:auto;bottom:72px;right:16px;left:auto;}
+        .fs-ctrl-layer.fs-ls > .fs-freebtn{top:auto;bottom:72px;right:70px;left:auto;}
         /* 横屏信息卡：顺旋90°贴视觉左下角（物理左上角），两列字段收成一小块，正读 */
         .full-wrap.model-backdrop.ls-card .info-card{
             top:0;left:0;right:auto;bottom:auto;
@@ -1140,7 +1136,7 @@ function enterFullscreen(type, isSwitch, reuse){
         fsState = { el, type, saved, rect, srcRect, bg, ctrl, isLandscape:false, wantLandscape:false, cssRotated:false };
     }
     if(!isSwitch){ try{ history.pushState({fs:type}, "", "#" + (type==="model"?"model-full":"page-full")); fsPushed = true; }catch(e){} }
-    setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 230);
+    setTimeout(()=>{ ctrl.querySelectorAll(".fs-ctrl").forEach(b=>b.classList.add("show")); }, 100);
 }
 function requestExitFullscreen(){
     if(!fsState || fsState.exiting) return;
