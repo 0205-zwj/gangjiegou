@@ -934,7 +934,7 @@ tipBanner.onclick = () => { tipBanner.classList.remove('show'); clearTimeout(tip
 const EASE = 'cubic-bezier(.33,0,.22,1)';        /* iOS 式柔和缓动：中段速度均匀、两端渐柔，无过冲无弹跳 */
 const EASE_IN = 'cubic-bezier(.33,0,.22,1)';    /* 退场与进场同一曲线，交叉淡化全程不露空、不白闪 */
 const FS_IN_MS = 500;
-const XF_MS = 380, XF_SW_MS = 340;              /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
+const XF_MS = 420, XF_SW_MS = 380;             /* 进/退场与互切交叉淡化统一时长：进层与出层完全同步，速度均匀无残影 */
 const XFADE = 'cubic-bezier(.33,0,.22,1)';      /* 柔和、中段速度均匀的交叉淡化曲线（进/出共用，保证两层透明度互补） */
 const FLY_MS = 480;
 const EASE_FLY = 'cubic-bezier(.33,0,.22,1)';
@@ -1124,9 +1124,10 @@ function enterFullscreen(type, isSwitch, reuse){
     fullWrap.style.opacity = '0';
     try{ flipModelTo(fromRect, toRect, xd, EASE_FLY); }catch(e){}
     void el.offsetHeight;
-    /* WAAPI 淡入：合成器强制从 0 播放到 1（不依赖绘制时序，必定平滑，无瞬变/闪白） */
-    try{ fullWrap.animate([{opacity:0},{opacity:1}], {duration:xd, easing:XFADE, fill:'forwards'}); }catch(e){ fullWrap.style.opacity='1'; }
-    if(!reuse){ try{ bg.animate([{opacity:0},{opacity:1}], {duration:xd, easing:XFADE, fill:'forwards'}); }catch(e){ bg.style.opacity='1'; } }
+    /* CSS transition 淡入：手机上比 WAAPI 更省主线程，不卡顿 */
+    fullWrap.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
+    fullWrap.style.opacity = '1';
+    if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = '1'; }
     /* 记录当前全屏状态（互切时复用首次的主页样式快照，仅更新模式信息） */
     if(isSwitch && fsState){
         fsState.el = el; fsState.type = type; fsState.bg = bg; fsState.ctrl = ctrl;
@@ -1283,8 +1284,7 @@ function fadeGhostOut(g, opts){
 
 /* ===== 退出（快照幽灵层交叉淡化）：冻结全屏快照模糊淡出，真实结构立即回主页淡入，
    两层同档交叉——快照在上面模糊消散、主页在下面柔和浮现，无白闪无跳变 ===== */
-let ctrlAnim = null, inAnim = null;
-try{ ctrlAnim = ctrl.animate([{opacity:1},{opacity:0}],{duration:140,easing:XFADE,fill:'forwards'}); }catch(e){ ctrl.style.opacity='0'; }
+try{ ctrl.style.transition='opacity .34s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
 /* 冻结全屏快照，立即纯 CSS 模糊淡出 */
 const ghost = captureGhost(el);
 fadeGhostOut(ghost, {dur:XF_MS, down:true});
@@ -1292,18 +1292,19 @@ fadeGhostOut(ghost, {dur:XF_MS, down:true});
 restoreLayout(el, state, bg, ctrl, false);
 safeResize();
 void el.offsetHeight;
-/* 主页从 opacity 0 + 轻微上浮柔和淡入（与快照同档时长） */
+/* 主页从 opacity 0 + 轻微上浮柔和淡入（CSS transition，手机更流畅） */
 fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(8px)';
 void fullWrap.offsetHeight;
-try{ inAnim = fullWrap.animate(
-    [{opacity:0, transform:'translateY(8px)'},{opacity:1, transform:'translateY(0)'}],
-    {duration:XF_MS, easing:XFADE, fill:'forwards'}
-); }catch(e){ fullWrap.style.opacity='1'; fullWrap.style.transform=''; }
+fullWrap.style.transition = "opacity " + XF_MS + "ms " + XFADE + ", transform " + XF_MS + "ms " + XFADE;
+fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
+/* 背景层也淡出 */
+try{ bg.style.transition='opacity '+XF_MS+'ms '+XFADE; bg.style.opacity='0'; }catch(e){}
 setTimeout(()=>{ try{ safeResize(); }catch(e){} }, XF_MS+90);
 setTimeout(()=>{
-    try{ if(inAnim) inAnim.cancel(); }catch(e){}
     try{ el.style.transition=''; el.style.transform=''; fullWrap.style.transition=''; fullWrap.style.transform=''; fullWrap.style.opacity=''; fullWrap.style.filter=''; }catch(e){}
-}, XF_MS+70);
+    try{ if(bg && bg.parentNode) bg.remove(); }catch(e){}
+    try{ if(ctrl && ctrl.parentNode) ctrl.remove(); }catch(e){}
+}, XF_MS+140);
 }
 
 function restoreLayout(el, state, bg, ctrl, keepOverlay){
