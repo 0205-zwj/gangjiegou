@@ -1284,18 +1284,14 @@ function fadeGhostOut(g, opts){
     setTimeout(()=>{ if(g.parentNode) g.remove(); }, dur+160);
 }
 
-/* ===== 退出（快照幽灵层交叉淡化）：冻结全屏快照模糊淡出，真实结构立即回主页淡入，
-   两层同档交叉——快照在上面模糊消散、主页在下面柔和浮现，无白闪无跳变 ===== */
-try{ ctrl.style.transition='opacity .34s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
-/* 冻结全屏快照，立即纯 CSS 模糊淡出 */
-const ghost = captureGhost(el);
-fadeGhostOut(ghost, {dur:XF_MS, down:true});
+/* ===== 退出：直接 CSS 淡出（不截图、不克隆 DOM，手机零卡顿） ===== */
+try{ ctrl.style.transition='opacity .2s '+XFADE; ctrl.style.opacity='0'; }catch(e){}
 /* 真实结构立即回主页布局 */
 restoreLayout(el, state, bg, ctrl, false);
 safeResize();
 void el.offsetHeight;
-/* 主页从 opacity 0 + 轻微上浮柔和淡入（CSS transition，手机更流畅） */
-fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(8px)';
+/* 主页从 opacity 0 + 轻微上浮柔和淡入 */
+fullWrap.style.transition='none'; fullWrap.style.opacity='0'; fullWrap.style.transform='translateY(6px)';
 void fullWrap.offsetHeight;
 fullWrap.style.transition = "opacity " + XF_MS + "ms " + XFADE + ", transform " + XF_MS + "ms " + XFADE;
 fullWrap.style.opacity='1'; fullWrap.style.transform='translateY(0)';
