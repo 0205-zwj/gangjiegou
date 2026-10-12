@@ -494,12 +494,14 @@
         .full-wrap.model-backdrop .info-card .v{font-size:12px;font-weight:600;text-shadow:none;}
         .full-wrap.model-backdrop .model-container{background:transparent;}
         .full-wrap.model-backdrop.info-collapsed .info-card{opacity:0 !important;pointer-events:none;}
-        body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(16px) saturate(186%) brightness(1.06)!important;-webkit-backdrop-filter:blur(16px) saturate(186%) brightness(1.06)!important;}
         body.in-fs .header,body.in-fs .footer{opacity:0;pointer-events:none;transition:none;}
         /* 全屏背景不透明，毛玻璃模糊逐帧重算很贵，整段关闭以保证动画流畅；
            但填充渐变/描边/高光与主页玻璃保持同一套（仅去掉模糊），确保三种状态色调统一 */
         body.in-fs .model-container,
-        body.in-fs .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        body.in-fs .info-card,
+        body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+        /* 全屏时暂停氛围光漂移动画（持续耗 GPU），固定不漂移 */
+        body.in-fs .ambient{animation:none!important;}
         body.in-fs .model-container{background:var(--glass-fill);}
         body.in-fs .info-card{background:var(--glass-fill);}
         /* 进/出全屏过渡只走 transform，提升为合成层，避免重排重绘卡顿 */
@@ -614,8 +616,8 @@
             @keyframes fsGhostFadeDn{0%{opacity:1;filter:blur(0);transform:translateY(0) scale(1);}40%{opacity:.5;filter:blur(1.5px);}100%{opacity:0;filter:blur(3px);transform:translateY(4px) scale(.99);}}
             @keyframes fsGhostShot{0%{opacity:1;filter:blur(0);transform:scale(1);}100%{opacity:0;filter:blur(4px);transform:scale(.99);}}
             @keyframes softIn{from{opacity:0;transform:translateY(12px) scale(.98);filter:blur(0);}to{opacity:1;transform:none;filter:blur(0);}}
-            /* 移动端 backdrop-filter 降半档 */
-            body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:blur(8px) saturate(140%)!important;-webkit-backdrop-filter:blur(8px) saturate(140%)!important;}
+            /* 全屏时 info-card 不做 backdrop-filter（手机上持续渲染很卡） */
+            body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
             /* 减少大范围光晕 box-shadow */
             .btn{box-shadow:var(--glass-spec),0 4px 10px rgba(40,72,120,.10),0 0 0 1px rgba(255,255,255,.4)!important;}
             .fs-ctrl{box-shadow:0 6px 18px rgba(70,100,150,.10),inset 0 1px 2px rgba(255,255,255,1)!important;}
