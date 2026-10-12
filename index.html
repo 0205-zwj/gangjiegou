@@ -500,10 +500,10 @@
         body.in-fs .model-container,
         body.in-fs .info-card,
         body.in-fs .full-wrap.model-backdrop .info-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
-        /* 全屏时暂停氛围光漂移动画（持续耗 GPU），固定不漂移 */
-        body.in-fs .ambient{animation:none!important;}
         body.in-fs .model-container{background:var(--glass-fill);}
         body.in-fs .info-card{background:var(--glass-fill);}
+        /* 全屏时暂停氛围光漂移动画（持续耗 GPU） */
+        body.in-fs .ambient{animation:none!important;}
         /* 进/出全屏过渡只走 transform，提升为合成层，避免重排重绘卡顿 */
         .full-wrap.fs-anim, .model-container.fs-anim{will-change:transform;}
 
@@ -1126,7 +1126,7 @@ function enterFullscreen(type, isSwitch, reuse){
     fullWrap.style.opacity = '0';
     try{ flipModelTo(fromRect, toRect, xd, EASE_FLY); }catch(e){}
     void el.offsetHeight;
-    /* CSS transition 淡入：手机上比 WAAPI 更省主线程，不卡顿 */
+    /* CSS transition 淡入：手机上比 WAAPI 更省主线程 */
     fullWrap.style.transition = "opacity " + xd + "ms " + XFADE + ", transform " + xd + "ms " + XFADE;
     fullWrap.style.opacity = '1';
     if(!reuse){ bg.style.transition = "opacity " + xd + "ms " + XFADE; bg.style.opacity = '1'; }
